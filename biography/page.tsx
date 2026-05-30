@@ -7,8 +7,8 @@ function formatDate(dateString: string) {
   if (!dateString) return "-";
 
   return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "long",
+    day: "2-digit",
+    month: "short",
     year: "numeric",
   }).format(new Date(dateString));
 }
@@ -25,7 +25,17 @@ function calculateAge(dateString: string) {
     age -= 1;
   }
 
-  return Number.isFinite(age) ? String(age) : "-";
+  return Number.isFinite(age) ? `${age} yrs` : "-";
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 }
 
 function groupNames(groups: TeamAthlete["groups"]) {
@@ -34,18 +44,18 @@ function groupNames(groups: TeamAthlete["groups"]) {
   return groups.map((group) => group.name).join(", ");
 }
 
-function exportTeam(team: TeamSummary) {
-  if (!team.athletes.length) return;
+function exportRoster(group: TeamSummary) {
+  if (!group.athletes.length) return;
 
-  const headers = ["id", "name", "birthDate", "age", "positions", "teams", "groups"];
-  const rows = team.athletes.map((athlete) =>
+  const headers = ["profileId", "name", "dateOfBirth", "age", "externalId", "email", "loadedGroup"];
+  const rows = group.athletes.map((athlete) =>
     [
       athlete.id,
       athlete.name,
       athlete.birthDate,
       calculateAge(athlete.birthDate),
-      groupNames(athlete.positions),
-      groupNames(athlete.teams),
+      athlete.externalId ?? "",
+      athlete.email ?? "",
       groupNames(athlete.groups),
     ]
       .map((value) => `"${String(value ?? "").replace(/"/g, '""')}"`)
@@ -58,338 +68,349 @@ function exportTeam(team: TeamSummary) {
   const anchor = document.createElement("a");
 
   anchor.href = url;
-  anchor.download = `${team.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-roster.csv`;
+  anchor.download = `${group.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-profiles.csv`;
   anchor.click();
   URL.revokeObjectURL(url);
 }
 
-function TeamCard({
-  team,
-  loadedTeam,
-  selected,
-  onSelect,
-}: {
-  team: TeamSummary;
-  loadedTeam: TeamSummary | null;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  const displayCount = loadedTeam?.athleteCount ?? team.athleteCount;
-  const positionCount = new Set(
-    (loadedTeam?.athletes ?? team.athletes).flatMap((athlete) =>
-      athlete.positions.map((position) => position.id),
-    ),
-  ).size;
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`rounded-lg border p-5 text-left transition ${
-        selected
-          ? "border-sky-300 bg-sky-300/10"
-          : "border-white/10 bg-white/[0.04] hover:border-white/25 hover:bg-white/[0.07]"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
-            {team.categoryName || "Team"}
-          </p>
-          <h2 className="mt-2 text-xl font-semibold text-white">{team.name}</h2>
-        </div>
-        <span className="rounded-full border border-sky-300/30 bg-sky-300/10 px-3 py-1 text-sm font-medium text-sky-200">
-          {displayCount ?? "Open"}
-        </span>
-      </div>
-
-      <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-        <div>
-          <p className="text-zinc-500">Athletes</p>
-          <p className="mt-1 text-lg font-semibold text-zinc-100">{displayCount ?? "-"}</p>
-        </div>
-        <div>
-          <p className="text-zinc-500">Positions</p>
-          <p className="mt-1 text-lg font-semibold text-zinc-100">{positionCount || "-"}</p>
-        </div>
-      </div>
-    </button>
-  );
+function copyProfileId(profileId: string) {
+  void navigator.clipboard?.writeText(profileId);
 }
 
-function PlayerDetail({
+function ProfilePanel({
   athlete,
+  group,
   onClose,
 }: {
-  athlete: TeamAthlete;
+  athlete: TeamAthlete | null;
+  group: TeamSummary | null;
   onClose: () => void;
 }) {
-  return (
-    <aside className="rounded-lg border border-sky-300/20 bg-sky-300/10 p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-sky-200">Player details</p>
-          <h3 className="mt-1 text-2xl font-semibold text-white">{athlete.name}</h3>
+  if (!athlete) {
+    return (
+      <aside className="flex min-h-0 flex-col border-l border-zinc-800 bg-zinc-950/80">
+        <div className="border-b border-zinc-800 px-6 py-5">
+          <h2 className="text-sm font-semibold text-zinc-100">Player Profile</h2>
         </div>
+        <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-zinc-500">
+          Select a player to inspect their VALD profile fields.
+        </div>
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="flex min-h-0 flex-col border-l border-zinc-800 bg-zinc-950/80">
+      <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-5">
+        <h2 className="text-sm font-semibold text-zinc-100">Player Profile</h2>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md border border-white/10 px-3 py-1.5 text-sm text-zinc-200 transition hover:bg-white/10"
+          className="h-8 w-8 rounded-md border border-zinc-800 text-lg leading-none text-zinc-400 transition hover:bg-zinc-900 hover:text-zinc-100"
+          aria-label="Close player profile"
         >
-          Close
+          ×
         </button>
       </div>
 
-      <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-zinc-500">Position</dt>
-          <dd className="mt-1 text-zinc-100">{groupNames(athlete.positions)}</dd>
+      <div className="flex-1 overflow-auto px-6 py-8">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-xl font-semibold text-zinc-400">
+            {initials(athlete.name)}
+          </div>
+          <h3 className="mt-4 text-xl font-semibold text-zinc-50">{athlete.name}</h3>
+          <p className="mt-1 text-sm text-sky-300">{group?.name ?? groupNames(athlete.groups)}</p>
         </div>
-        <div>
-          <dt className="text-zinc-500">Team</dt>
-          <dd className="mt-1 text-zinc-100">{groupNames(athlete.teams)}</dd>
-        </div>
-        <div>
-          <dt className="text-zinc-500">Birth date</dt>
-          <dd className="mt-1 text-zinc-100">{formatDate(athlete.birthDate)}</dd>
-        </div>
-        <div>
-          <dt className="text-zinc-500">Age</dt>
-          <dd className="mt-1 text-zinc-100">{calculateAge(athlete.birthDate)}</dd>
-        </div>
-      </dl>
 
-      <div className="mt-6">
-        <p className="text-sm text-zinc-500">All VALD groups</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {athlete.groups.length ? (
-            athlete.groups.map((group) => (
+        <dl className="mt-8 divide-y divide-zinc-800 text-sm">
+          <div className="py-4">
+            <dt className="text-xs uppercase tracking-[0.12em] text-zinc-500">Age</dt>
+            <dd className="mt-1 text-zinc-100">{calculateAge(athlete.birthDate)}</dd>
+          </div>
+          <div className="py-4">
+            <dt className="text-xs uppercase tracking-[0.12em] text-zinc-500">Date of Birth</dt>
+            <dd className="mt-1 text-zinc-100">{formatDate(athlete.birthDate)}</dd>
+          </div>
+          <div className="py-4">
+            <dt className="text-xs uppercase tracking-[0.12em] text-zinc-500">External ID</dt>
+            <dd className="mt-1 break-all text-zinc-100">{athlete.externalId || "-"}</dd>
+          </div>
+          <div className="py-4">
+            <dt className="text-xs uppercase tracking-[0.12em] text-zinc-500">Email</dt>
+            <dd className="mt-1 break-all text-zinc-100">{athlete.email || "-"}</dd>
+          </div>
+          <div className="py-4">
+            <dt className="text-xs uppercase tracking-[0.12em] text-zinc-500">Profile ID</dt>
+            <dd className="mt-1 break-all font-mono text-xs text-zinc-300">{athlete.id}</dd>
+          </div>
+        </dl>
+
+        <div className="mt-4">
+          <p className="text-xs uppercase tracking-[0.12em] text-zinc-500">Loaded VALD Group</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {athlete.groups.map((item) => (
               <span
-                key={group.id}
-                className="rounded-full border border-white/10 bg-zinc-950 px-3 py-1 text-xs text-zinc-200"
+                key={item.id}
+                className="rounded-md border border-sky-400/30 bg-sky-400/15 px-3 py-1 text-xs text-sky-200"
               >
-                {group.name}
+                {item.name}
               </span>
-            ))
-          ) : (
-            <span className="text-sm text-zinc-400">No group memberships found.</span>
-          )}
+            ))}
+          </div>
         </div>
       </div>
 
-      <p className="mt-6 break-all text-xs text-zinc-500">Profile ID: {athlete.id}</p>
+      <div className="space-y-3 border-t border-zinc-800 p-6">
+        <button
+          type="button"
+          onClick={() => copyProfileId(athlete.id)}
+          className="h-11 w-full rounded-md border border-zinc-800 bg-zinc-900 text-sm font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-white"
+        >
+          Copy Profile ID
+        </button>
+      </div>
     </aside>
   );
 }
 
 export default function Biography() {
   const { data, loading, error } = useValdTeams();
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [lastFetched, setLastFetched] = useState<Date | null>(null);
 
-  const teams = useMemo(() => data?.teams ?? [], [data]);
-  const selectedTeamSummary = useMemo(
-    () => teams.find((team) => team.id === selectedTeamId) ?? null,
-    [selectedTeamId, teams],
+  const groups = useMemo(() => data?.teams ?? [], [data]);
+  const selectedGroupSummary = useMemo(
+    () => groups.find((group) => group.id === selectedGroupId) ?? null,
+    [selectedGroupId, groups],
   );
   const {
-    team: loadedTeam,
+    team: loadedGroup,
     loading: rosterLoading,
     error: rosterError,
-  } = useValdTeamRoster(selectedTeamId);
-  const selectedTeam = loadedTeam ?? selectedTeamSummary;
+  } = useValdTeamRoster(selectedGroupId);
+  const activeGroup = loadedGroup ?? selectedGroupSummary;
   const filteredAthletes = useMemo(() => {
-    const athletes = selectedTeam?.athletes ?? [];
+    const athletes = activeGroup?.athletes ?? [];
     const normalizedQuery = query.trim().toLowerCase();
 
     if (!normalizedQuery) return athletes;
 
     return athletes.filter((athlete) =>
-      [athlete.name, athlete.id, groupNames(athlete.positions), groupNames(athlete.groups)]
+      [athlete.name, athlete.id, athlete.externalId, athlete.email, groupNames(athlete.groups)]
         .join(" ")
         .toLowerCase()
         .includes(normalizedQuery),
     );
-  }, [query, selectedTeam]);
+  }, [activeGroup, query]);
   const selectedAthlete =
     filteredAthletes.find((athlete) => athlete.id === selectedAthleteId) ??
-    selectedTeam?.athletes.find((athlete) => athlete.id === selectedAthleteId) ??
+    activeGroup?.athletes.find((athlete) => athlete.id === selectedAthleteId) ??
     null;
 
-  function selectTeam(teamId: string) {
-    setSelectedTeamId(teamId);
+  function selectGroup(groupId: string) {
+    setSelectedGroupId(groupId);
     setSelectedAthleteId(null);
     setQuery("");
+    setLastFetched(new Date());
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10">
-        <header className="flex flex-col gap-5 border-b border-white/10 pb-8 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.16em] text-sky-300">
-              Hache Performance
-            </p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              {data?.tenant?.name || "VALD Teams"}
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-300">
-              Choose a team, inspect its roster, and click any player to see their
-              VALD team, position, and group memberships.
-            </p>
-          </div>
+    <main className="min-h-screen bg-zinc-100 p-8 text-zinc-100">
+      <div className="mx-auto max-w-[1680px]">
+        <h1 className="mb-5 text-xl font-semibold text-zinc-600">VALD Profile Dashboard</h1>
 
-          {selectedTeam && (
-            <button
-              type="button"
-              onClick={() => exportTeam(selectedTeam)}
-              disabled={!selectedTeam.athletes.length}
-              className="h-11 rounded-md bg-sky-400 px-5 text-sm font-semibold text-zinc-950 transition hover:bg-sky-300 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
-            >
-              Export team
-            </button>
-          )}
-        </header>
-
-        {loading && (
-          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5 text-zinc-300">
-            Loading VALD teams...
-          </div>
-        )}
-
-        {error && (
-          <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-5 text-sm leading-6 text-amber-100">
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && (
-          <>
-            <section className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
-                <p className="text-sm text-zinc-400">Teams</p>
-                <p className="mt-2 text-3xl font-semibold">{teams.length}</p>
+        <div className="grid min-h-[760px] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 shadow-2xl lg:grid-cols-[76px_minmax(0,1fr)_360px]">
+          <nav className="flex flex-col items-center border-r border-zinc-800 bg-zinc-950 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-sky-400 text-sm font-bold text-zinc-950">
+              HP
+            </div>
+            <div className="mt-12 flex flex-col gap-3 text-zinc-500">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-sky-300">
+                ◎
               </div>
-              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
-                <p className="text-sm text-zinc-400">Selected roster</p>
-                <p className="mt-2 text-3xl font-semibold">
-                  {loadedTeam?.athleteCount ?? "-"}
-                </p>
-              </div>
-              <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
-                <p className="text-sm text-zinc-400">VALD groups</p>
-                <p className="mt-2 text-3xl font-semibold">{data?.groups.length ?? 0}</p>
-              </div>
-            </section>
+              <div className="flex h-10 w-10 items-center justify-center rounded-md">≡</div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-md">⚙</div>
+            </div>
+          </nav>
 
-            <section>
-              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <h2 className="text-2xl font-semibold">Teams</h2>
-                  <p className="mt-1 text-sm text-zinc-400">
-                    These come from VALD groups. Position labels appear when positions
-                    are modeled as groups or categories.
-                  </p>
-                </div>
+          <section className="min-w-0">
+            <header className="flex min-h-16 items-center justify-between border-b border-zinc-800 px-7">
+              <div className="flex min-w-0 items-center gap-3 text-sm">
+                <span className="text-zinc-500">Groups</span>
+                <span className="text-zinc-600">›</span>
+                <span className="truncate font-medium text-zinc-100">
+                  {activeGroup?.name ?? data?.tenant?.name ?? "Select a VALD group"}
+                </span>
               </div>
 
-              {teams.length ? (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {teams.map((team) => (
-                    <TeamCard
-                      key={team.id}
-                      team={team}
-                      loadedTeam={loadedTeam?.id === team.id ? loadedTeam : null}
-                      selected={team.id === selectedTeamId}
-                      onSelect={() => selectTeam(team.id)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5 text-zinc-400">
-                  No VALD teams or groups were found for this tenant.
+              <div className="flex items-center gap-3">
+                <span className="rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-400">
+                  <span className="mr-2 inline-block h-2 w-2 rounded-full bg-emerald-400" />
+                  VALD fetch {lastFetched ? "just now" : "pending"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => activeGroup && exportRoster(activeGroup)}
+                  disabled={!activeGroup?.athletes.length}
+                  className="h-10 rounded-md border border-zinc-800 bg-zinc-900 px-4 text-sm text-zinc-300 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:text-zinc-600"
+                >
+                  Export Roster
+                </button>
+              </div>
+            </header>
+
+            <div className="border-b border-zinc-800 px-7 py-5">
+              {loading && <p className="text-sm text-zinc-400">Loading VALD groups...</p>}
+
+              {error && (
+                <div className="rounded-md border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+                  {error}
                 </div>
               )}
-            </section>
 
-            {selectedTeamSummary && (
-              <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
-                <div className="rounded-lg border border-white/10 bg-white/[0.04]">
-                  <div className="flex flex-col gap-4 border-b border-white/10 p-5 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-sm text-zinc-400">Selected team</p>
-                      <h2 className="mt-1 text-2xl font-semibold">{selectedTeamSummary.name}</h2>
-                    </div>
+              {!loading && !error && (
+                <div className="grid gap-4">
+                  <div className="flex items-center gap-3 overflow-x-auto pb-1">
+                    {groups.map((group) => (
+                      <button
+                        key={group.id}
+                        type="button"
+                        onClick={() => selectGroup(group.id)}
+                        className={`h-10 shrink-0 rounded-md border px-4 text-sm transition ${
+                          group.id === selectedGroupId
+                            ? "border-sky-400/50 bg-sky-400/15 text-sky-200"
+                            : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100"
+                        }`}
+                      >
+                        {group.name}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-5">
                     <input
                       value={query}
                       onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Search this roster"
-                      className="h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-4 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-sky-300 md:w-72"
+                      placeholder="Search players..."
+                      className="h-11 w-full max-w-sm rounded-md border border-zinc-800 bg-zinc-900 px-4 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-500 focus:border-sky-400"
                     />
-                  </div>
-
-                  <div className="grid gap-3 p-5">
-                    {rosterLoading && (
-                      <p className="text-zinc-400">Loading team roster...</p>
-                    )}
-
-                    {rosterError && (
-                      <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-4 text-sm leading-6 text-amber-100">
-                        {rosterError}
-                      </div>
-                    )}
-
-                    {!rosterLoading && !rosterError && filteredAthletes.length ? (
-                      filteredAthletes.map((athlete) => (
-                        <button
-                          key={athlete.id}
-                          type="button"
-                          onClick={() => setSelectedAthleteId(athlete.id)}
-                          className={`grid gap-4 rounded-lg border p-4 text-left transition md:grid-cols-[1fr_auto] ${
-                            selectedAthleteId === athlete.id
-                              ? "border-sky-300 bg-sky-300/10"
-                              : "border-white/10 bg-zinc-950 hover:border-white/25"
-                          }`}
-                        >
-                          <div>
-                            <h3 className="text-lg font-semibold text-white">{athlete.name}</h3>
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-100">
-                                {groupNames(athlete.positions)}
-                              </span>
-                              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-zinc-300">
-                                {groupNames(athlete.teams)}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="text-sm text-zinc-400 md:text-right">
-                            <p>{formatDate(athlete.birthDate)}</p>
-                            <p className="mt-1">Age {calculateAge(athlete.birthDate)}</p>
-                          </div>
-                        </button>
-                      ))
-                    ) : null}
-
-                    {!rosterLoading && !rosterError && !filteredAthletes.length && (
-                      <p className="text-zinc-400">No players found for this team.</p>
-                    )}
+                    <p className="text-sm text-zinc-400">
+                      Showing{" "}
+                      <span className="font-semibold text-zinc-100">{filteredAthletes.length}</span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-zinc-100">
+                        {activeGroup?.athletes.length ?? 0}
+                      </span>{" "}
+                      players
+                    </p>
                   </div>
                 </div>
+              )}
+            </div>
 
-                {selectedAthlete ? (
-                  <PlayerDetail athlete={selectedAthlete} onClose={() => setSelectedAthleteId(null)} />
-                ) : (
-                  <aside className="rounded-lg border border-white/10 bg-white/[0.04] p-5 text-zinc-400">
-                    Click a player to see their team, position, and full VALD group list.
-                  </aside>
-                )}
-              </section>
-            )}
-          </>
-        )}
-      </section>
+            <div className="overflow-auto">
+              <table className="w-full min-w-[920px] border-collapse text-left text-sm">
+                <thead className="bg-zinc-900 text-xs uppercase tracking-[0.12em] text-zinc-500">
+                  <tr>
+                    <th className="px-7 py-3 font-medium">Player</th>
+                    <th className="px-4 py-3 font-medium">Date of Birth</th>
+                    <th className="px-4 py-3 font-medium">External ID</th>
+                    <th className="px-4 py-3 font-medium">Loaded Group</th>
+                    <th className="px-4 py-3 font-medium" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {rosterLoading && (
+                    <tr>
+                      <td colSpan={5} className="px-7 py-8 text-zinc-400">
+                        Loading selected group roster...
+                      </td>
+                    </tr>
+                  )}
+
+                  {rosterError && (
+                    <tr>
+                      <td colSpan={5} className="px-7 py-8">
+                        <div className="rounded-md border border-amber-400/30 bg-amber-400/10 p-4 text-amber-100">
+                          {rosterError}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+
+                  {!rosterLoading &&
+                    !rosterError &&
+                    filteredAthletes.map((athlete) => (
+                      <tr
+                        key={athlete.id}
+                        onClick={() => setSelectedAthleteId(athlete.id)}
+                        className={`cursor-pointer transition ${
+                          athlete.id === selectedAthleteId
+                            ? "bg-sky-400/10"
+                            : "bg-zinc-950 hover:bg-zinc-900/70"
+                        }`}
+                      >
+                        <td className="px-7 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-xs font-semibold text-zinc-400">
+                              {initials(athlete.name)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-zinc-100">{athlete.name}</p>
+                              <p className="mt-0.5 font-mono text-xs text-zinc-500">{athlete.id}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <p className="text-zinc-100">{formatDate(athlete.birthDate)}</p>
+                          <p className="mt-0.5 text-xs text-zinc-500">{calculateAge(athlete.birthDate)}</p>
+                        </td>
+                        <td className="px-4 py-4 text-zinc-400">{athlete.externalId || "-"}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex flex-wrap gap-2">
+                            {athlete.groups.map((group) => (
+                              <span
+                                key={group.id}
+                                className="rounded-md border border-sky-400/30 bg-sky-400/15 px-2.5 py-1 text-xs text-sky-200"
+                              >
+                                {group.name}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-right text-xl text-zinc-500">›</td>
+                      </tr>
+                    ))}
+
+                  {!rosterLoading && !rosterError && selectedGroupId && !filteredAthletes.length && (
+                    <tr>
+                      <td colSpan={5} className="px-7 py-8 text-zinc-400">
+                        No players found in this group.
+                      </td>
+                    </tr>
+                  )}
+
+                  {!selectedGroupId && !loading && !error && (
+                    <tr>
+                      <td colSpan={5} className="px-7 py-8 text-zinc-400">
+                        Select a VALD group to load its roster.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <ProfilePanel
+            athlete={selectedAthlete}
+            group={activeGroup}
+            onClose={() => setSelectedAthleteId(null)}
+          />
+        </div>
+      </div>
     </main>
   );
 }

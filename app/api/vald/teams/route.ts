@@ -39,7 +39,6 @@ export async function GET() {
     const categories = listFromPayload<ValdCategory>(categoriesPayload, "categories");
     const groups = classifyGroups(listFromPayload<ValdGroup>(groupsPayload, "groups"), categories);
     const teams = groups
-      .filter((group) => group.kind === "team")
       .map((team) => ({
         ...team,
         athleteCount: null,

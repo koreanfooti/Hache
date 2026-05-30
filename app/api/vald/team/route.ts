@@ -8,17 +8,12 @@ import {
   listFromPayload,
   missingConfigResponse,
   profileName,
-  type ClassifiedGroup,
   type ValdCategory,
   type ValdGroup,
   type ValdProfile,
 } from "../_utils";
 
 export const dynamic = "force-dynamic";
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 export async function GET(request: Request) {
   const tenantId = process.env.VALD_TENANT_ID;
@@ -63,47 +58,19 @@ export async function GET(request: Request) {
 
     const teamProfilesPayload = await fetchValdWithRetry(teamProfilesUrl, token);
     const teamProfiles = listFromPayload<ValdProfile>(teamProfilesPayload, "profiles");
-    const teamProfileIds = new Set(teamProfiles.map((profile) => profile.profileId).filter(Boolean));
-    const groupsByProfileId = new Map<string, ClassifiedGroup[]>();
-
-    for (const profileId of teamProfileIds) {
-      groupsByProfileId.set(profileId as string, [team]);
-    }
-
-    for (const positionGroup of groups.filter((group) => group.kind === "position")) {
-      const positionProfilesUrl = new URL("/profiles", profilesBaseUrl);
-      positionProfilesUrl.searchParams.set("tenantId", tenantId);
-      positionProfilesUrl.searchParams.set("groupId", positionGroup.id);
-
-      await sleep(250);
-
-      const payload = await fetchValdWithRetry(positionProfilesUrl, token);
-      const profiles = listFromPayload<ValdProfile>(payload, "profiles");
-
-      for (const profile of profiles) {
-        if (!profile.profileId || !teamProfileIds.has(profile.profileId)) continue;
-
-        groupsByProfileId.set(profile.profileId, [
-          ...(groupsByProfileId.get(profile.profileId) ?? [team]),
-          positionGroup,
-        ]);
-      }
-    }
 
     const athletes = teamProfiles
       .filter((profile) => profile.profileId)
       .map((profile) => {
-        const allGroups = groupsByProfileId.get(profile.profileId as string) ?? [team];
-
         return {
           id: profile.profileId as string,
           name: profileName(profile),
           birthDate: profile.dateOfBirth ?? "",
           externalId: profile.externalId ?? profile.syncId,
           email: profile.email,
-          positions: allGroups.filter((group) => group.kind === "position"),
-          groups: allGroups,
-          teams: [team],
+          positions: [],
+          groups: [team],
+          teams: [],
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name));
