@@ -77,7 +77,7 @@ export default function AmsDashboard() {
           status: `Loaded ${compactNumber(rows.length)} ${sourceLabel}.`,
         });
       } catch (error) {
-        const rows = sampleGpsRows;
+        const rows: GpsDailyRow[] = sampleGpsRows;
         const totalDistance = rows.reduce(
           (total, row) => total + numberValue(row.total_distance_m ?? row.totalDistance),
           0,
