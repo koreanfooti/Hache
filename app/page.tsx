@@ -1,5 +1,5 @@
-import Biography from "@/biography/page";
+import AmsDashboard from "@/components/ams/AmsDashboard";
 
 export default function Home() {
-  return <Biography />;
+  return <AmsDashboard />;
 }
