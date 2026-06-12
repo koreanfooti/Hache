@@ -116,6 +116,30 @@ export default function AmsDashboard() {
 
   const selectedPlayer = players.find((player) => player.id === selectedPlayerId) ?? players[0];
 
+  function rotateSelectedPlayer(direction: 1 | -1) {
+    const currentIndex = Math.max(
+      0,
+      players.findIndex((player) => player.id === selectedPlayerId),
+    );
+    const nextIndex = (currentIndex + direction + players.length) % players.length;
+    setSelectedPlayerId(players[nextIndex].id);
+  }
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setSelectedPlayerId((currentPlayerId) => {
+        const currentIndex = Math.max(
+          0,
+          players.findIndex((player) => player.id === currentPlayerId),
+        );
+        const nextIndex = (currentIndex + 1) % players.length;
+        return players[nextIndex].id;
+      });
+    }, 5200);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -224,7 +248,12 @@ export default function AmsDashboard() {
       <div className="ams-shell">
         <Sidebar activeSection={activeSection} onSelect={setActiveSection} />
         <section className="ams-stage">
-          <PlayerStrip selectedPlayerId={selectedPlayerId} onSelect={setSelectedPlayerId} />
+          <PlayerStrip
+            selectedPlayerId={selectedPlayerId}
+            onNext={() => rotateSelectedPlayer(1)}
+            onPrevious={() => rotateSelectedPlayer(-1)}
+            onSelect={setSelectedPlayerId}
+          />
           {activeSection === "overview" && (
             <OverviewPanel
               loadSummary={loadSummary}
@@ -310,36 +339,56 @@ function Sidebar({
 
 function PlayerStrip({
   selectedPlayerId,
+  onNext,
+  onPrevious,
   onSelect,
 }: {
   selectedPlayerId: string;
+  onNext: () => void;
+  onPrevious: () => void;
   onSelect: (playerId: string) => void;
 }) {
   const carouselPlayers = [...players, ...players];
 
   return (
-    <section className="player-strip" aria-label="Players currently in view">
-      <div className="player-strip-track">
-        {carouselPlayers.map((player, index) => (
-          <button
-            key={`${player.id}-${index}`}
-            type="button"
-            className={player.id === selectedPlayerId ? "player-pill is-active" : "player-pill"}
-            onClick={() => onSelect(player.id)}
-            tabIndex={index >= players.length ? -1 : 0}
-            aria-hidden={index >= players.length}
-          >
-            <span className="player-photo">
-              <Image src={player.photo} alt="" width={72} height={72} />
-            </span>
-            <span>
-              <strong>{player.name}</strong>
-              <small>
-                #{player.number} · {player.position}
-              </small>
-            </span>
+    <section className="player-carousel-panel" aria-label="Rotating players currently in view">
+      <div className="player-carousel-header">
+        <div>
+          <span className="section-kicker">Squad Window</span>
+          <strong>Rotating player view</strong>
+        </div>
+        <div className="player-carousel-controls">
+          <button type="button" onClick={onPrevious} aria-label="Show previous player">
+            ‹
           </button>
-        ))}
+          <button type="button" onClick={onNext} aria-label="Show next player">
+            ›
+          </button>
+        </div>
+      </div>
+      <div className="player-strip">
+        <div className="player-strip-track">
+          {carouselPlayers.map((player, index) => (
+            <button
+              key={`${player.id}-${index}`}
+              type="button"
+              className={player.id === selectedPlayerId ? "player-pill is-active" : "player-pill"}
+              onClick={() => onSelect(player.id)}
+              tabIndex={index >= players.length ? -1 : 0}
+              aria-hidden={index >= players.length}
+            >
+              <span className="player-photo">
+                <Image src={player.photo} alt="" width={72} height={72} />
+              </span>
+              <span>
+                <strong>{player.name}</strong>
+                <small>
+                  #{player.number} · {player.position}
+                </small>
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );
