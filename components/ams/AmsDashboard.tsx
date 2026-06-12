@@ -91,12 +91,89 @@ type SourceData = {
   status: string;
 };
 
+type Language = "en" | "es";
+
 const sectionMap: Record<AmsSection, string> = Object.fromEntries(
   navItems.map((item) => [item.id, item.label]),
 ) as Record<AmsSection, string>;
 
+const uiCopy = {
+  en: {
+    assistantKicker: "Private Performance Assistant",
+    assistantPlaceholder: "Ask about a player, injury, session, test, or resource...",
+    assistantPrompt: "How can H help you?",
+    assistantStatus:
+      "RAG-ready placeholder. Connect a private vector database and LLM endpoint when the backend is ready.",
+    ask: "Ask",
+    calendar: "Calendar",
+    contextCopy:
+      "Integrated staff view for daily load, medical risk, development, recovery, biography, and off-field context.",
+    contextKicker: "First Team Monitoring",
+    exportCsv: "Export CSV",
+    playersInView: "Players in view",
+    ragExampleLabel: "Example RAG",
+    ragExamplePrompt: "Try: Show {player}'s hamstring RTP risk this week.",
+    resources: "Resources",
+    sections: {
+      load: "Load Demand",
+      injury: "Injury History",
+      development: "Physical Development",
+      recovery: "Recovery",
+      biography: "Biography",
+      external: "External Factors",
+    },
+  },
+  es: {
+    assistantKicker: "Asistente privado de rendimiento",
+    assistantPlaceholder: "Pregunta sobre un jugador, lesión, sesión, prueba o recurso...",
+    assistantPrompt: "¿Cómo puede ayudarte H?",
+    assistantStatus:
+      "Marcador listo para RAG. Conecta una base vectorial privada y un endpoint LLM cuando el backend esté listo.",
+    ask: "Preguntar",
+    calendar: "Calendario",
+    contextCopy:
+      "Vista integrada del staff para carga diaria, riesgo médico, desarrollo, recuperación, biografía y contexto externo.",
+    contextKicker: "Monitoreo del primer equipo",
+    exportCsv: "Exportar CSV",
+    playersInView: "Jugadores en vista",
+    ragExampleLabel: "Ejemplo RAG",
+    ragExamplePrompt: "Prueba: muestra el riesgo RTP de isquios de {player} esta semana.",
+    resources: "Recursos",
+    sections: {
+      load: "Carga",
+      injury: "Historial de lesiones",
+      development: "Desarrollo físico",
+      recovery: "Recuperación",
+      biography: "Biografía",
+      external: "Factores externos",
+    },
+  },
+} satisfies Record<Language, {
+  assistantKicker: string;
+  assistantPlaceholder: string;
+  assistantPrompt: string;
+  assistantStatus: string;
+  ask: string;
+  calendar: string;
+  contextCopy: string;
+  contextKicker: string;
+  exportCsv: string;
+  playersInView: string;
+  ragExampleLabel: string;
+  ragExamplePrompt: string;
+  resources: string;
+  sections: Partial<Record<AmsSection, string>>;
+}>;
+
+const missingPhotoMarkers = ["example_", "download-removebg-preview", "prod-removebg-preview"];
+
+function hasPlayerPhoto(player: (typeof players)[number]) {
+  return Boolean(player.photo) && !missingPhotoMarkers.some((marker) => player.photo.includes(marker));
+}
+
 export default function AmsDashboard() {
   const [activeSection, setActiveSection] = useState<AmsSection>("overview");
+  const [language, setLanguage] = useState<Language>("en");
   const [selectedPlayerId, setSelectedPlayerId] = useState("gustavo-ferrareis");
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [loadSummary, setLoadSummary] = useState<LoadSummary>({
@@ -253,23 +330,27 @@ export default function AmsDashboard() {
     <main className="ams-app">
       <AppHeader
         activeLabel={sectionMap[activeSection]}
+        language={language}
+        onGoHome={() => setActiveSection("overview")}
+        onLanguageChange={setLanguage}
         onOpenCalendar={() => setActiveSection("calendar")}
         onOpenResources={() => setActiveSection("resources")}
         onOpenSettings={() => setActiveSection("settings")}
       />
       <div className="ams-shell">
         <section className="ams-stage">
-          <ContextStrip playerCount={players.length} />
+          <ContextStrip language={language} playerCount={players.length} />
           <PlayerStrip
             selectedPlayerId={selectedPlayerId}
             onNext={() => rotateSelectedPlayer(1)}
             onPrevious={() => rotateSelectedPlayer(-1)}
             onSelect={setSelectedPlayerId}
           />
-          <Sidebar activeSection={activeSection} onSelect={setActiveSection} />
+          <Sidebar activeSection={activeSection} language={language} onSelect={setActiveSection} />
           {activeSection === "overview" && (
             <OverviewPanel
               currentTime={currentTime}
+              language={language}
               loadSummary={loadSummary}
               sourceData={sourceData}
               selectedPlayer={selectedPlayer}
@@ -296,18 +377,26 @@ export default function AmsDashboard() {
 
 function AppHeader({
   activeLabel,
+  language,
+  onGoHome,
+  onLanguageChange,
   onOpenCalendar,
   onOpenResources,
   onOpenSettings,
 }: {
   activeLabel: string;
+  language: Language;
+  onGoHome: () => void;
+  onLanguageChange: (language: Language) => void;
   onOpenCalendar: () => void;
   onOpenResources: () => void;
   onOpenSettings: () => void;
 }) {
+  const copy = uiCopy[language];
+
   return (
     <header className="ams-header">
-      <div className="ams-brand">
+      <button className="ams-brand" type="button" onClick={onGoHome} aria-label="Home">
         <Image
           src="/ams/assets/clubs/10445.png"
           alt="Atlas FC crest"
@@ -319,24 +408,38 @@ function AppHeader({
           <p>Atlas FC Performance Operations</p>
           <h1>Athlete Monitoring System</h1>
         </div>
-      </div>
+      </button>
       <div className="ams-header-actions">
         <button className="resources-action" type="button" onClick={onOpenResources}>
           <Image src="/ams/assets/resources-document.png" alt="" width={22} height={22} />
-          Resources
+          {copy.resources}
         </button>
-        <button type="button" onClick={onOpenCalendar} aria-label="Open calendar">
+        <button type="button" onClick={onOpenCalendar} aria-label={copy.calendar}>
           <Image src="/ams/assets/calendar-clock.png" alt="" width={22} height={22} />
         </button>
         <span className="language-action" aria-label="Language">
-          <b>🇬🇧</b>
-          <b>🇲🇽</b>
+          <button
+            className={language === "en" ? "is-active" : ""}
+            type="button"
+            onClick={() => onLanguageChange("en")}
+            aria-label="Switch to English"
+          >
+            🇬🇧
+          </button>
+          <button
+            className={language === "es" ? "is-active" : ""}
+            type="button"
+            onClick={() => onLanguageChange("es")}
+            aria-label="Cambiar a español"
+          >
+            🇲🇽
+          </button>
         </span>
         <button type="button" onClick={onOpenSettings} aria-label="Open settings">
           ⚙
         </button>
         <span className="active-section-pill">{activeLabel}</span>
-        <button type="button">Export CSV</button>
+        <button type="button">{copy.exportCsv}</button>
       </div>
     </header>
   );
@@ -344,11 +447,16 @@ function AppHeader({
 
 function Sidebar({
   activeSection,
+  language,
   onSelect,
 }: {
   activeSection: AmsSection;
+  language: Language;
   onSelect: (section: AmsSection) => void;
 }) {
+  const copy = uiCopy[language];
+  const sectionLabels: Partial<Record<AmsSection, string>> = copy.sections;
+
   return (
     <nav className="ams-sidebar" aria-label="AMS sections">
       {navItems.filter((item) =>
@@ -361,26 +469,25 @@ function Sidebar({
           onClick={() => onSelect(item.id)}
         >
           <small>{item.eyebrow}</small>
-          <span>{item.label}</span>
+          <span>{sectionLabels[item.id] ?? item.label}</span>
         </button>
       ))}
     </nav>
   );
 }
 
-function ContextStrip({ playerCount }: { playerCount: number }) {
+function ContextStrip({ language, playerCount }: { language: Language; playerCount: number }) {
+  const copy = uiCopy[language];
+
   return (
     <section className="club-context">
       <div>
-        <span className="section-kicker">First Team Monitoring</span>
-        <p>
-          Integrated staff view for daily load, medical risk, development, recovery,
-          biography, and off-field context.
-        </p>
+        <span className="section-kicker">{copy.contextKicker}</span>
+        <p>{copy.contextCopy}</p>
       </div>
       <div className="context-stat">
         <strong>{playerCount}</strong>
-        <span>Players in view</span>
+        <span>{copy.playersInView}</span>
       </div>
     </section>
   );
@@ -417,24 +524,32 @@ function PlayerStrip({
       </div>
       <div className="player-strip">
         <div className="player-strip-track">
-          {carouselPlayers.map((player, index) => (
-            <button
-              key={`${player.id}-${index}`}
-              type="button"
-              className={player.id === selectedPlayerId ? "player-pill is-active" : "player-pill"}
-              onClick={() => onSelect(player.id)}
-              tabIndex={index >= players.length ? -1 : 0}
-              aria-hidden={index >= players.length}
-            >
-              <span className="player-photo">
-                <Image src={player.photo} alt="" width={72} height={72} />
-              </span>
-              <span>
-                <strong>{player.name}</strong>
-                <small>{player.amsId}</small>
-              </span>
-            </button>
-          ))}
+          {carouselPlayers.map((player, index) => {
+            const fallbackNumber = player.number && String(player.number) !== "-" ? String(player.number) : "";
+
+            return (
+              <button
+                key={`${player.id}-${index}`}
+                type="button"
+                className={player.id === selectedPlayerId ? "player-pill is-active" : "player-pill"}
+                onClick={() => onSelect(player.id)}
+                tabIndex={index >= players.length ? -1 : 0}
+                aria-hidden={index >= players.length}
+              >
+                <span className="player-photo">
+                  {hasPlayerPhoto(player) ? (
+                    <Image src={player.photo} alt="" width={72} height={72} />
+                  ) : (
+                    <span className="player-photo-fallback">{fallbackNumber}</span>
+                  )}
+                </span>
+                <span>
+                  <strong>{player.name}</strong>
+                  <small>{player.amsId}</small>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -443,17 +558,21 @@ function PlayerStrip({
 
 function OverviewPanel({
   currentTime,
+  language,
   loadSummary,
   sourceData,
   selectedPlayer,
   onSelectSection,
 }: {
   currentTime: Date | null;
+  language: Language;
   loadSummary: LoadSummary;
   sourceData: SourceData;
   selectedPlayer: (typeof players)[number];
   onSelectSection: (section: AmsSection) => void;
 }) {
+  const copy = uiCopy[language];
+  const sectionLabels: Partial<Record<AmsSection, string>> = copy.sections;
   const timeText = currentTime
     ? new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Mexico_City",
@@ -464,11 +583,12 @@ function OverviewPanel({
       }).format(currentTime)
     : "--:--:-- AM";
   const [timeValue, periodValue = ""] = timeText.split(" ");
+  const dateLocale = language === "es" ? "es-MX" : "en-GB";
   const dateText = currentTime
-    ? `${new Intl.DateTimeFormat("en-GB", {
+    ? `${new Intl.DateTimeFormat(dateLocale, {
         timeZone: "America/Mexico_City",
         weekday: "long",
-      }).format(currentTime)} · ${new Intl.DateTimeFormat("en-GB", {
+      }).format(currentTime)} · ${new Intl.DateTimeFormat(dateLocale, {
         timeZone: "America/Mexico_City",
         day: "2-digit",
         month: "long",
@@ -480,32 +600,30 @@ function OverviewPanel({
       <section className="hero-panel welcome-hero">
         <div className="welcome-clock"><span>{timeValue} <small>{periodValue}</small></span><strong>{dateText}</strong></div>
         <div className="home-assistant">
-          <span>Private Performance Assistant</span>
-          <h2>How can H help you?</h2>
+          <span>{copy.assistantKicker}</span>
+          <h2>{copy.assistantPrompt}</h2>
           <div className="assistant-row assistant-search">
             <input
-              readOnly
-              value=""
-              placeholder="Ask about a player, injury, session, test, or resource..."
+              autoFocus
+              placeholder={copy.assistantPlaceholder}
             />
-            <button type="button">Ask</button>
+            <button type="button">{copy.ask}</button>
           </div>
-          <p>
-            RAG-ready placeholder. Connect a private vector database and LLM endpoint when
-            the backend is ready.
-          </p>
+          <p>{copy.assistantStatus}</p>
           <article className="rag-example">
-            <span>Example RAG</span>
-            <button className="rag-example-prompt" type="button">Try: Show {selectedPlayer.name}&apos;s hamstring RTP risk this week.</button>
+            <span>{copy.ragExampleLabel}</span>
+            <button className="rag-example-prompt" type="button">
+              {copy.ragExamplePrompt.replace("{player}", selectedPlayer.name)}
+            </button>
           </article>
         </div>
       </section>
 
       <section className="quick-grid welcome-grid">
-        <QuickCard label="Load Demand" value={`${compactNumber(loadSummary.sessions)} records`} onClick={() => onSelectSection("load")} />
-        <QuickCard label="Injury History" value={`${compactNumber(sourceData.injuries.length)} injuries`} onClick={() => onSelectSection("injury")} />
-        <QuickCard label="Physical Development" value={`${compactNumber(sourceData.fms.length + sourceData.yBalance.length)} tests`} onClick={() => onSelectSection("development")} />
-        <QuickCard label="Calendar" value="RTP planning" onClick={() => onSelectSection("calendar")} />
+        <QuickCard label={sectionLabels.load ?? "Load Demand"} value={`${compactNumber(loadSummary.sessions)} records`} onClick={() => onSelectSection("load")} />
+        <QuickCard label={sectionLabels.injury ?? "Injury History"} value={`${compactNumber(sourceData.injuries.length)} injuries`} onClick={() => onSelectSection("injury")} />
+        <QuickCard label={sectionLabels.development ?? "Physical Development"} value={`${compactNumber(sourceData.fms.length + sourceData.yBalance.length)} tests`} onClick={() => onSelectSection("development")} />
+        <QuickCard label={copy.calendar} value="RTP planning" onClick={() => onSelectSection("calendar")} />
       </section>
 
       <section className="integration-grid">

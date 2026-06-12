@@ -1635,3 +1635,63 @@ select:focus-visible {
 .ams-app .data-list span {
   color: var(--ams-muted) !important;
 }
+
+.ams-brand {
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+.ams-brand:hover {
+  transform: none;
+}
+
+.ams-brand:focus-visible {
+  outline: 2px solid var(--ams-gold);
+  outline-offset: 6px;
+}
+
+.ams-header-actions .language-action button {
+  display: grid;
+  width: 42px;
+  min-height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 1.15rem;
+  padding: 0;
+}
+
+.ams-header-actions .language-action button.is-active {
+  border: 1px solid rgb(255 255 255 / 16%);
+  background: linear-gradient(135deg, rgb(211 31 47 / 92%), rgb(116 13 22 / 94%));
+}
+
+.ams-header-actions .language-action button:hover {
+  transform: none;
+}
+
+.player-photo-fallback {
+  color: var(--ams-gold);
+  font-size: 0.95rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.home-assistant h2::after {
+  display: none !important;
+  content: none !important;
+}
+
+.assistant-row input {
+  caret-color: var(--ams-gold);
+}
+
+.assistant-row input:focus {
+  border-color: rgb(215 180 106 / 72%);
+  box-shadow: 0 0 0 3px rgb(215 180 106 / 10%);
+}
