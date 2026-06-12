@@ -98,6 +98,7 @@ const sectionMap: Record<AmsSection, string> = Object.fromEntries(
 export default function AmsDashboard() {
   const [activeSection, setActiveSection] = useState<AmsSection>("overview");
   const [selectedPlayerId, setSelectedPlayerId] = useState("gustavo-ferrareis");
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [loadSummary, setLoadSummary] = useState<LoadSummary>({
     rows: [],
     totalDistance: 0,
@@ -137,6 +138,12 @@ export default function AmsDashboard() {
       });
     }, 5200);
 
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    setCurrentTime(new Date());
+    const timer = window.setInterval(() => setCurrentTime(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -244,18 +251,25 @@ export default function AmsDashboard() {
 
   return (
     <main className="ams-app">
-      <AppHeader activeLabel={sectionMap[activeSection]} onOpenCalendar={() => setActiveSection("calendar")} />
+      <AppHeader
+        activeLabel={sectionMap[activeSection]}
+        onOpenCalendar={() => setActiveSection("calendar")}
+        onOpenResources={() => setActiveSection("resources")}
+        onOpenSettings={() => setActiveSection("settings")}
+      />
       <div className="ams-shell">
-        <Sidebar activeSection={activeSection} onSelect={setActiveSection} />
         <section className="ams-stage">
+          <ContextStrip playerCount={players.length} />
           <PlayerStrip
             selectedPlayerId={selectedPlayerId}
             onNext={() => rotateSelectedPlayer(1)}
             onPrevious={() => rotateSelectedPlayer(-1)}
             onSelect={setSelectedPlayerId}
           />
+          <Sidebar activeSection={activeSection} onSelect={setActiveSection} />
           {activeSection === "overview" && (
             <OverviewPanel
+              currentTime={currentTime}
               loadSummary={loadSummary}
               sourceData={sourceData}
               selectedPlayer={selectedPlayer}
@@ -283,18 +297,22 @@ export default function AmsDashboard() {
 function AppHeader({
   activeLabel,
   onOpenCalendar,
+  onOpenResources,
+  onOpenSettings,
 }: {
   activeLabel: string;
   onOpenCalendar: () => void;
+  onOpenResources: () => void;
+  onOpenSettings: () => void;
 }) {
   return (
     <header className="ams-header">
       <div className="ams-brand">
         <Image
-          src="/ams/assets/hp-ams-logo.svg"
-          alt="Hache Performance"
-          width={48}
-          height={48}
+          src="/ams/assets/clubs/10445.png"
+          alt="Atlas FC crest"
+          width={92}
+          height={92}
           priority
         />
         <div>
@@ -303,10 +321,21 @@ function AppHeader({
         </div>
       </div>
       <div className="ams-header-actions">
-        <span>{activeLabel}</span>
+        <button className="resources-action" type="button" onClick={onOpenResources}>
+          <span aria-hidden="true">▤</span>
+          Resources
+        </button>
         <button type="button" onClick={onOpenCalendar} aria-label="Open calendar">
           <Image src="/ams/assets/calendar-clock.png" alt="" width={22} height={22} />
         </button>
+        <span className="language-action" aria-label="Language">
+          <b>🇬🇧</b>
+          <b>🇲🇽</b>
+        </span>
+        <button type="button" onClick={onOpenSettings} aria-label="Open settings">
+          ⚙
+        </button>
+        <span className="active-section-pill">{activeLabel}</span>
         <button type="button">Export CSV</button>
       </div>
     </header>
@@ -322,7 +351,9 @@ function Sidebar({
 }) {
   return (
     <nav className="ams-sidebar" aria-label="AMS sections">
-      {navItems.map((item) => (
+      {navItems.filter((item) =>
+        ["load", "injury", "development", "recovery", "biography", "external"].includes(item.id),
+      ).map((item) => (
         <button
           key={item.id}
           type="button"
@@ -334,6 +365,24 @@ function Sidebar({
         </button>
       ))}
     </nav>
+  );
+}
+
+function ContextStrip({ playerCount }: { playerCount: number }) {
+  return (
+    <section className="club-context">
+      <div>
+        <span className="section-kicker">First Team Monitoring</span>
+        <p>
+          Integrated staff view for daily load, medical risk, development, recovery,
+          biography, and off-field context.
+        </p>
+      </div>
+      <div className="context-stat">
+        <strong>{playerCount}</strong>
+        <span>Players in view</span>
+      </div>
+    </section>
   );
 }
 
@@ -395,36 +444,58 @@ function PlayerStrip({
 }
 
 function OverviewPanel({
+  currentTime,
   loadSummary,
   sourceData,
   selectedPlayer,
   onSelectSection,
 }: {
+  currentTime: Date | null;
   loadSummary: LoadSummary;
   sourceData: SourceData;
   selectedPlayer: (typeof players)[number];
   onSelectSection: (section: AmsSection) => void;
 }) {
+  const timeText = currentTime
+    ? currentTime.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+    : "--:--:--";
+  const dateText = currentTime
+    ? currentTime.toLocaleDateString("en-US", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      })
+    : "";
+
   return (
     <div className="panel-stack">
       <section className="hero-panel">
+        <div className="time-pill">{timeText}</div>
+        <div className="date-pill">{dateText}</div>
         <div>
           <span className="section-kicker">Private Performance Assistant</span>
           <h2>How can H help you?</h2>
-          <p>
-            RAG-ready command center for daily load, medical risk, development testing,
-            recovery, biography, and off-field context.
-          </p>
           <div className="assistant-row">
-            <input readOnly value={`Show ${selectedPlayer.name}'s hamstring RTP risk this week.`} />
-            <button type="button">Stage Query</button>
+            <input
+              readOnly
+              value=""
+              placeholder="Ask about a player, injury, session, test, or resource..."
+            />
+            <button type="button">Ask</button>
           </div>
+          <p>
+            RAG-ready placeholder. Connect a private vector database and LLM endpoint when
+            the backend is ready.
+          </p>
+          <article className="rag-example">
+            <span>Example RAG</span>
+            <strong>Try: Show {selectedPlayer.name}&apos;s hamstring RTP risk this week.</strong>
+          </article>
         </div>
-        <article>
-          <span>Current roster</span>
-          <strong>{players.length}</strong>
-          <small>Players in first-pass migration</small>
-        </article>
       </section>
 
       <section className="quick-grid">
