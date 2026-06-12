@@ -311,8 +311,8 @@ function AppHeader({
         <Image
           src="/ams/assets/clubs/10445.png"
           alt="Atlas FC crest"
-          width={92}
-          height={92}
+          width={64}
+          height={64}
           priority
         />
         <div>
@@ -322,7 +322,7 @@ function AppHeader({
       </div>
       <div className="ams-header-actions">
         <button className="resources-action" type="button" onClick={onOpenResources}>
-          <span aria-hidden="true">▤</span>
+          <Image src="/ams/assets/resources-document.png" alt="" width={22} height={22} />
           Resources
         </button>
         <button type="button" onClick={onOpenCalendar} aria-label="Open calendar">
@@ -431,9 +431,7 @@ function PlayerStrip({
               </span>
               <span>
                 <strong>{player.name}</strong>
-                <small>
-                  #{player.number} · {player.position}
-                </small>
+                <small>{player.amsId}</small>
               </span>
             </button>
           ))}
@@ -457,29 +455,34 @@ function OverviewPanel({
   onSelectSection: (section: AmsSection) => void;
 }) {
   const timeText = currentTime
-    ? currentTime.toLocaleTimeString("en-US", {
+    ? new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Mexico_City",
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
-      })
-    : "--:--:--";
+        hour12: true,
+      }).format(currentTime)
+    : "--:--:-- AM";
+  const [timeValue, periodValue = ""] = timeText.split(" ");
   const dateText = currentTime
-    ? currentTime.toLocaleDateString("en-US", {
+    ? `${new Intl.DateTimeFormat("en-GB", {
+        timeZone: "America/Mexico_City",
         weekday: "long",
-        day: "numeric",
+      }).format(currentTime)} · ${new Intl.DateTimeFormat("en-GB", {
+        timeZone: "America/Mexico_City",
+        day: "2-digit",
         month: "long",
-      })
+      }).format(currentTime)}`
     : "";
 
   return (
     <div className="panel-stack">
-      <section className="hero-panel">
-        <div className="time-pill">{timeText}</div>
-        <div className="date-pill">{dateText}</div>
-        <div>
-          <span className="section-kicker">Private Performance Assistant</span>
+      <section className="hero-panel welcome-hero">
+        <div className="welcome-clock"><span>{timeValue} <small>{periodValue}</small></span><strong>{dateText}</strong></div>
+        <div className="home-assistant">
+          <span>Private Performance Assistant</span>
           <h2>How can H help you?</h2>
-          <div className="assistant-row">
+          <div className="assistant-row assistant-search">
             <input
               readOnly
               value=""
@@ -493,12 +496,12 @@ function OverviewPanel({
           </p>
           <article className="rag-example">
             <span>Example RAG</span>
-            <strong>Try: Show {selectedPlayer.name}&apos;s hamstring RTP risk this week.</strong>
+            <button className="rag-example-prompt" type="button">Try: Show {selectedPlayer.name}&apos;s hamstring RTP risk this week.</button>
           </article>
         </div>
       </section>
 
-      <section className="quick-grid">
+      <section className="quick-grid welcome-grid">
         <QuickCard label="Load Demand" value={`${compactNumber(loadSummary.sessions)} records`} onClick={() => onSelectSection("load")} />
         <QuickCard label="Injury History" value={`${compactNumber(sourceData.injuries.length)} injuries`} onClick={() => onSelectSection("injury")} />
         <QuickCard label="Physical Development" value={`${compactNumber(sourceData.fms.length + sourceData.yBalance.length)} tests`} onClick={() => onSelectSection("development")} />
@@ -522,7 +525,7 @@ function OverviewPanel({
 
 function QuickCard({ label, value, onClick }: { label: string; value: string; onClick: () => void }) {
   return (
-    <button type="button" className="quick-card" onClick={onClick}>
+    <button type="button" className="quick-card welcome-card" onClick={onClick}>
       <span>{label}</span>
       <strong>{value}</strong>
     </button>
