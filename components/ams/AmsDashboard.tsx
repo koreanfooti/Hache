@@ -770,8 +770,8 @@ function AppHeader({
           <Image src="/ams/assets/resources-document.png" alt="" width={22} height={22} />
           {copy.resources}
         </button>
-        <button type="button" onClick={onOpenCalendar} aria-label={copy.calendar}>
-          <Image src="/ams/assets/calendar-clock.png" alt="" width={22} height={22} />
+        <button className="calendar-button" type="button" onClick={onOpenCalendar} aria-label={copy.calendar}>
+          <Image src="/ams/assets/calendar-clock.png" alt="" width={28} height={28} />
         </button>
         <span className="language-action" aria-label={copy.language}>
           <button
