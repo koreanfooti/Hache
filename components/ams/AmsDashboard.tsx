@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { type CSSProperties, useEffect, useState } from "react";
+import { type CSSProperties, type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import {
   type AmsSection,
   dataSources,
@@ -92,6 +92,26 @@ type SourceData = {
 };
 
 type Language = "en" | "es";
+type CalendarEventCategory = "match" | "training" | "testing" | "medical" | "rtp" | "travel" | "meeting";
+type CalendarEventDepartment = "performance" | "medical" | "technical" | "nutrition" | "academy";
+type CalendarTeam = "first-team" | "u21" | "u19" | "u17" | "u15";
+
+type CalendarEvent = {
+  id: string;
+  title: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  category: CalendarEventCategory;
+  department: CalendarEventDepartment;
+  team: CalendarTeam;
+  notes: string;
+};
+
+type CalendarFormState = Omit<CalendarEvent, "id"> & {
+  id: string;
+};
 
 const sectionMap: Record<AmsSection, string> = Object.fromEntries(
   navItems.map((item) => [item.id, item.label]),
@@ -191,6 +211,195 @@ const uiCopy = {
   resources: string;
   sections: Partial<Record<AmsSection, string>>;
 }>;
+
+const calendarCopy = {
+  en: {
+    add: "Add",
+    academy: "Academy",
+    athlete: "Athlete",
+    calendar: "Calendar",
+    category: "Category",
+    clear: "Clear",
+    days: "days",
+    department: "Department",
+    editEvent: "Edit Event",
+    editorSub: "Add matches, travel, testing, recovery blocks, or staff notes.",
+    endDate: "End Date",
+    endTime: "End Time",
+    eventDetails: "Event Details",
+    eventTitle: "Title",
+    firstTeam: "First Team",
+    hideEditor: "Hide Editor",
+    match: "Match",
+    medical: "Medical",
+    meeting: "Meeting",
+    mild: "Mild (1-3d)",
+    minor: "Minor (4-7d)",
+    moderate: "Moderate (8-28d)",
+    noNotes: "No notes.",
+    noRtpEvents: "No RTP events for this view yet.",
+    notes: "Notes",
+    nutrition: "Nutrition",
+    performance: "Performance",
+    remove: "Remove",
+    rtp: "RTP",
+    rtpTimeline: "RTP Calendar",
+    rtpTimelineSub: "Rehab and return-to-play windows created from RTP calendar events.",
+    save: "Save",
+    scheduleCalendar: "Schedule / Calendar",
+    scheduleCalendarSub: "Year overview, monthly planning, match days, staff notes, and external factors.",
+    selectCalendarEvent: "Hover or click a calendar event to view notes.",
+    severe: "Severe (>28d)",
+    showEditor: "Show Editor",
+    startDate: "Start Date",
+    startTime: "Start Time",
+    team: "Team",
+    technical: "Technical",
+    testing: "Testing",
+    training: "Training",
+    travel: "Travel",
+    yearView: "Year View",
+  },
+  es: {
+    add: "Agregar",
+    academy: "Academia",
+    athlete: "Atleta",
+    calendar: "Calendario",
+    category: "Categoría",
+    clear: "Limpiar",
+    days: "días",
+    department: "Departamento",
+    editEvent: "Editar evento",
+    editorSub: "Agrega partidos, viajes, pruebas, bloques de recuperación o notas del staff.",
+    endDate: "Fecha final",
+    endTime: "Hora final",
+    eventDetails: "Detalles del evento",
+    eventTitle: "Título",
+    firstTeam: "Primer Equipo",
+    hideEditor: "Ocultar editor",
+    match: "Partido",
+    medical: "Médico",
+    meeting: "Reunión",
+    mild: "Leve (1-3d)",
+    minor: "Menor (4-7d)",
+    moderate: "Moderado (8-28d)",
+    noNotes: "Sin notas.",
+    noRtpEvents: "No hay eventos RTP para esta vista todavía.",
+    notes: "Notas",
+    nutrition: "Nutrición",
+    performance: "Rendimiento",
+    remove: "Eliminar",
+    rtp: "RTP",
+    rtpTimeline: "Calendario RTP",
+    rtpTimelineSub: "Ventanas de rehabilitación y retorno creadas desde eventos RTP del calendario.",
+    save: "Guardar",
+    scheduleCalendar: "Calendario / Programación",
+    scheduleCalendarSub: "Vista anual, planeación mensual, partidos, notas del staff y factores externos.",
+    selectCalendarEvent: "Pasa encima o haz clic en un evento para ver notas.",
+    severe: "Severo (>28d)",
+    showEditor: "Mostrar editor",
+    startDate: "Fecha inicial",
+    startTime: "Hora inicial",
+    team: "Equipo",
+    technical: "Técnico",
+    testing: "Pruebas",
+    training: "Entrenamiento",
+    travel: "Viaje",
+    yearView: "Vista anual",
+  },
+} satisfies Record<Language, Record<string, string>>;
+
+const defaultCalendarEvents: CalendarEvent[] = [
+  {
+    id: "ligamx-151212",
+    title: "Atlas vs Puebla F.C.",
+    startDate: "2026-01-09",
+    startTime: "21:00",
+    endDate: "2026-01-09",
+    endTime: "21:00",
+    category: "match",
+    department: "technical",
+    team: "first-team",
+    notes: "Liga MX Clausura 2026 · Jornada 1 · Calificación · Estadio Jalisco · Resultado: Atlas 1-0 Puebla F.C. · Match ID: 151212",
+  },
+  {
+    id: "ligamx-151225",
+    title: "Cruz Azul vs Atlas",
+    startDate: "2026-01-14",
+    startTime: "17:00",
+    endDate: "2026-01-14",
+    endTime: "17:00",
+    category: "match",
+    department: "technical",
+    team: "first-team",
+    notes: "Liga MX Clausura 2026 · Jornada 2 · Calificación · Estadio Cuauhtémoc · Resultado: Cruz Azul 2-0 Atlas · Match ID: 151225",
+  },
+  {
+    id: "ligamx-151274",
+    title: "Atlas vs Universidad Nacional",
+    startDate: "2026-02-07",
+    startTime: "19:05",
+    endDate: "2026-02-07",
+    endTime: "19:05",
+    category: "match",
+    department: "technical",
+    team: "first-team",
+    notes: "Liga MX Clausura 2026 · Jornada 5 · Estadio Jalisco · Resultado: Atlas 2-2 Universidad Nacional.",
+  },
+  {
+    id: "ligamx-151341",
+    title: "Atlas vs Guadalajara",
+    startDate: "2026-03-07",
+    startTime: "19:05",
+    endDate: "2026-03-07",
+    endTime: "19:05",
+    category: "match",
+    department: "technical",
+    team: "first-team",
+    notes: "Liga MX Clausura 2026 · Jornada 10 · Estadio Jalisco · Resultado: Atlas 1-2 Guadalajara.",
+  },
+  {
+    id: "ligamx-151425",
+    title: "Atlas vs Tigres de la U.A.N.L.",
+    startDate: "2026-04-22",
+    startTime: "19:00",
+    endDate: "2026-04-22",
+    endTime: "19:00",
+    category: "match",
+    department: "technical",
+    team: "first-team",
+    notes: "Liga MX Clausura 2026 · Jornada 16 · Estadio Jalisco · Resultado: Atlas 0-0 Tigres.",
+  },
+  {
+    id: "ligamx-154755",
+    title: "Cruz Azul vs Atlas",
+    startDate: "2026-05-09",
+    startTime: "21:15",
+    endDate: "2026-05-09",
+    endTime: "21:15",
+    category: "match",
+    department: "technical",
+    team: "first-team",
+    notes: "Liga MX Clausura 2026 · Cuartos Vuelta · Fase Final · Estadio Banorte · Resultado: Cruz Azul 1-0 Atlas.",
+  },
+  {
+    id: "rtp-example-gustavo-hamstring",
+    title: "Gustavo Ferrareis RTP - Hamstring",
+    startDate: "2026-06-08",
+    startTime: "08:30",
+    endDate: "2026-06-24",
+    endTime: "12:00",
+    category: "rtp",
+    department: "performance",
+    team: "first-team",
+    notes: "Example RTP block: left biceps femoris rehab. Phase 1 pain-free isometrics, Phase 2 progressive running exposure, Phase 3 high-speed return and football-specific integration.",
+  },
+];
+
+const calendarCategories: CalendarEventCategory[] = ["match", "training", "testing", "medical", "rtp", "travel", "meeting"];
+const calendarDepartments: CalendarEventDepartment[] = ["performance", "medical", "technical", "nutrition", "academy"];
+const calendarTeams: CalendarTeam[] = ["first-team", "u21", "u19", "u17", "u15"];
+const calendarStorageKey = "atlasScheduleEvents";
 
 const missingPhotoMarkers = ["example_", "download-removebg-preview", "prod-removebg-preview"];
 
@@ -1240,17 +1449,556 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
 }
 
 function CalendarPanel({ language }: { language: Language }) {
-  const copy = panelCopy[language];
+  const copy = calendarCopy[language];
+  const today = new Date();
+  const [events, setEvents] = useState<CalendarEvent[]>(() => loadCalendarEvents());
+  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [isEditorVisible, setIsEditorVisible] = useState(true);
+  const [previewEvent, setPreviewEvent] = useState<CalendarEvent | null>(null);
+  const [form, setForm] = useState<CalendarFormState>(() => emptyCalendarForm(today.getFullYear(), today.getMonth()));
+
+  function persistEvents(nextEvents: CalendarEvent[]) {
+    const sortedEvents = sortCalendarEvents(nextEvents);
+    setEvents(sortedEvents);
+    window.localStorage.setItem(calendarStorageKey, JSON.stringify(sortedEvents));
+  }
+
+  function selectEvent(event: CalendarEvent) {
+    setPreviewEvent(event);
+    setForm(calendarEventToForm(event));
+    setSelectedYear(new Date(`${event.startDate}T00:00:00`).getFullYear());
+    setSelectedMonth(new Date(`${event.startDate}T00:00:00`).getMonth());
+  }
+
+  function selectDate(date: string) {
+    const nextDate = new Date(`${date}T00:00:00`);
+    setSelectedYear(nextDate.getFullYear());
+    setSelectedMonth(nextDate.getMonth());
+    setPreviewEvent(null);
+    setForm(emptyCalendarForm(nextDate.getFullYear(), nextDate.getMonth(), date));
+  }
+
+  function updateForm(field: keyof CalendarFormState, value: string) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function saveEvent(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const title = form.title.trim();
+    if (!title || !form.startDate) return;
+
+    const startDate = form.startDate;
+    const endDate = form.endDate && form.endDate >= startDate ? form.endDate : startDate;
+    const nextEvent: CalendarEvent = {
+      ...form,
+      id: form.id || `event-${Date.now()}`,
+      title,
+      startDate,
+      endDate,
+      notes: form.notes.trim(),
+    };
+    persistEvents(events.filter((item) => item.id !== nextEvent.id).concat(nextEvent));
+    setSelectedYear(new Date(`${nextEvent.startDate}T00:00:00`).getFullYear());
+    setSelectedMonth(new Date(`${nextEvent.startDate}T00:00:00`).getMonth());
+    setPreviewEvent(nextEvent);
+    setForm(calendarEventToForm(nextEvent));
+  }
+
+  function clearForm() {
+    setPreviewEvent(null);
+    setForm(emptyCalendarForm(selectedYear, selectedMonth ?? today.getMonth()));
+  }
+
+  function removeSelectedEvent() {
+    if (!form.id) return;
+    persistEvents(events.filter((event) => event.id !== form.id));
+    clearForm();
+  }
+
+  const displayedEvents = selectedMonth === null
+    ? events.filter((event) => eventOverlapsRange(event, `${selectedYear}-01-01`, `${selectedYear}-12-31`))
+    : eventsForMonth(events, selectedYear, selectedMonth);
 
   return (
-    <SectionPlaceholder
-      emptyDetail={copy.common.readyForComponentExtraction}
-      kicker={copy.calendar.kicker}
-      title={copy.calendar.title}
-      copy={copy.calendar.copy}
-      items={[...copy.calendar.items]}
-    />
+    <div className="panel-stack schedule-calendar">
+      <section className="panel-intro calendar-intro">
+        <div>
+          <span>{copy.calendar}</span>
+          <h2>{copy.scheduleCalendar}</h2>
+          <p>{copy.scheduleCalendarSub}</p>
+        </div>
+        <div className="calendar-toolbar">
+          <button className="icon-button" type="button" onClick={() => setSelectedYear((year) => year - 1)} aria-label="Previous year">
+            ‹
+          </button>
+          <strong>{selectedYear}</strong>
+          <button className="icon-button" type="button" onClick={() => setSelectedYear((year) => year + 1)} aria-label="Next year">
+            ›
+          </button>
+          <button className="secondary-button" type="button" onClick={() => setIsEditorVisible((visible) => !visible)}>
+            {isEditorVisible ? copy.hideEditor : copy.showEditor}
+          </button>
+          <button className="secondary-button" type="button" onClick={() => setSelectedMonth(null)}>
+            {copy.yearView}
+          </button>
+        </div>
+      </section>
+
+      <section className={`calendar-layout${isEditorVisible ? "" : " editor-hidden"}`}>
+        <div className="calendar-main">
+          <div className={`calendar-year-grid${selectedMonth !== null ? " is-condensed" : ""}`}>
+            {Array.from({ length: 12 }, (_, month) => (
+              <CalendarMonthCard
+                key={month}
+                events={events}
+                language={language}
+                month={month}
+                selectedMonth={selectedMonth}
+                selectedYear={selectedYear}
+                onSelectDate={selectDate}
+                onSelectEvent={selectEvent}
+                onSelectMonth={setSelectedMonth}
+              />
+            ))}
+          </div>
+
+          <CalendarMonthDetail
+            copy={copy}
+            events={events}
+            language={language}
+            month={selectedMonth}
+            selectedYear={selectedYear}
+            onSelectDate={selectDate}
+            onSelectEvent={selectEvent}
+          />
+
+          <RtpTimeline
+            copy={copy}
+            events={displayedEvents}
+            language={language}
+            selectedYear={selectedYear}
+            onSelectEvent={selectEvent}
+          />
+        </div>
+
+        {isEditorVisible && (
+          <aside className="calendar-side-panel">
+            <div className="panel-heading compact">
+              <div>
+                <h3>{copy.editEvent}</h3>
+                <span>{copy.editorSub}</span>
+              </div>
+            </div>
+            <form className="calendar-event-form" onSubmit={saveEvent}>
+              <CalendarTextInput label={copy.eventTitle} value={form.title} placeholder="Atlas U21 vs Rival" onChange={(value) => updateForm("title", value)} />
+              <CalendarTextInput label={copy.startDate} type="date" value={form.startDate} onChange={(value) => updateForm("startDate", value)} />
+              <CalendarTextInput label={copy.startTime} type="time" value={form.startTime} onChange={(value) => updateForm("startTime", value)} />
+              <CalendarTextInput label={copy.endDate} type="date" value={form.endDate} onChange={(value) => updateForm("endDate", value)} />
+              <CalendarTextInput label={copy.endTime} type="time" value={form.endTime} onChange={(value) => updateForm("endTime", value)} />
+              <label>
+                <span>{copy.category}</span>
+                <select value={form.category} onChange={(event) => updateForm("category", event.target.value as CalendarEventCategory)}>
+                  {calendarCategories.map((category) => (
+                    <option key={category} value={category}>{copy[category]}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>{copy.department}</span>
+                <select value={form.department} onChange={(event) => updateForm("department", event.target.value as CalendarEventDepartment)}>
+                  {calendarDepartments.map((department) => (
+                    <option key={department} value={department}>{copy[department]}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>{copy.team}</span>
+                <select value={form.team} onChange={(event) => updateForm("team", event.target.value as CalendarTeam)}>
+                  {calendarTeams.map((team) => (
+                    <option key={team} value={team}>{teamLabel(team, language, copy)}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>{copy.notes}</span>
+                <textarea value={form.notes} rows={4} placeholder="Comments, travel notes, staff reminders" onChange={(event) => updateForm("notes", event.target.value)} />
+              </label>
+              <div className="calendar-form-actions">
+                <button className="secondary-button" type="button" onClick={clearForm}>{copy.clear}</button>
+                <button className="secondary-button danger" type="button" onClick={removeSelectedEvent} disabled={!form.id}>{copy.remove}</button>
+                <button className="primary-button" type="submit">{copy.save}</button>
+              </div>
+            </form>
+            <section className="calendar-event-preview">
+              <span>{copy.eventDetails}</span>
+              {previewEvent ? (
+                <>
+                  <h3>{previewEvent.title}</h3>
+                  <p>{formatEventRange(previewEvent, language)} · {copy[previewEvent.category]} · {copy[previewEvent.department]} · {teamLabel(previewEvent.team, language, copy)}</p>
+                  <p>{previewEvent.notes || copy.noNotes}</p>
+                </>
+              ) : (
+                <p>{copy.selectCalendarEvent}</p>
+              )}
+            </section>
+          </aside>
+        )}
+      </section>
+    </div>
   );
+}
+
+function CalendarTextInput({
+  label,
+  onChange,
+  placeholder,
+  type = "text",
+  value,
+}: {
+  label: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+  value: string;
+}) {
+  return (
+    <label>
+      <span>{label}</span>
+      <input type={type} value={value} placeholder={placeholder} onChange={(event: ChangeEvent<HTMLInputElement>) => onChange(event.target.value)} />
+    </label>
+  );
+}
+
+function CalendarMonthCard({
+  events,
+  language,
+  month,
+  selectedMonth,
+  selectedYear,
+  onSelectDate,
+  onSelectEvent,
+  onSelectMonth,
+}: {
+  events: CalendarEvent[];
+  language: Language;
+  month: number;
+  selectedMonth: number | null;
+  selectedYear: number;
+  onSelectDate: (date: string) => void;
+  onSelectEvent: (event: CalendarEvent) => void;
+  onSelectMonth: (month: number) => void;
+}) {
+  const monthEvents = eventsForMonth(events, selectedYear, month);
+  const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
+  const firstDay = new Date(selectedYear, month, 1).getDay();
+
+  return (
+    <article className={`calendar-month-card${selectedMonth === month ? " is-active" : ""}`}>
+      <button className="calendar-month-heading" type="button" onClick={() => onSelectMonth(month)}>
+        <strong>{monthName(selectedYear, month, language, "short")}</strong>
+        <span>{monthEvents.length} {language === "es" ? "eventos" : "events"}</span>
+      </button>
+      <div className="calendar-weekdays">
+        {dayNames(language).map((day) => <span key={day}>{day}</span>)}
+      </div>
+      <div className="calendar-mini-grid">
+        {Array.from({ length: firstDay }, (_, index) => <span key={`blank-${index}`} className="calendar-day is-empty" />)}
+        {Array.from({ length: daysInMonth }, (_, index) => {
+          const day = index + 1;
+          const date = calendarDate(selectedYear, month, day);
+          const dayEvents = eventsForDate(events, date);
+          const intensity = Math.min(4, dayEvents.length);
+          return (
+            <button
+              key={date}
+              className={`calendar-day${dayEvents.length ? " has-events" : ""}${intensity ? ` intensity-${intensity}` : ""}`}
+              type="button"
+              title={dayEvents.map((event) => event.title).join(", ")}
+              onClick={() => onSelectDate(date)}
+            >
+              <span>{day}</span>
+              {dayEvents.length ? <small>{dayEvents.length}</small> : null}
+            </button>
+          );
+        })}
+      </div>
+      {monthEvents.slice(0, 3).map((event) => (
+        <button key={event.id} className="calendar-chip-button" type="button" onClick={() => onSelectEvent(event)}>
+          <CalendarEventChip event={event} />
+        </button>
+      ))}
+    </article>
+  );
+}
+
+function CalendarMonthDetail({
+  copy,
+  events,
+  language,
+  month,
+  selectedYear,
+  onSelectDate,
+  onSelectEvent,
+}: {
+  copy: Record<string, string>;
+  events: CalendarEvent[];
+  language: Language;
+  month: number | null;
+  selectedYear: number;
+  onSelectDate: (date: string) => void;
+  onSelectEvent: (event: CalendarEvent) => void;
+}) {
+  if (month === null) {
+    return (
+      <section className="calendar-month-detail">
+        <p className="empty-profile">{language === "es" ? "Selecciona un mes o una fecha para ver el detalle." : "Select a month or date to open the planning detail."}</p>
+      </section>
+    );
+  }
+
+  const monthEvents = eventsForMonth(events, selectedYear, month);
+  const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
+  const firstDay = new Date(selectedYear, month, 1).getDay();
+
+  return (
+    <section className="calendar-month-detail">
+      <div className="calendar-month-title">
+        <h3>{monthName(selectedYear, month, language, "long")} {selectedYear}</h3>
+        <span>{monthEvents.length} {language === "es" ? "eventos programados" : "scheduled events"}</span>
+      </div>
+      <div className="calendar-weekdays full">
+        {dayNames(language).map((day) => <span key={day}>{day}</span>)}
+      </div>
+      <div className="calendar-month-grid">
+        {Array.from({ length: firstDay }, (_, index) => <span key={`blank-${index}`} className="calendar-date-card is-empty" />)}
+        {Array.from({ length: daysInMonth }, (_, index) => {
+          const day = index + 1;
+          const date = calendarDate(selectedYear, month, day);
+          const dayEvents = eventsForDate(events, date);
+          return (
+            <button key={date} className="calendar-date-card" type="button" onClick={() => onSelectDate(date)}>
+              <strong>{day}</strong>
+              <div>
+                {dayEvents.length
+                  ? dayEvents.map((event) => (
+                    <span key={event.id} role="button" tabIndex={0} onClick={(clickEvent) => { clickEvent.stopPropagation(); onSelectEvent(event); }} onKeyDown={(keyEvent) => { if (keyEvent.key === "Enter") onSelectEvent(event); }}>
+                      <CalendarEventChip event={event} />
+                    </span>
+                  ))
+                  : <span className="calendar-empty-day">{copy.add}</span>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function CalendarEventChip({ event }: { event: CalendarEvent }) {
+  return (
+    <span className={`calendar-event-chip ${event.category}${event.team === "first-team" ? " first-team" : ""}`} title={event.title}>
+      {event.title}
+    </span>
+  );
+}
+
+function RtpTimeline({
+  copy,
+  events,
+  language,
+  selectedYear,
+  onSelectEvent,
+}: {
+  copy: Record<string, string>;
+  events: CalendarEvent[];
+  language: Language;
+  selectedYear: number;
+  onSelectEvent: (event: CalendarEvent) => void;
+}) {
+  const rtpEvents = events.filter((event) => event.category === "rtp").sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+  return (
+    <section className="rtp-timeline-panel">
+      <div className="panel-heading compact">
+        <div>
+          <h3>{copy.rtpTimeline}</h3>
+          <span>{copy.rtpTimelineSub}</span>
+        </div>
+      </div>
+      <div className="rtp-legend">
+        <span className="mild">{copy.mild}</span>
+        <span className="minor">{copy.minor}</span>
+        <span className="moderate">{copy.moderate}</span>
+        <span className="severe">{copy.severe}</span>
+      </div>
+      <div className="rtp-timeline">
+        <div className="rtp-months">
+          <span>{copy.athlete}</span>
+          {Array.from({ length: 12 }, (_, month) => (
+            <span key={month}>{monthName(selectedYear, month, language, "short")}<small>{selectedYear}</small></span>
+          ))}
+        </div>
+        {rtpEvents.length ? rtpEvents.map((event) => {
+          const startMonth = clampMonth(new Date(`${event.startDate}T00:00:00`).getMonth());
+          const endMonth = clampMonth(new Date(`${event.endDate || event.startDate}T00:00:00`).getMonth());
+          const duration = daysBetween(event.startDate, event.endDate);
+          const severity = rtpSeverityClass(duration);
+          return (
+            <div className="rtp-timeline-row" key={event.id}>
+              <button className="rtp-athlete" type="button" onClick={() => onSelectEvent(event)}>
+                {event.title}
+                <small>{teamLabel(event.team, language, copy)}</small>
+              </button>
+              <button
+                className={`rtp-tile ${severity}`}
+                type="button"
+                style={{ gridColumn: `${startMonth + 2} / ${endMonth + 3}` }}
+                onClick={() => onSelectEvent(event)}
+              >
+                <span>{event.title}</span>
+                <small>{formatEventRange(event, language)} · {duration} {copy.days}</small>
+              </button>
+            </div>
+          );
+        }) : <p className="empty-profile">{copy.noRtpEvents}</p>}
+      </div>
+    </section>
+  );
+}
+
+function loadCalendarEvents() {
+  if (typeof window === "undefined") return defaultCalendarEvents;
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(calendarStorageKey) || "null");
+    if (Array.isArray(stored)) {
+      const normalizedEvents = stored.map(normalizeCalendarEvent).filter(Boolean) as CalendarEvent[];
+      const storedIds = new Set(normalizedEvents.map((event) => event.id));
+      return sortCalendarEvents(normalizedEvents.concat(defaultCalendarEvents.filter((event) => !storedIds.has(event.id))));
+    }
+  } catch {
+    // Ignore malformed local calendar storage and reseed defaults.
+  }
+  window.localStorage.setItem(calendarStorageKey, JSON.stringify(defaultCalendarEvents));
+  return defaultCalendarEvents;
+}
+
+function normalizeCalendarEvent(event: Partial<CalendarEvent> & { date?: string }) {
+  const startDate = event.startDate || event.date || "";
+  if (!event.id || !event.title || !startDate) return null;
+  return {
+    id: event.id,
+    title: event.title,
+    startDate,
+    startTime: event.startTime || "",
+    endDate: event.endDate || startDate,
+    endTime: event.endTime || event.startTime || "",
+    category: calendarCategories.includes(event.category as CalendarEventCategory) ? event.category as CalendarEventCategory : "meeting",
+    department: calendarDepartments.includes(event.department as CalendarEventDepartment) ? event.department as CalendarEventDepartment : "performance",
+    team: calendarTeams.includes(event.team as CalendarTeam) ? event.team as CalendarTeam : "first-team",
+    notes: event.notes || "",
+  };
+}
+
+function sortCalendarEvents(events: CalendarEvent[]) {
+  return [...events].sort((a, b) => `${a.startDate} ${a.startTime}`.localeCompare(`${b.startDate} ${b.startTime}`));
+}
+
+function emptyCalendarForm(year: number, month: number, date = calendarDate(year, month, 1)): CalendarFormState {
+  return {
+    id: "",
+    title: "",
+    startDate: date,
+    startTime: "",
+    endDate: date,
+    endTime: "",
+    category: "match",
+    department: "performance",
+    team: "first-team",
+    notes: "",
+  };
+}
+
+function calendarEventToForm(event: CalendarEvent): CalendarFormState {
+  return { ...event };
+}
+
+function calendarDate(year: number, month: number, day: number) {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function eventCoversDate(event: CalendarEvent, date: string) {
+  return event.startDate <= date && (event.endDate || event.startDate) >= date;
+}
+
+function eventOverlapsRange(event: CalendarEvent, rangeStart: string, rangeEnd: string) {
+  return event.startDate <= rangeEnd && (event.endDate || event.startDate) >= rangeStart;
+}
+
+function eventsForDate(events: CalendarEvent[], date: string) {
+  return events.filter((event) => eventCoversDate(event, date));
+}
+
+function eventsForMonth(events: CalendarEvent[], year: number, month: number) {
+  const monthStart = calendarDate(year, month, 1);
+  const monthEnd = calendarDate(year, month, new Date(year, month + 1, 0).getDate());
+  return events.filter((event) => eventOverlapsRange(event, monthStart, monthEnd));
+}
+
+function monthName(year: number, month: number, language: Language, style: "short" | "long") {
+  return new Intl.DateTimeFormat(language === "es" ? "es-MX" : "en-US", { month: style }).format(new Date(year, month, 1));
+}
+
+function dayNames(language: Language) {
+  const baseSunday = new Date(2026, 0, 4);
+  return Array.from({ length: 7 }, (_, index) =>
+    new Intl.DateTimeFormat(language === "es" ? "es-MX" : "en-US", { weekday: "short" }).format(
+      new Date(baseSunday.getFullYear(), baseSunday.getMonth(), baseSunday.getDate() + index),
+    ),
+  );
+}
+
+function teamLabel(team: CalendarTeam, language: Language, copy: Record<string, string>) {
+  if (team === "first-team") return copy.firstTeam;
+  if (language === "es" && team === "u21") return "Sub 21";
+  if (language === "es" && team === "u19") return "Sub 19";
+  if (language === "es" && team === "u17") return "Sub 17";
+  if (language === "es" && team === "u15") return "Sub 15";
+  return team.toUpperCase();
+}
+
+function formatEventRange(event: CalendarEvent, language: Language) {
+  const locale = language === "es" ? "es-MX" : "en-US";
+  const startDate = formatCalendarDate(event.startDate, locale);
+  const endDate = event.endDate && event.endDate !== event.startDate ? formatCalendarDate(event.endDate, locale) : "";
+  const start = [startDate, event.startTime].filter(Boolean).join(" ");
+  const end = [endDate, event.endTime && event.endTime !== event.startTime ? event.endTime : ""].filter(Boolean).join(" ");
+  return end ? `${start} - ${end}` : start;
+}
+
+function formatCalendarDate(date: string, locale: string) {
+  if (!date) return "";
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "2-digit" }).format(new Date(`${date}T00:00:00`));
+}
+
+function daysBetween(startDate: string, endDate: string) {
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate || startDate}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 1;
+  return Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
+}
+
+function rtpSeverityClass(days: number) {
+  if (days <= 3) return "mild";
+  if (days <= 7) return "minor";
+  if (days <= 28) return "moderate";
+  return "severe";
+}
+
+function clampMonth(month: number) {
+  if (Number.isNaN(month)) return 0;
+  return Math.min(11, Math.max(0, month));
 }
 
 function ResourcesPanel({ language }: { language: Language }) {
