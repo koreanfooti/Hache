@@ -1643,7 +1643,7 @@ select:focus-visible {
 
 .calendar-event-chip {
   position: relative;
-  display: -webkit-box;
+  display: block;
   overflow: hidden;
   max-width: 100%;
   margin-top: 4px;
@@ -1656,35 +1656,97 @@ select:focus-visible {
   overflow-wrap: anywhere;
   text-overflow: ellipsis;
   white-space: normal;
+}
+
+.calendar-event-label {
+  display: -webkit-box;
+  overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
 
-.calendar-event-chip[data-tooltip]:hover {
+.calendar-event-chip[data-tooltip]:hover,
+.calendar-event-chip[data-tooltip]:focus-within {
   overflow: visible;
   z-index: 20;
 }
 
-.calendar-event-chip[data-tooltip]:hover::after {
-  content: attr(data-tooltip);
+.calendar-event-tooltip {
   position: absolute;
+  display: grid;
+  gap: 4px;
   left: 0;
   bottom: calc(100% + 8px);
   z-index: 30;
-  width: max-content;
+  min-width: 220px;
   max-width: min(300px, 78vw);
+  opacity: 0;
   padding: 10px 12px;
-  border: 1px solid rgb(215 180 106 / 45%);
+  border: 1px solid rgb(215 180 106 / 34%);
   border-radius: 8px;
-  background: linear-gradient(135deg, rgb(20 8 11 / 98%), rgb(80 9 17 / 96%));
-  box-shadow: 0 16px 44px rgb(0 0 0 / 42%);
+  background:
+    radial-gradient(circle at 12px 12px, rgb(215 180 106 / 18%), transparent 34px),
+    linear-gradient(135deg, rgb(8 5 6 / 96%), rgb(28 10 14 / 96%));
+  box-shadow: 0 16px 32px rgb(0 0 0 / 38%);
   color: #fff;
-  font-size: 0.72rem;
-  font-weight: 850;
+  font-size: 0.76rem;
+  font-weight: 800;
   line-height: 1.35;
   pointer-events: none;
+  transform: translateY(6px) scale(0.98);
+  transform-origin: left bottom;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
   text-transform: none;
-  white-space: pre-line;
+}
+
+.calendar-event-tooltip::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  border-right: 1px solid rgb(215 180 106 / 34%);
+  border-bottom: 1px solid rgb(215 180 106 / 34%);
+  background: rgb(8 5 6 / 96%);
+  transform: rotate(45deg);
+}
+
+.calendar-event-chip[data-tooltip]:hover .calendar-event-tooltip,
+.calendar-event-chip[data-tooltip]:focus-within .calendar-event-tooltip {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.calendar-event-tooltip strong {
+  display: block;
+  padding-right: 16px;
+  color: #fff;
+  font-size: 0.84rem;
+  letter-spacing: 0.01em;
+}
+
+.calendar-event-tooltip strong::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 999px;
+  background: var(--ams-gold);
+  box-shadow: 0 0 14px rgb(215 180 106 / 70%);
+  vertical-align: 1px;
+}
+
+.calendar-event-tooltip span {
+  color: var(--ams-muted);
+}
+
+.calendar-event-tooltip span:nth-child(4),
+.calendar-event-tooltip span:nth-child(5) {
+  color: rgb(255 255 255 / 82%);
 }
 
 .calendar-event-chip.match {

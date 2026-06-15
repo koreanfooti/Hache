@@ -1778,14 +1778,22 @@ function CalendarMonthDetail({
 
 function CalendarEventChip({ event }: { event: CalendarEvent }) {
   const tooltip = event.tooltip || event.notes || event.title;
+  const tooltipLines = tooltip.split("\n").filter(Boolean);
 
   return (
     <span
       className={`calendar-event-chip ${event.category}${event.team === "first-team" ? " first-team" : ""}`}
       data-tooltip={tooltip}
+      tabIndex={0}
       title={tooltip}
     >
-      {event.title}
+      <span className="calendar-event-label">{event.title}</span>
+      <span className="calendar-event-tooltip" aria-hidden="true">
+        <strong>{tooltipLines[0] ?? event.title}</strong>
+        {tooltipLines.slice(1).map((line) => (
+          <span key={line}>{line}</span>
+        ))}
+      </span>
     </span>
   );
 }
