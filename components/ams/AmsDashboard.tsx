@@ -727,8 +727,8 @@ function localizedIntegrationStatus(status: string, language: Language) {
 
 function localizedTravelLoad(load: AtlasTravelContext["travelLoad"], language: Language) {
   const labels = {
-    en: { low: "Low", moderate: "Moderate", high: "High" },
-    es: { low: "Baja", moderate: "Moderada", high: "Alta" },
+    en: { low: "Low", moderate: "Medium", high: "High" },
+    es: { low: "Baja", moderate: "Media", high: "Alta" },
   };
   return labels[language][load];
 }
@@ -746,13 +746,46 @@ function travelLoadScore(load: AtlasTravelContext["travelLoad"]) {
 }
 
 function formatSignedHours(value: number) {
-  if (value === 0) return "TZ +0h";
-  return `TZ ${value > 0 ? "+" : ""}${value}h`;
+  if (value === 0) return "+0h";
+  return `${value > 0 ? "+" : ""}${value}h`;
 }
 
 function formatSignedMeters(value: number) {
   if (value === 0) return "+0m";
   return `${value > 0 ? "+" : ""}${value.toLocaleString()}m`;
+}
+
+function clubLogoPath(team: string) {
+  const logos: Record<string, string> = {
+    "América": "/ams/assets/clubs/1.png",
+    "Atlas": "/ams/assets/clubs/10445.png",
+    "Pachuca": "/ams/assets/clubs/11.png",
+    "Atl. San Luis": "/ams/assets/clubs/11220.svg",
+    "Puebla": "/ams/assets/clubs/11550.png",
+    "Juárez": "/ams/assets/clubs/11790.png",
+    "Mazatlán": "/ams/assets/clubs/12043.png",
+    "Cruz Azul": "/ams/assets/clubs/12566.svg",
+    "Querétaro": "/ams/assets/clubs/13668.png",
+    "Monterrey": "/ams/assets/clubs/14.png",
+    "Santos": "/ams/assets/clubs/14102.png",
+    "Tigres": "/ams/assets/clubs/16.svg",
+    "Toluca": "/ams/assets/clubs/17.png",
+    "Pumas": "/ams/assets/clubs/18.png",
+    "Necaxa": "/ams/assets/clubs/29.png",
+    "Tijuana": "/ams/assets/clubs/5.png",
+    "Guadalajara": "/ams/assets/clubs/7.png",
+    "León": "/ams/assets/clubs/9.png",
+  };
+  return logos[team];
+}
+
+function teamInitials(team: string) {
+  return team
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join("");
 }
 
 function localizedSourceLabel(label: string, language: Language) {
@@ -1602,18 +1635,28 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
 function EnvironmentFixtureCard({ fixture, language }: { fixture: AtlasFixtureFeedItem; language: Language }) {
   const context = fixture.travelContext;
   if (!context) return null;
+  const homeLogo = clubLogoPath(fixture.homeTeam);
+  const awayLogo = clubLogoPath(fixture.awayTeam);
 
   return (
     <article className={`environment-fixture-card ${context.travelLoad}`}>
       <div>
         <span>{fixture.date}{fixture.time ? ` · ${fixture.time}` : ""}</span>
-        <h3>{fixture.homeTeam} vs {fixture.awayTeam}</h3>
+        <h3 className="environment-match-title">
+          <ClubLogo team={fixture.homeTeam} logoPath={homeLogo} />
+          <span>{fixture.homeTeam}</span>
+          <small>vs</small>
+          <ClubLogo team={fixture.awayTeam} logoPath={awayLogo} />
+          <span>{fixture.awayTeam}</span>
+        </h3>
         <p>{fixture.venue} · {fixture.city}, {fixture.country}</p>
       </div>
       <div className="environment-chip-row">
-        <span>{language === "es" ? "Carga" : "Load"}: {localizedTravelLoad(context.travelLoad, language)}</span>
+        <span className={`travel-load-chip ${context.travelLoad}`}>
+          {language === "es" ? "Carga" : "Load"}: {localizedTravelLoad(context.travelLoad, language)}
+        </span>
         <span>{context.distanceKm.toLocaleString()} km</span>
-        <span>{formatSignedHours(context.timezoneDifferenceHours)}</span>
+        <span>TZ {formatSignedHours(context.timezoneDifferenceHours)}</span>
         <span>{context.altitudeMeters.toLocaleString()} m</span>
       </div>
       <dl className="environment-detail-list">
@@ -1635,6 +1678,22 @@ function EnvironmentFixtureCard({ fixture, language }: { fixture: AtlasFixtureFe
         </div>
       </dl>
     </article>
+  );
+}
+
+function ClubLogo({ team, logoPath }: { team: string; logoPath?: string }) {
+  if (logoPath) {
+    return (
+      <span className="environment-club-logo">
+        <Image src={logoPath} alt={`${team} crest`} width={34} height={34} />
+      </span>
+    );
+  }
+
+  return (
+    <span className="environment-club-logo is-placeholder" aria-label={`${team} crest placeholder`}>
+      {teamInitials(team)}
+    </span>
   );
 }
 
