@@ -1069,6 +1069,12 @@ button {
   object-fit: contain;
 }
 
+.environment-competition-badge.liga-mx img {
+  width: 50px;
+  max-width: 50px;
+  max-height: 20px;
+}
+
 .environment-match-title {
   display: flex;
   flex-wrap: wrap;

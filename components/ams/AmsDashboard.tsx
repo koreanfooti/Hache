@@ -179,6 +179,19 @@ type AtlasTravelContext = {
   travelLoad: "low" | "moderate" | "high";
 };
 
+type EnvironmentWeatherPoint = {
+  id: "academy" | "airport";
+  label: string;
+  city: string;
+  altitudeMeters: number;
+  temperatureC: number | null;
+  apparentTemperatureC: number | null;
+  humidityPercent: number | null;
+  windKmh: number | null;
+  condition: string;
+  observedAt: string | null;
+};
+
 const sectionMap: Record<AmsSection, string> = Object.fromEntries(
   navItems.map((item) => [item.id, item.label]),
 ) as Record<AmsSection, string>;
@@ -756,6 +769,40 @@ function formatSignedMeters(value: number) {
   return `${value > 0 ? "+" : ""}${value.toLocaleString()}m`;
 }
 
+function environmentWeatherDetail(point: EnvironmentWeatherPoint | undefined, language: Language, fallback: string) {
+  if (!point) return `${fallback} · ${language === "es" ? "Clima pendiente" : "Weather pending"}`;
+
+  const altitude = `${point.altitudeMeters.toLocaleString()}m`;
+  if (point.temperatureC === null) {
+    return `${point.city} · ${altitude} · ${language === "es" ? "Clima no disponible" : "Weather unavailable"}`;
+  }
+
+  return [
+    point.city,
+    altitude,
+    `${Math.round(point.temperatureC)}°C`,
+    localizedWeatherCondition(point.condition, language),
+    point.humidityPercent !== null ? `${point.humidityPercent}% RH` : "",
+  ].filter(Boolean).join(" · ");
+}
+
+function localizedWeatherCondition(condition: string, language: Language) {
+  if (language === "en") return condition;
+  const conditions: Record<string, string> = {
+    Clear: "Despejado",
+    "Partly cloudy": "Parcialmente nublado",
+    Cloudy: "Nublado",
+    Fog: "Niebla",
+    Drizzle: "Llovizna",
+    Rain: "Lluvia",
+    Snow: "Nieve",
+    Thunderstorm: "Tormenta",
+    Mixed: "Mixto",
+    Unavailable: "No disponible",
+  };
+  return conditions[condition] ?? condition;
+}
+
 function clubLogoPath(team: string) {
   const logos: Record<string, string> = {
     "América": "/ams/assets/clubs/1.png",
@@ -787,6 +834,12 @@ function competitionLogoPath(competition: string) {
   if (competition.includes("Leagues Cup")) return "/ams/assets/competitions/leagues-cup.png";
   if (competition.includes("Liga MX")) return "/ams/assets/competitions/liga-mx.png";
   return undefined;
+}
+
+function competitionSlug(competition: string) {
+  if (competition.includes("Leagues Cup")) return "leagues-cup";
+  if (competition.includes("Liga MX")) return "liga-mx";
+  return "competition";
 }
 
 function teamInitials(team: string) {
@@ -1568,6 +1621,7 @@ function BiographyPanel({ language, selectedPlayer }: { language: Language; sele
 function ExternalFactorsPanel({ language }: { language: Language }) {
   const copy = panelCopy[language];
   const [fixtures, setFixtures] = useState<AtlasFixtureFeedItem[]>([]);
+  const [weatherPoints, setWeatherPoints] = useState<EnvironmentWeatherPoint[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -1582,7 +1636,18 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
       }
     }
 
+    async function loadWeather() {
+      try {
+        const response = await fetch("/api/ams/weather", { cache: "no-store" });
+        const payload = await response.json() as { points?: EnvironmentWeatherPoint[] };
+        if (isMounted) setWeatherPoints(payload.points ?? []);
+      } catch {
+        if (isMounted) setWeatherPoints([]);
+      }
+    }
+
     loadFixtures();
+    loadWeather();
 
     return () => {
       isMounted = false;
@@ -1592,8 +1657,9 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
   const awayFixtures = fixtures
     .filter((fixture) => fixture.travelContext && !fixture.travelContext.isHome)
     .sort((a, b) => a.date.localeCompare(b.date));
-  const nextAwayFixtures = awayFixtures.filter((fixture) => fixture.status === "scheduled").slice(0, 4);
-  const showcaseFixtures = nextAwayFixtures.length ? nextAwayFixtures : awayFixtures.slice(-4);
+  const environmentFixtures = fixtures
+    .filter((fixture) => fixture.travelContext)
+    .sort((a, b) => a.date.localeCompare(b.date));
   const highestLoadFixture = awayFixtures.reduce<AtlasFixtureFeedItem | null>((current, fixture) => {
     if (!fixture.travelContext) return current;
     if (!current?.travelContext) return fixture;
@@ -1603,6 +1669,8 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
   const avgTravelHours = awayFixtures.length
     ? awayFixtures.reduce((total, fixture) => total + (fixture.travelContext?.estimatedTravelHours ?? 0), 0) / awayFixtures.length
     : 0;
+  const academyWeather = weatherPoints.find((point) => point.id === "academy");
+  const airportWeather = weatherPoints.find((point) => point.id === "airport");
 
   return (
     <div className="panel-stack">
@@ -1615,12 +1683,16 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
         <MetricCard
           label={language === "es" ? "Base diaria" : "Daily base"}
           value="Academia AGA"
-          detail="Zapopan, Jalisco"
+          detail={environmentWeatherDetail(academyWeather, language, "Zapopan, Jalisco")}
         />
         <MetricCard
           label={language === "es" ? "Aeropuerto" : "Flight anchor"}
           value="GDL"
-          detail={language === "es" ? "Aeropuerto Internacional de Guadalajara" : "Guadalajara International Airport"}
+          detail={environmentWeatherDetail(
+            airportWeather,
+            language,
+            language === "es" ? "Aeropuerto Internacional de Guadalajara" : "Guadalajara International Airport",
+          )}
         />
         <MetricCard
           label={language === "es" ? "Viaje máximo" : "Max travel"}
@@ -1634,7 +1706,7 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
         />
       </section>
       <section className="environment-fixture-grid">
-        {showcaseFixtures.map((fixture) => (
+        {environmentFixtures.map((fixture) => (
           <EnvironmentFixtureCard fixture={fixture} language={language} key={fixture.id} />
         ))}
       </section>
@@ -1655,7 +1727,7 @@ function EnvironmentFixtureCard({ fixture, language }: { fixture: AtlasFixtureFe
         <div className="environment-card-meta">
           <span>{fixture.date}{fixture.time ? ` · ${fixture.time}` : ""}</span>
           {competitionLogo ? (
-            <span className="environment-competition-badge">
+            <span className={`environment-competition-badge ${competitionSlug(fixture.competition)}`}>
               <Image src={competitionLogo} alt={`${fixture.competition} logo`} width={74} height={26} />
             </span>
           ) : null}
