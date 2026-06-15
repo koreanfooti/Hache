@@ -110,6 +110,8 @@ type CalendarEvent = {
   source?: string;
   sourceUrl?: string;
   tooltip?: string;
+  venue?: string;
+  location?: string;
 };
 
 type CalendarFormState = Omit<CalendarEvent, "id"> & {
@@ -127,6 +129,10 @@ type AtlasFixtureFeedItem = {
   status: "finished" | "scheduled";
   score?: string;
   aggregate?: string;
+  venue?: string;
+  city?: string;
+  country?: string;
+  location?: string;
 };
 
 const sectionMap: Record<AmsSection, string> = Object.fromEntries(
@@ -1609,6 +1615,7 @@ function CalendarPanel({ language }: { language: Language }) {
                 <>
                   <h3>{previewEvent.title}</h3>
                   <p>{formatEventRange(previewEvent, language)} · {copy[previewEvent.category]} · {copy[previewEvent.department]} · {teamLabel(previewEvent.team, language, copy)}</p>
+                  {previewEvent.venue ? <p>{previewEvent.venue}{previewEvent.location ? ` · ${previewEvent.location}` : ""}</p> : null}
                   <p>{previewEvent.notes || copy.noNotes}</p>
                 </>
               ) : (
@@ -1867,12 +1874,19 @@ function atlasFixtureToCalendarEvent(fixture: AtlasFixtureFeedItem): CalendarEve
   const title = `${fixture.homeTeam} vs ${fixture.awayTeam}`;
   const scoreLine = fixture.score ? `Result: ${fixture.score}` : "Scheduled";
   const aggregateLine = fixture.aggregate ? ` · ${fixture.aggregate}` : "";
-  const notes = `${fixture.competition} · ${fixture.round} · ${scoreLine}${aggregateLine}`;
+  const location = fixture.location || [fixture.city, fixture.country].filter(Boolean).join(", ");
+  const venueLine = fixture.venue ? `Venue: ${fixture.venue}${location ? ` · ${location}` : ""}` : "";
+  const notes = [
+    `${fixture.competition} · ${fixture.round}`,
+    scoreLine + aggregateLine,
+    venueLine,
+  ].filter(Boolean).join(" · ");
   const tooltip = [
     title,
     `${fixture.competition} · ${fixture.round}`,
     fixture.time ? `${fixture.date} ${fixture.time}` : fixture.date,
     scoreLine,
+    venueLine,
     "Team: First Team",
   ].filter(Boolean).join("\n");
 
@@ -1890,6 +1904,8 @@ function atlasFixtureToCalendarEvent(fixture: AtlasFixtureFeedItem): CalendarEve
     source: "atlas-fixtures-api",
     sourceUrl: "/api/atlas/fixtures",
     tooltip,
+    venue: fixture.venue,
+    location,
   };
 }
 
@@ -1922,6 +1938,8 @@ function normalizeCalendarEvent(event: Partial<CalendarEvent> & { date?: string 
     source: event.source,
     sourceUrl: event.sourceUrl,
     tooltip: event.tooltip,
+    venue: event.venue,
+    location: event.location,
   };
 }
 

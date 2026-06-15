@@ -11,6 +11,29 @@ export type AtlasFixture = {
   aggregate?: string;
 };
 
+export type AtlasVenue = {
+  venue: string;
+  city: string;
+  country: string;
+};
+
+export const atlasVenueByHomeTeam: Record<string, AtlasVenue> = {
+  "Atl. San Luis": { venue: "Estadio Alfonso Lastras", city: "San Luis Potosi", country: "Mexico" },
+  "América": { venue: "Estadio Ciudad de los Deportes", city: "Mexico City", country: "Mexico" },
+  "Atlas": { venue: "Estadio Jalisco", city: "Guadalajara", country: "Mexico" },
+  "Charlotte FC": { venue: "Bank of America Stadium", city: "Charlotte, NC", country: "United States" },
+  "Cincinnati": { venue: "TQL Stadium", city: "Cincinnati, OH", country: "United States" },
+  "Columbus Crew": { venue: "Lower.com Field", city: "Columbus, OH", country: "United States" },
+  "Cruz Azul": { venue: "Estadio Olimpico Universitario", city: "Mexico City", country: "Mexico" },
+  "Juárez": { venue: "Estadio Olimpico Benito Juarez", city: "Ciudad Juarez", country: "Mexico" },
+  "León": { venue: "Estadio Leon", city: "Leon", country: "Mexico" },
+  "Necaxa": { venue: "Estadio Victoria", city: "Aguascalientes", country: "Mexico" },
+  "Pachuca": { venue: "Estadio Hidalgo", city: "Pachuca", country: "Mexico" },
+  "Santos": { venue: "Estadio Corona", city: "Torreon", country: "Mexico" },
+  "Tijuana": { venue: "Estadio Caliente", city: "Tijuana", country: "Mexico" },
+  "Toluca": { venue: "Estadio Nemesio Diez", city: "Toluca", country: "Mexico" },
+};
+
 export const atlasFirstTeamFixtures: AtlasFixture[] = [
   {
     id: "ligamx-cl26-j01-atlas-puebla",
