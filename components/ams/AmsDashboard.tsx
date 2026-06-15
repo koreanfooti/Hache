@@ -91,6 +91,17 @@ type SourceData = {
   status: string;
 };
 
+type RawSourcePreview = {
+  label: string;
+  path: string;
+  columns: string[];
+  rows: Record<string, unknown>[];
+  rowCount: number;
+  totalRows?: number;
+  truncated: boolean;
+  error?: string;
+};
+
 type Language = "en" | "es";
 type CalendarEventCategory = "match" | "training" | "testing" | "medical" | "rtp" | "travel" | "meeting";
 type CalendarEventDepartment = "performance" | "medical" | "technical" | "nutrition" | "academy";
@@ -885,7 +896,9 @@ export default function AmsDashboard() {
           {activeSection === "external" && <ExternalFactorsPanel language={language} />}
           {activeSection === "calendar" && <CalendarPanel language={language} />}
           {activeSection === "resources" && <ResourcesPanel language={language} />}
-          {activeSection === "settings" && <SettingsPanel language={language} />}
+          {activeSection === "settings" && (
+            <SettingsPanel language={language} loadSummary={loadSummary} sourceData={sourceData} />
+          )}
         </section>
       </div>
     </main>
@@ -2065,8 +2078,46 @@ function ResourcesPanel({ language }: { language: Language }) {
   );
 }
 
-function SettingsPanel({ language }: { language: Language }) {
+function SettingsPanel({
+  language,
+  loadSummary,
+  sourceData,
+}: {
+  language: Language;
+  loadSummary: LoadSummary;
+  sourceData: SourceData;
+}) {
   const copy = panelCopy[language];
+  const [activePreview, setActivePreview] = useState<RawSourcePreview | null>(null);
+  const [loadingPath, setLoadingPath] = useState<string | null>(null);
+
+  async function openSourcePreview(source: (typeof dataSources)[number]) {
+    setLoadingPath(source.path);
+    setActivePreview(null);
+
+    try {
+      const response = await fetch(`/api/ams/source-preview?path=${encodeURIComponent(source.path)}`);
+      const payload = (await response.json()) as RawSourcePreview;
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Unable to open source preview.");
+      }
+
+      setActivePreview(payload);
+    } catch (error) {
+      setActivePreview({
+        label: source.label,
+        path: source.path,
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        truncated: false,
+        error: error instanceof Error ? error.message : "Unable to open source preview.",
+      });
+    } finally {
+      setLoadingPath(null);
+    }
+  }
 
   return (
     <div className="panel-stack">
@@ -2077,14 +2128,95 @@ function SettingsPanel({ language }: { language: Language }) {
       />
       <section className="source-table">
         {dataSources.map((source) => (
-          <div key={source.path}>
-            <strong>{localizedSourceLabel(source.label, language)}</strong>
-            <code>{source.path}</code>
-          </div>
+          <article className="source-row" key={source.path}>
+            <div className="source-meta">
+              <strong>{localizedSourceLabel(source.label, language)}</strong>
+              <code>{source.path}</code>
+            </div>
+            <div className="source-actions">
+              <span>{sourceRecordLabel(source.path, loadSummary, sourceData, language)}</span>
+              <button
+                className="source-open-button"
+                type="button"
+                onClick={() => openSourcePreview(source)}
+                disabled={loadingPath === source.path}
+              >
+                {loadingPath === source.path
+                  ? language === "es" ? "Cargando..." : "Loading..."
+                  : language === "es" ? "Abrir fuente" : "Open Source"}
+              </button>
+            </div>
+          </article>
         ))}
       </section>
+      {activePreview && (
+        <section className="raw-source-view">
+          <div className="panel-heading compact">
+            <div>
+              <span>{language === "es" ? "Vista de fuente" : "Source Preview"}</span>
+              <h3>{localizedSourceLabel(activePreview.label, language)}</h3>
+            </div>
+            <code>{activePreview.path}</code>
+          </div>
+          {activePreview.error ? (
+            <p className="empty-profile">{activePreview.error}</p>
+          ) : (
+            <>
+              <p>
+                {language === "es" ? "Mostrando" : "Showing"} {activePreview.rowCount}
+                {activePreview.totalRows ? ` / ${compactNumber(activePreview.totalRows)}` : ""}{" "}
+                {language === "es" ? "filas" : "rows"}
+                {activePreview.truncated ? ` (${language === "es" ? "vista previa limitada" : "preview limited"})` : ""}.
+              </p>
+              <div className="raw-table-wrap">
+                <table className="raw-data-table">
+                  <thead>
+                    <tr>
+                      {activePreview.columns.map((column) => (
+                        <th key={column}>{column}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activePreview.rows.map((row, index) => (
+                      <tr key={`${activePreview.path}-${index}`}>
+                        {activePreview.columns.map((column) => (
+                          <td key={column}>{formatRawValue(row[column])}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </section>
+      )}
     </div>
   );
+}
+
+function sourceRecordLabel(path: string, loadSummary: LoadSummary, sourceData: SourceData, language: Language) {
+  const knownCounts: Record<string, number> = {
+    "/ams/data/clean/gps/gps_player_daily_current_roster.json": loadSummary.rows.length,
+    "/ams/data/clean/injuries/injury_history_clean.json": sourceData.injuries.length,
+    "/ams/data/clean/body_comp/body_comp_clean.json": sourceData.bodyComp.length,
+    "/ams/data/clean/tests/fms_assessments_clean.json": sourceData.fms.length,
+    "/ams/data/clean/tests/y_balance_assessments_clean.json": sourceData.yBalance.length,
+  };
+
+  const count = knownCounts[path];
+  if (typeof count === "number") {
+    return `${compactNumber(count)} ${language === "es" ? "registros cargados" : "loaded records"}`;
+  }
+
+  return language === "es" ? "Disponible para vista previa" : "Available for preview";
+}
+
+function formatRawValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
 }
 
 function DataList({
