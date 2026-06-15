@@ -107,10 +107,26 @@ type CalendarEvent = {
   department: CalendarEventDepartment;
   team: CalendarTeam;
   notes: string;
+  source?: string;
+  sourceUrl?: string;
+  tooltip?: string;
 };
 
 type CalendarFormState = Omit<CalendarEvent, "id"> & {
   id: string;
+};
+
+type AtlasFixtureFeedItem = {
+  id: string;
+  competition: string;
+  round: string;
+  date: string;
+  time: string;
+  homeTeam: string;
+  awayTeam: string;
+  status: "finished" | "scheduled";
+  score?: string;
+  aggregate?: string;
 };
 
 const sectionMap: Record<AmsSection, string> = Object.fromEntries(
@@ -231,6 +247,7 @@ const calendarCopy = {
     firstTeam: "First Team",
     hideEditor: "Hide Editor",
     match: "Match",
+    matchFeed: "First team match feed",
     medical: "Medical",
     meeting: "Meeting",
     mild: "Mild (1-3d)",
@@ -278,6 +295,7 @@ const calendarCopy = {
     firstTeam: "Primer Equipo",
     hideEditor: "Ocultar editor",
     match: "Partido",
+    matchFeed: "Feed de partidos del primer equipo",
     medical: "Médico",
     meeting: "Reunión",
     mild: "Leve (1-3d)",
@@ -310,78 +328,6 @@ const calendarCopy = {
 } satisfies Record<Language, Record<string, string>>;
 
 const defaultCalendarEvents: CalendarEvent[] = [
-  {
-    id: "ligamx-151212",
-    title: "Atlas vs Puebla F.C.",
-    startDate: "2026-01-09",
-    startTime: "21:00",
-    endDate: "2026-01-09",
-    endTime: "21:00",
-    category: "match",
-    department: "technical",
-    team: "first-team",
-    notes: "Liga MX Clausura 2026 · Jornada 1 · Calificación · Estadio Jalisco · Resultado: Atlas 1-0 Puebla F.C. · Match ID: 151212",
-  },
-  {
-    id: "ligamx-151225",
-    title: "Cruz Azul vs Atlas",
-    startDate: "2026-01-14",
-    startTime: "17:00",
-    endDate: "2026-01-14",
-    endTime: "17:00",
-    category: "match",
-    department: "technical",
-    team: "first-team",
-    notes: "Liga MX Clausura 2026 · Jornada 2 · Calificación · Estadio Cuauhtémoc · Resultado: Cruz Azul 2-0 Atlas · Match ID: 151225",
-  },
-  {
-    id: "ligamx-151274",
-    title: "Atlas vs Universidad Nacional",
-    startDate: "2026-02-07",
-    startTime: "19:05",
-    endDate: "2026-02-07",
-    endTime: "19:05",
-    category: "match",
-    department: "technical",
-    team: "first-team",
-    notes: "Liga MX Clausura 2026 · Jornada 5 · Estadio Jalisco · Resultado: Atlas 2-2 Universidad Nacional.",
-  },
-  {
-    id: "ligamx-151341",
-    title: "Atlas vs Guadalajara",
-    startDate: "2026-03-07",
-    startTime: "19:05",
-    endDate: "2026-03-07",
-    endTime: "19:05",
-    category: "match",
-    department: "technical",
-    team: "first-team",
-    notes: "Liga MX Clausura 2026 · Jornada 10 · Estadio Jalisco · Resultado: Atlas 1-2 Guadalajara.",
-  },
-  {
-    id: "ligamx-151425",
-    title: "Atlas vs Tigres de la U.A.N.L.",
-    startDate: "2026-04-22",
-    startTime: "19:00",
-    endDate: "2026-04-22",
-    endTime: "19:00",
-    category: "match",
-    department: "technical",
-    team: "first-team",
-    notes: "Liga MX Clausura 2026 · Jornada 16 · Estadio Jalisco · Resultado: Atlas 0-0 Tigres.",
-  },
-  {
-    id: "ligamx-154755",
-    title: "Cruz Azul vs Atlas",
-    startDate: "2026-05-09",
-    startTime: "21:15",
-    endDate: "2026-05-09",
-    endTime: "21:15",
-    category: "match",
-    department: "technical",
-    team: "first-team",
-    notes: "Liga MX Clausura 2026 · Cuartos Vuelta · Fase Final · Estadio Banorte · Resultado: Cruz Azul 1-0 Atlas.",
-  },
   {
     id: "rtp-example-gustavo-hamstring",
     title: "Gustavo Ferrareis RTP - Hamstring",
@@ -1458,6 +1404,33 @@ function CalendarPanel({ language }: { language: Language }) {
   const [previewEvent, setPreviewEvent] = useState<CalendarEvent | null>(null);
   const [form, setForm] = useState<CalendarFormState>(() => emptyCalendarForm(today.getFullYear(), today.getMonth()));
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFixtureFeed() {
+      try {
+        const response = await fetch("/api/atlas/fixtures", { cache: "no-store" });
+        if (!response.ok) return;
+        const payload = await response.json() as { fixtures?: AtlasFixtureFeedItem[] };
+        const fixtureEvents = (payload.fixtures ?? []).map(atlasFixtureToCalendarEvent);
+        if (!cancelled) {
+          setEvents((currentEvents) => {
+            const nextEvents = mergeFixtureEvents(currentEvents, fixtureEvents);
+            window.localStorage.setItem(calendarStorageKey, JSON.stringify(nextEvents));
+            return nextEvents;
+          });
+        }
+      } catch {
+        // Keep local calendar events available even if the fixture feed is offline.
+      }
+    }
+
+    loadFixtureFeed();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   function persistEvents(nextEvents: CalendarEvent[]) {
     const sortedEvents = sortCalendarEvents(nextEvents);
     setEvents(sortedEvents);
@@ -1797,8 +1770,14 @@ function CalendarMonthDetail({
 }
 
 function CalendarEventChip({ event }: { event: CalendarEvent }) {
+  const tooltip = event.tooltip || event.notes || event.title;
+
   return (
-    <span className={`calendar-event-chip ${event.category}${event.team === "first-team" ? " first-team" : ""}`} title={event.title}>
+    <span
+      className={`calendar-event-chip ${event.category}${event.team === "first-team" ? " first-team" : ""}`}
+      data-tooltip={tooltip}
+      title={tooltip}
+    >
       {event.title}
     </span>
   );
@@ -1884,6 +1863,48 @@ function loadCalendarEvents() {
   return defaultCalendarEvents;
 }
 
+function atlasFixtureToCalendarEvent(fixture: AtlasFixtureFeedItem): CalendarEvent {
+  const title = `${fixture.homeTeam} vs ${fixture.awayTeam}`;
+  const scoreLine = fixture.score ? `Result: ${fixture.score}` : "Scheduled";
+  const aggregateLine = fixture.aggregate ? ` · ${fixture.aggregate}` : "";
+  const notes = `${fixture.competition} · ${fixture.round} · ${scoreLine}${aggregateLine}`;
+  const tooltip = [
+    title,
+    `${fixture.competition} · ${fixture.round}`,
+    fixture.time ? `${fixture.date} ${fixture.time}` : fixture.date,
+    scoreLine,
+    "Team: First Team",
+  ].filter(Boolean).join("\n");
+
+  return {
+    id: `atlas-fixture-${fixture.id}`,
+    title,
+    startDate: fixture.date,
+    startTime: fixture.time,
+    endDate: fixture.date,
+    endTime: fixture.time,
+    category: "match",
+    department: "technical",
+    team: "first-team",
+    notes,
+    source: "atlas-fixtures-api",
+    sourceUrl: "/api/atlas/fixtures",
+    tooltip,
+  };
+}
+
+function mergeFixtureEvents(currentEvents: CalendarEvent[], fixtureEvents: CalendarEvent[]) {
+  const fixtureIds = new Set(fixtureEvents.map((event) => event.id));
+  const userEvents = currentEvents.filter(
+    (event) => event.source !== "atlas-fixtures-api" && !fixtureIds.has(event.id) && !isLegacyAtlasFixture(event),
+  );
+  return sortCalendarEvents(userEvents.concat(fixtureEvents));
+}
+
+function isLegacyAtlasFixture(event: CalendarEvent) {
+  return event.category === "match" && event.team === "first-team" && /^ligamx-\d+$/.test(event.id);
+}
+
 function normalizeCalendarEvent(event: Partial<CalendarEvent> & { date?: string }) {
   const startDate = event.startDate || event.date || "";
   if (!event.id || !event.title || !startDate) return null;
@@ -1898,6 +1919,9 @@ function normalizeCalendarEvent(event: Partial<CalendarEvent> & { date?: string 
     department: calendarDepartments.includes(event.department as CalendarEventDepartment) ? event.department as CalendarEventDepartment : "performance",
     team: calendarTeams.includes(event.team as CalendarTeam) ? event.team as CalendarTeam : "first-team",
     notes: event.notes || "",
+    source: event.source,
+    sourceUrl: event.sourceUrl,
+    tooltip: event.tooltip,
   };
 }
 

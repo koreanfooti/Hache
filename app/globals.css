@@ -1642,6 +1642,7 @@ select:focus-visible {
 }
 
 .calendar-event-chip {
+  position: relative;
   display: -webkit-box;
   overflow: hidden;
   max-width: 100%;
@@ -1657,6 +1658,33 @@ select:focus-visible {
   white-space: normal;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.calendar-event-chip[data-tooltip]:hover {
+  overflow: visible;
+  z-index: 20;
+}
+
+.calendar-event-chip[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 30;
+  width: max-content;
+  max-width: min(300px, 78vw);
+  padding: 10px 12px;
+  border: 1px solid rgb(215 180 106 / 45%);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgb(20 8 11 / 98%), rgb(80 9 17 / 96%));
+  box-shadow: 0 16px 44px rgb(0 0 0 / 42%);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1.35;
+  pointer-events: none;
+  text-transform: none;
+  white-space: pre-line;
 }
 
 .calendar-event-chip.match {
