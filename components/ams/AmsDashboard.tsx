@@ -4,6 +4,7 @@ import Image from "next/image";
 import { type CSSProperties, type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import {
   type AmsSection,
+  type Player,
   dataSources,
   integrationCards,
   metricDefinitions,
@@ -11,7 +12,7 @@ import {
   players,
   sampleGpsRows,
 } from "@/lib/ams/content";
-import { compactNumber, type GpsDailyRow, loadJson, numberValue } from "@/lib/ams/data";
+import { compactNumber, type GpsDailyRow, loadCsv, loadJson, numberValue } from "@/lib/ams/data";
 
 type CleanGpsRow = GpsDailyRow & {
   amsId?: string;
@@ -42,6 +43,7 @@ type InjuryRow = {
 
 type BodyCompRow = {
   playerName?: string;
+  player_name?: string;
   category?: string;
   testDate?: string;
   weightKg?: number;
@@ -74,6 +76,15 @@ type YBalanceAssessmentRow = {
   riskFlag?: string;
 };
 
+type SyncAuditRow = {
+  amsId?: string;
+  source?: string;
+  hasData?: string;
+  lastUpdated?: string;
+  recordCount?: string;
+  notes?: string;
+};
+
 type LoadSummary = {
   rows: CleanGpsRow[];
   totalDistance: number;
@@ -88,6 +99,7 @@ type SourceData = {
   bodyComp: BodyCompRow[];
   fms: FmsAssessmentRow[];
   yBalance: YBalanceAssessmentRow[];
+  syncAudit: SyncAuditRow[];
   status: string;
 };
 
@@ -682,6 +694,7 @@ function localizedIntegrationStatus(status: string, language: Language) {
 function localizedSourceLabel(label: string, language: Language) {
   if (language === "en") return label;
   const labels: Record<string, string> = {
+    "Sync audit": "Auditoría de sincronización",
     "GPS daily rollup": "Resumen diario GPS",
     "Current roster GPS": "GPS de plantilla actual",
     "Injury history": "Historial de lesiones",
@@ -716,6 +729,7 @@ export default function AmsDashboard() {
     bodyComp: [],
     fms: [],
     yBalance: [],
+    syncAudit: [],
     status: "Loading clean AMS modules...",
   });
 
@@ -829,11 +843,12 @@ export default function AmsDashboard() {
     let cancelled = false;
 
     async function loadModules() {
-      const [injuries, bodyComp, fms, yBalance] = await Promise.all([
+      const [injuries, bodyComp, fms, yBalance, syncAudit] = await Promise.all([
         loadJson<InjuryRow>("/ams/data/clean/injuries/injury_history_clean.json").catch(() => []),
         loadJson<BodyCompRow>("/ams/data/clean/body_comp/body_comp_clean.json").catch(() => []),
         loadJson<FmsAssessmentRow>("/ams/data/clean/tests/fms_assessments_clean.json").catch(() => []),
         loadJson<YBalanceAssessmentRow>("/ams/data/clean/tests/y_balance_assessments_clean.json").catch(() => []),
+        loadCsv<SyncAuditRow>("/ams/data/clean/sync_audit.csv").catch(() => []),
       ]);
 
       if (cancelled) return;
@@ -843,7 +858,8 @@ export default function AmsDashboard() {
         bodyComp,
         fms,
         yBalance,
-        status: `Loaded ${compactNumber(injuries.length + bodyComp.length + fms.length + yBalance.length)} clean module records.`,
+        syncAudit,
+        status: `Loaded ${compactNumber(injuries.length + bodyComp.length + fms.length + yBalance.length + syncAudit.length)} clean module records.`,
       });
     }
 
@@ -2090,6 +2106,8 @@ function SettingsPanel({
   const copy = panelCopy[language];
   const [activePreview, setActivePreview] = useState<RawSourcePreview | null>(null);
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
+  const [previewZoom, setPreviewZoom] = useState(100);
+  const registryRows = buildPlayerRegistryRows(loadSummary, sourceData);
 
   async function openSourcePreview(source: (typeof dataSources)[number]) {
     setLoadingPath(source.path);
@@ -2149,6 +2167,40 @@ function SettingsPanel({
           </article>
         ))}
       </section>
+      <section className="player-registry-panel">
+        <div className="panel-heading compact">
+          <div>
+            <span>{language === "es" ? "Conexiones por jugador" : "Player Source Connections"}</span>
+            <h3>{language === "es" ? "Registro de jugadores" : "Player Registry"}</h3>
+          </div>
+          <strong>
+            {Math.round(registryRows.reduce((total, row) => total + row.percent, 0) / Math.max(registryRows.length, 1))}%
+            {" "}
+            {language === "es" ? "promedio" : "avg"}
+          </strong>
+        </div>
+        <div className="registry-list">
+          {registryRows.map((row) => (
+            <article className="registry-player-row" key={row.player.amsId}>
+              <div className="registry-player-main">
+                <span className="registry-number">{row.player.number || "—"}</span>
+                <div>
+                  <strong>{row.player.name}</strong>
+                  <small>{row.player.amsId} · {localizedValue(row.player.position, language)}</small>
+                </div>
+              </div>
+              <div className="source-chips">
+                {row.sources.map((source) => (
+                  <span className={`status-chip ${source.tone}`} key={`${row.player.amsId}-${source.label}`}>
+                    {localizedRegistrySource(source.label, language)}
+                  </span>
+                ))}
+              </div>
+              <SyncMeter row={row} language={language} />
+            </article>
+          ))}
+        </div>
+      </section>
       {activePreview && (
         <section className="raw-source-view">
           <div className="panel-heading compact">
@@ -2168,8 +2220,19 @@ function SettingsPanel({
                 {language === "es" ? "filas" : "rows"}
                 {activePreview.truncated ? ` (${language === "es" ? "vista previa limitada" : "preview limited"})` : ""}.
               </p>
+              <div className="raw-zoom-controls">
+                <span>{language === "es" ? "Zoom de tabla" : "Table zoom"}: {previewZoom}%</span>
+                <button type="button" onClick={() => setPreviewZoom((value) => Math.max(70, value - 10))}>−</button>
+                <button type="button" onClick={() => setPreviewZoom(100)}>
+                  {language === "es" ? "Restablecer" : "Reset"}
+                </button>
+                <button type="button" onClick={() => setPreviewZoom((value) => Math.min(160, value + 10))}>+</button>
+              </div>
               <div className="raw-table-wrap">
-                <table className="raw-data-table">
+                <table
+                  className="raw-data-table"
+                  style={{ fontSize: `${(previewZoom / 100) * 0.76}rem` } as CSSProperties}
+                >
                   <thead>
                     <tr>
                       {activePreview.columns.map((column) => (
@@ -2203,6 +2266,7 @@ function sourceRecordLabel(path: string, loadSummary: LoadSummary, sourceData: S
     "/ams/data/clean/body_comp/body_comp_clean.json": sourceData.bodyComp.length,
     "/ams/data/clean/tests/fms_assessments_clean.json": sourceData.fms.length,
     "/ams/data/clean/tests/y_balance_assessments_clean.json": sourceData.yBalance.length,
+    "/ams/data/clean/sync_audit.csv": sourceData.syncAudit.length,
   };
 
   const count = knownCounts[path];
@@ -2217,6 +2281,104 @@ function formatRawValue(value: unknown) {
   if (value === null || value === undefined || value === "") return "—";
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
+}
+
+type RegistryTone = "synced" | "partial" | "pending";
+type RegistrySource = { label: string; tone: RegistryTone };
+type PlayerRegistryRow = {
+  player: Player;
+  sources: RegistrySource[];
+  percent: number;
+  connectedCount: number;
+  totalCount: number;
+  tone: RegistryTone;
+};
+
+function SyncMeter({ row, language }: { row: PlayerRegistryRow; language: Language }) {
+  const label = row.tone === "synced"
+    ? language === "es" ? "conectado" : "synced"
+    : row.tone === "partial"
+      ? language === "es" ? "parcial" : "partial"
+      : language === "es" ? "pendiente" : "pending";
+
+  return (
+    <div className={`sync-meter ${row.tone}`} aria-label={`${row.percent}% ${label}`}>
+      <div className="sync-meter-top">
+        <strong>{row.percent}%</strong>
+        <span>{label}</span>
+      </div>
+      <div className="sync-meter-track">
+        <span style={{ width: `${row.percent}%` }} />
+      </div>
+      <small>{row.connectedCount} / {row.totalCount} {language === "es" ? "fuentes" : "sources"}</small>
+    </div>
+  );
+}
+
+function buildPlayerRegistryRows(loadSummary: LoadSummary, sourceData: SourceData): PlayerRegistryRow[] {
+  return players.map((player) => {
+    const auditSources = ["Bio", "Photo", "LigaMX", "SofaScore", "Match", "Sessions"].map((source) => ({
+      label: source,
+      tone: auditSourceTone(sourceData.syncAudit, player.amsId, source),
+    }));
+
+    const bodyCompMatch = sourceData.bodyComp.some((row) => normalizeIdentityName(row.playerName ?? row.player_name) === normalizeIdentityName(player.name));
+    const sourceChecks: RegistrySource[] = [
+      ...auditSources,
+      { label: "WIMU/GPS", tone: loadSummary.rows.some((row) => row.amsId === player.amsId) ? "synced" : "pending" },
+      { label: "Injury", tone: sourceData.injuries.some((row) => row.amsId === player.amsId || normalizeIdentityName(row.playerName) === normalizeIdentityName(player.name)) ? "synced" : "pending" },
+      { label: "Body Comp", tone: bodyCompMatch ? "synced" : "pending" },
+      { label: "FMS", tone: sourceData.fms.some((row) => row.amsId === player.amsId) ? "synced" : "pending" },
+      { label: "Y Balance", tone: sourceData.yBalance.some((row) => row.amsId === player.amsId) ? "synced" : "pending" },
+    ];
+
+    const connectedCount = sourceChecks.filter((source) => source.tone === "synced").length;
+    const partialCount = sourceChecks.filter((source) => source.tone === "partial").length;
+    const percent = Math.round(((connectedCount + partialCount * 0.5) / sourceChecks.length) * 100);
+    const tone: RegistryTone = percent >= 85 ? "synced" : percent >= 45 ? "partial" : "pending";
+
+    return {
+      player,
+      sources: sourceChecks,
+      percent,
+      connectedCount,
+      totalCount: sourceChecks.length,
+      tone,
+    };
+  }).sort((a, b) => b.percent - a.percent || a.player.name.localeCompare(b.player.name));
+}
+
+function auditSourceTone(syncAudit: SyncAuditRow[], amsId: string, source: string): RegistryTone {
+  const row = syncAudit.find((item) => item.amsId === amsId && item.source === source);
+  if (!row) return "pending";
+  if (String(row.hasData).toLowerCase() === "true") return "synced";
+  return Number(row.recordCount ?? 0) > 0 ? "partial" : "pending";
+}
+
+function localizedRegistrySource(label: string, language: Language) {
+  if (language === "en") return label;
+  const labels: Record<string, string> = {
+    Bio: "Bio",
+    Photo: "Foto",
+    LigaMX: "LigaMX",
+    SofaScore: "SofaScore",
+    Match: "Partidos",
+    Sessions: "Sesiones",
+    "WIMU/GPS": "WIMU/GPS",
+    Injury: "Lesiones",
+    "Body Comp": "Comp. corporal",
+    FMS: "FMS",
+    "Y Balance": "Y Balance",
+  };
+  return labels[label] ?? label;
+}
+
+function normalizeIdentityName(value: string | undefined) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/gi, "")
+    .toLowerCase();
 }
 
 function DataList({

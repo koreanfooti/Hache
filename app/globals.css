@@ -883,6 +883,206 @@ button {
   font-size: 0.86rem;
 }
 
+.raw-zoom-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.raw-zoom-controls span {
+  color: var(--ams-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.raw-zoom-controls button {
+  min-width: 36px;
+  border: 1px solid rgb(215 180 106 / 35%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 6%);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 950;
+  padding: 7px 10px;
+}
+
+.player-registry-panel {
+  overflow: hidden;
+  padding: 18px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 0 0, rgb(215 180 106 / 11%), transparent 34%),
+    linear-gradient(135deg, rgb(16 9 12 / 94%), rgb(25 9 13 / 88%));
+  box-shadow: var(--ams-shadow);
+}
+
+.player-registry-panel .panel-heading > strong {
+  color: var(--ams-gold);
+  font-size: 1rem;
+}
+
+.registry-list {
+  display: grid;
+  gap: 10px;
+}
+
+.registry-player-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(280px, 1.6fr) 180px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 3.5%);
+}
+
+.registry-player-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.registry-player-main strong,
+.registry-player-main small {
+  display: block;
+}
+
+.registry-player-main strong {
+  color: #fff;
+  font-size: 0.94rem;
+}
+
+.registry-player-main small {
+  color: var(--ams-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.registry-number {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(215 180 106 / 34%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 22%);
+  color: var(--ams-gold);
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.source-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.status-chip.synced {
+  border-color: rgb(68 210 128 / 45%);
+  background: rgb(68 210 128 / 16%);
+  color: #b9ffd5;
+}
+
+.status-chip.partial {
+  border-color: rgb(215 180 106 / 55%);
+  background: rgb(215 180 106 / 14%);
+  color: #ffe2a2;
+}
+
+.status-chip.pending {
+  border-color: rgb(242 85 91 / 45%);
+  background: rgb(211 31 47 / 14%);
+  color: #ffb8bc;
+}
+
+.sync-meter {
+  min-width: 150px;
+}
+
+.sync-meter-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.sync-meter-top strong {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.sync-meter-top span,
+.sync-meter small {
+  color: var(--ams-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.sync-meter-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+}
+
+.sync-meter-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.sync-meter small {
+  display: block;
+  margin-top: 5px;
+}
+
+.sync-meter.synced .sync-meter-track span {
+  background: linear-gradient(90deg, #2fd072, #86ffb4);
+}
+
+.sync-meter.synced .sync-meter-top span {
+  color: #b9ffd5;
+}
+
+.sync-meter.partial .sync-meter-track span {
+  background: linear-gradient(90deg, var(--ams-gold), #ffcf66);
+}
+
+.sync-meter.partial .sync-meter-top span {
+  color: #ffe2a2;
+}
+
+.sync-meter.pending .sync-meter-track span {
+  background: linear-gradient(90deg, #7f1821, #d31f2f);
+}
+
+.sync-meter.pending .sync-meter-top span {
+  color: #ffb8bc;
+}
+
 .raw-table-wrap {
   max-height: 520px;
   overflow: auto;
@@ -915,7 +1115,7 @@ button {
   z-index: 1;
   background: rgb(23 8 12 / 98%);
   color: var(--ams-gold);
-  font-size: 0.68rem;
+  font-size: 0.9em;
   font-weight: 950;
   text-transform: uppercase;
 }
@@ -1014,6 +1214,10 @@ button {
 
   .source-actions span {
     white-space: normal;
+  }
+
+  .registry-player-row {
+    grid-template-columns: 1fr;
   }
 
   .data-list article {

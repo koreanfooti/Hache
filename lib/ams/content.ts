@@ -455,6 +455,7 @@ export const integrationCards = [
 ];
 
 export const dataSources = [
+  { label: "Sync audit", path: "/ams/data/clean/sync_audit.csv" },
   { label: "GPS daily rollup", path: "/ams/data/clean/gps/gps_player_daily.csv" },
   { label: "Current roster GPS", path: "/ams/data/clean/gps/gps_player_daily_current_roster.json" },
   { label: "Injury history", path: "/ams/data/clean/injuries/injury_history_clean.json" },
