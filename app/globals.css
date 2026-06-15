@@ -1045,6 +1045,30 @@ button {
     linear-gradient(135deg, rgb(211 31 47 / 18%), rgb(12 6 8 / 88%));
 }
 
+.environment-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.environment-competition-badge {
+  display: grid;
+  min-width: 74px;
+  min-height: 26px;
+  place-items: center;
+  padding: 3px 8px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 30%);
+}
+
+.environment-competition-badge img {
+  max-width: 74px;
+  max-height: 24px;
+  object-fit: contain;
+}
+
 .environment-match-title {
   display: flex;
   flex-wrap: wrap;
@@ -2398,7 +2422,22 @@ select:focus-visible {
 }
 
 .calendar-event-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.calendar-event-label img {
+  width: 22px;
+  height: 12px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.calendar-event-label > span {
   display: -webkit-box;
+  min-width: 0;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;

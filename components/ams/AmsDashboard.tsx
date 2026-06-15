@@ -138,6 +138,7 @@ type CalendarEvent = {
   venue?: string;
   location?: string;
   travelContext?: AtlasTravelContext;
+  competition?: string;
 };
 
 type CalendarFormState = Omit<CalendarEvent, "id"> & {
@@ -775,8 +776,17 @@ function clubLogoPath(team: string) {
     "Tijuana": "/ams/assets/clubs/5.png",
     "Guadalajara": "/ams/assets/clubs/7.png",
     "León": "/ams/assets/clubs/9.png",
+    "Charlotte FC": "/ams/assets/clubs/charlotte-fc.svg",
+    "Cincinnati": "/ams/assets/clubs/fc-cincinnati.png",
+    "Columbus Crew": "/ams/assets/clubs/columbus-crew.png",
   };
   return logos[team];
+}
+
+function competitionLogoPath(competition: string) {
+  if (competition.includes("Leagues Cup")) return "/ams/assets/competitions/leagues-cup.png";
+  if (competition.includes("Liga MX")) return "/ams/assets/competitions/liga-mx.png";
+  return undefined;
 }
 
 function teamInitials(team: string) {
@@ -1637,11 +1647,19 @@ function EnvironmentFixtureCard({ fixture, language }: { fixture: AtlasFixtureFe
   if (!context) return null;
   const homeLogo = clubLogoPath(fixture.homeTeam);
   const awayLogo = clubLogoPath(fixture.awayTeam);
+  const competitionLogo = competitionLogoPath(fixture.competition);
 
   return (
     <article className={`environment-fixture-card ${context.travelLoad}`}>
       <div>
-        <span>{fixture.date}{fixture.time ? ` · ${fixture.time}` : ""}</span>
+        <div className="environment-card-meta">
+          <span>{fixture.date}{fixture.time ? ` · ${fixture.time}` : ""}</span>
+          {competitionLogo ? (
+            <span className="environment-competition-badge">
+              <Image src={competitionLogo} alt={`${fixture.competition} logo`} width={74} height={26} />
+            </span>
+          ) : null}
+        </div>
         <h3 className="environment-match-title">
           <ClubLogo team={fixture.homeTeam} logoPath={homeLogo} />
           <span>{fixture.homeTeam}</span>
@@ -2140,6 +2158,7 @@ function CalendarMonthDetail({
 function CalendarEventChip({ event }: { event: CalendarEvent }) {
   const tooltip = event.tooltip || event.notes || event.title;
   const tooltipLines = tooltip.split("\n").filter(Boolean);
+  const competitionLogo = event.competition ? competitionLogoPath(event.competition) : undefined;
 
   return (
     <span
@@ -2148,7 +2167,12 @@ function CalendarEventChip({ event }: { event: CalendarEvent }) {
       tabIndex={0}
       title={tooltip}
     >
-      <span className="calendar-event-label">{event.title}</span>
+      <span className="calendar-event-label">
+        {competitionLogo ? (
+          <Image src={competitionLogo} alt="" width={22} height={12} />
+        ) : null}
+        <span>{event.title}</span>
+      </span>
       <span className="calendar-event-tooltip" aria-hidden="true">
         <strong>{tooltipLines[0] ?? event.title}</strong>
         {tooltipLines.slice(1).map((line) => (
@@ -2283,6 +2307,7 @@ function atlasFixtureToCalendarEvent(fixture: AtlasFixtureFeedItem): CalendarEve
     venue: fixture.venue,
     location,
     travelContext: fixture.travelContext,
+    competition: fixture.competition,
   };
 }
 
@@ -2318,6 +2343,7 @@ function normalizeCalendarEvent(event: Partial<CalendarEvent> & { date?: string 
     venue: event.venue,
     location: event.location,
     travelContext: event.travelContext,
+    competition: event.competition,
   };
 }
 
