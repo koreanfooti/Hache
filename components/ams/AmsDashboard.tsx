@@ -137,6 +137,7 @@ type CalendarEvent = {
   tooltip?: string;
   venue?: string;
   location?: string;
+  travelContext?: AtlasTravelContext;
 };
 
 type CalendarFormState = Omit<CalendarEvent, "id"> & {
@@ -158,6 +159,23 @@ type AtlasFixtureFeedItem = {
   city?: string;
   country?: string;
   location?: string;
+  travelContext?: AtlasTravelContext;
+};
+
+type AtlasTravelContext = {
+  isHome: boolean;
+  baseName: string;
+  airportName: string;
+  distanceKm: number;
+  airDistanceKm: number;
+  groundToAirportKm: number;
+  estimatedTravelHours: number;
+  estimatedFlightHours: number;
+  timezoneDifferenceHours: number;
+  altitudeMeters: number;
+  altitudeDeltaMeters: number;
+  travelMode: "home" | "road" | "air";
+  travelLoad: "low" | "moderate" | "high";
 };
 
 const sectionMap: Record<AmsSection, string> = Object.fromEntries(
@@ -485,9 +503,9 @@ const panelCopy = {
     },
     external: {
       kicker: "External Context",
-      title: "External Factors",
-      copy: "Holding area for match context, travel, off-field availability, and future Opta/PlayerData integrations.",
-      items: ["Match context", "Travel", "Availability", "Off-field notes"],
+      title: "Environment",
+      copy: "Travel, venue, altitude, and timezone context from the first-team fixture calendar.",
+      items: ["Travel distance", "Flight estimate", "Timezone shift", "Altitude"],
     },
     athleteProfile: {
       kicker: "Athlete Dossier",
@@ -614,9 +632,9 @@ const panelCopy = {
     },
     external: {
       kicker: "Contexto externo",
-      title: "Factores externos",
-      copy: "Área para contexto de partido, viaje, disponibilidad fuera de cancha y futuras integraciones Opta/PlayerData.",
-      items: ["Contexto de partido", "Viaje", "Disponibilidad", "Notas externas"],
+      title: "Entorno",
+      copy: "Contexto de viaje, sede, altitud y zona horaria desde el calendario del primer equipo.",
+      items: ["Distancia de viaje", "Estimación de vuelo", "Cambio horario", "Altitud"],
     },
     athleteProfile: {
       kicker: "Dossier del atleta",
@@ -705,6 +723,36 @@ function localizedIntegrationStatus(status: string, language: Language) {
     "Future source": "Fuente futura",
   };
   return statuses[status] ?? status;
+}
+
+function localizedTravelLoad(load: AtlasTravelContext["travelLoad"], language: Language) {
+  const labels = {
+    en: { low: "Low", moderate: "Moderate", high: "High" },
+    es: { low: "Baja", moderate: "Moderada", high: "Alta" },
+  };
+  return labels[language][load];
+}
+
+function localizedTravelMode(mode: AtlasTravelContext["travelMode"], language: Language) {
+  const labels = {
+    en: { home: "Home", road: "Road", air: "Air" },
+    es: { home: "Local", road: "Carretera", air: "Aéreo" },
+  };
+  return labels[language][mode];
+}
+
+function travelLoadScore(load: AtlasTravelContext["travelLoad"]) {
+  return { low: 1, moderate: 2, high: 3 }[load];
+}
+
+function formatSignedHours(value: number) {
+  if (value === 0) return "TZ +0h";
+  return `TZ ${value > 0 ? "+" : ""}${value}h`;
+}
+
+function formatSignedMeters(value: number) {
+  if (value === 0) return "+0m";
+  return `${value > 0 ? "+" : ""}${value.toLocaleString()}m`;
 }
 
 function localizedSourceLabel(label: string, language: Language) {
@@ -1476,15 +1524,117 @@ function BiographyPanel({ language, selectedPlayer }: { language: Language; sele
 
 function ExternalFactorsPanel({ language }: { language: Language }) {
   const copy = panelCopy[language];
+  const [fixtures, setFixtures] = useState<AtlasFixtureFeedItem[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFixtures() {
+      try {
+        const response = await fetch("/api/atlas/fixtures", { cache: "no-store" });
+        const payload = await response.json() as { fixtures?: AtlasFixtureFeedItem[] };
+        if (isMounted) setFixtures(payload.fixtures ?? []);
+      } catch {
+        if (isMounted) setFixtures([]);
+      }
+    }
+
+    loadFixtures();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const awayFixtures = fixtures
+    .filter((fixture) => fixture.travelContext && !fixture.travelContext.isHome)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const nextAwayFixtures = awayFixtures.filter((fixture) => fixture.status === "scheduled").slice(0, 4);
+  const showcaseFixtures = nextAwayFixtures.length ? nextAwayFixtures : awayFixtures.slice(-4);
+  const highestLoadFixture = awayFixtures.reduce<AtlasFixtureFeedItem | null>((current, fixture) => {
+    if (!fixture.travelContext) return current;
+    if (!current?.travelContext) return fixture;
+    return travelLoadScore(fixture.travelContext.travelLoad) > travelLoadScore(current.travelContext.travelLoad) ? fixture : current;
+  }, null);
+  const maxDistance = Math.max(...awayFixtures.map((fixture) => fixture.travelContext?.distanceKm ?? 0), 0);
+  const avgTravelHours = awayFixtures.length
+    ? awayFixtures.reduce((total, fixture) => total + (fixture.travelContext?.estimatedTravelHours ?? 0), 0) / awayFixtures.length
+    : 0;
 
   return (
-    <SectionPlaceholder
-      emptyDetail={copy.common.readyForComponentExtraction}
-      kicker={copy.external.kicker}
-      title={copy.external.title}
-      copy={copy.external.copy}
-      items={[...copy.external.items]}
-    />
+    <div className="panel-stack">
+      <PanelIntro
+        kicker={copy.external.kicker}
+        title={copy.external.title}
+        copy={copy.external.copy}
+      />
+      <section className="environment-overview-grid">
+        <MetricCard
+          label={language === "es" ? "Base diaria" : "Daily base"}
+          value="Academia AGA"
+          detail="Zapopan, Jalisco"
+        />
+        <MetricCard
+          label={language === "es" ? "Aeropuerto" : "Flight anchor"}
+          value="GDL"
+          detail={language === "es" ? "Aeropuerto Internacional de Guadalajara" : "Guadalajara International Airport"}
+        />
+        <MetricCard
+          label={language === "es" ? "Viaje máximo" : "Max travel"}
+          value={maxDistance ? `${maxDistance.toLocaleString()} km` : copy.common.noData}
+          detail={highestLoadFixture ? `${highestLoadFixture.homeTeam} vs ${highestLoadFixture.awayTeam}` : copy.common.waitingForSource}
+        />
+        <MetricCard
+          label={language === "es" ? "Promedio de viaje" : "Avg travel"}
+          value={awayFixtures.length ? `${avgTravelHours.toFixed(1)} h` : copy.common.noData}
+          detail={language === "es" ? "Estimación por partido fuera" : "Estimated per away match"}
+        />
+      </section>
+      <section className="environment-fixture-grid">
+        {showcaseFixtures.map((fixture) => (
+          <EnvironmentFixtureCard fixture={fixture} language={language} key={fixture.id} />
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function EnvironmentFixtureCard({ fixture, language }: { fixture: AtlasFixtureFeedItem; language: Language }) {
+  const context = fixture.travelContext;
+  if (!context) return null;
+
+  return (
+    <article className={`environment-fixture-card ${context.travelLoad}`}>
+      <div>
+        <span>{fixture.date}{fixture.time ? ` · ${fixture.time}` : ""}</span>
+        <h3>{fixture.homeTeam} vs {fixture.awayTeam}</h3>
+        <p>{fixture.venue} · {fixture.city}, {fixture.country}</p>
+      </div>
+      <div className="environment-chip-row">
+        <span>{language === "es" ? "Carga" : "Load"}: {localizedTravelLoad(context.travelLoad, language)}</span>
+        <span>{context.distanceKm.toLocaleString()} km</span>
+        <span>{formatSignedHours(context.timezoneDifferenceHours)}</span>
+        <span>{context.altitudeMeters.toLocaleString()} m</span>
+      </div>
+      <dl className="environment-detail-list">
+        <div>
+          <dt>{language === "es" ? "Modo" : "Mode"}</dt>
+          <dd>{localizedTravelMode(context.travelMode, language)}</dd>
+        </div>
+        <div>
+          <dt>{language === "es" ? "Vuelo est." : "Est. flight"}</dt>
+          <dd>{context.estimatedFlightHours ? `${context.estimatedFlightHours.toFixed(1)} h` : "—"}</dd>
+        </div>
+        <div>
+          <dt>{language === "es" ? "Viaje total" : "Total travel"}</dt>
+          <dd>{context.estimatedTravelHours.toFixed(1)} h</dd>
+        </div>
+        <div>
+          <dt>{language === "es" ? "Altitud vs AGA" : "Altitude vs AGA"}</dt>
+          <dd>{formatSignedMeters(context.altitudeDeltaMeters)}</dd>
+        </div>
+      </dl>
+    </article>
   );
 }
 
@@ -2036,10 +2186,16 @@ function atlasFixtureToCalendarEvent(fixture: AtlasFixtureFeedItem): CalendarEve
   const aggregateLine = fixture.aggregate ? ` · ${fixture.aggregate}` : "";
   const location = fixture.location || [fixture.city, fixture.country].filter(Boolean).join(", ");
   const venueLine = fixture.venue ? `Venue: ${fixture.venue}${location ? ` · ${location}` : ""}` : "";
+  const travelLines = fixture.travelContext ? [
+    `Travel load: ${fixture.travelContext.travelLoad.toUpperCase()} · ${fixture.travelContext.distanceKm.toLocaleString()} km`,
+    `Est. travel: ${fixture.travelContext.estimatedTravelHours.toFixed(1)}h${fixture.travelContext.estimatedFlightHours ? ` · flight ${fixture.travelContext.estimatedFlightHours.toFixed(1)}h` : ""}`,
+    `TZ: ${formatSignedHours(fixture.travelContext.timezoneDifferenceHours)} · Altitude: ${fixture.travelContext.altitudeMeters.toLocaleString()}m (${formatSignedMeters(fixture.travelContext.altitudeDeltaMeters)} vs AGA)`,
+  ] : [];
   const notes = [
     `${fixture.competition} · ${fixture.round}`,
     scoreLine + aggregateLine,
     venueLine,
+    ...travelLines,
   ].filter(Boolean).join(" · ");
   const tooltip = [
     title,
@@ -2047,6 +2203,7 @@ function atlasFixtureToCalendarEvent(fixture: AtlasFixtureFeedItem): CalendarEve
     fixture.time ? `${fixture.date} ${fixture.time}` : fixture.date,
     scoreLine,
     venueLine,
+    ...travelLines,
     "Team: First Team",
   ].filter(Boolean).join("\n");
 
@@ -2066,6 +2223,7 @@ function atlasFixtureToCalendarEvent(fixture: AtlasFixtureFeedItem): CalendarEve
     tooltip,
     venue: fixture.venue,
     location,
+    travelContext: fixture.travelContext,
   };
 }
 
@@ -2100,6 +2258,7 @@ function normalizeCalendarEvent(event: Partial<CalendarEvent> & { date?: string 
     tooltip: event.tooltip,
     venue: event.venue,
     location: event.location,
+    travelContext: event.travelContext,
   };
 }
 

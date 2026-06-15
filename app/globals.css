@@ -1008,6 +1008,98 @@ button {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+.environment-overview-grid,
+.environment-fixture-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.environment-overview-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.environment-fixture-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.environment-fixture-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 100% 0, rgb(215 180 106 / 12%), transparent 34%),
+    linear-gradient(135deg, rgb(255 255 255 / 5%), rgb(211 31 47 / 8%));
+  box-shadow: var(--ams-shadow);
+}
+
+.environment-fixture-card.moderate {
+  border-color: rgb(255 204 92 / 30%);
+}
+
+.environment-fixture-card.high {
+  border-color: rgb(255 91 105 / 38%);
+  background:
+    radial-gradient(circle at 100% 0, rgb(255 91 105 / 18%), transparent 34%),
+    linear-gradient(135deg, rgb(211 31 47 / 18%), rgb(12 6 8 / 88%));
+}
+
+.environment-fixture-card span,
+.environment-fixture-card p,
+.environment-detail-list dt {
+  color: var(--ams-muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.environment-fixture-card h3 {
+  margin: 5px 0;
+  color: #fff;
+  font-size: clamp(1.25rem, 2vw, 2rem);
+}
+
+.environment-fixture-card p {
+  margin: 0;
+}
+
+.environment-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.environment-chip-row span {
+  padding: 6px 9px;
+  border: 1px solid rgb(215 180 106 / 28%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 22%);
+  color: #fff;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.environment-detail-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.environment-detail-list div {
+  padding: 10px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 18%);
+}
+
+.environment-detail-list dd {
+  margin: 3px 0 0;
+  color: #fff;
+  font-size: 0.96rem;
+  font-weight: 950;
+}
+
 .player-registry-panel {
   overflow: hidden;
   padding: 18px;
@@ -1403,7 +1495,9 @@ button {
   .placeholder-grid,
   .profile-details-grid,
   .integration-grid,
-  .athlete-profile-grid {
+  .athlete-profile-grid,
+  .environment-overview-grid,
+  .environment-fixture-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1443,6 +1537,9 @@ button {
   .athlete-profile-hero,
   .athlete-profile-grid,
   .readiness-command-grid,
+  .environment-overview-grid,
+  .environment-fixture-grid,
+  .environment-detail-list,
   .hero-panel,
   .profile-hero,
   .source-row {

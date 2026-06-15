@@ -15,24 +15,160 @@ export type AtlasVenue = {
   venue: string;
   city: string;
   country: string;
+  latitude: number;
+  longitude: number;
+  altitudeMeters: number;
+  timezone: string;
+};
+
+export type AtlasTravelContext = {
+  isHome: boolean;
+  baseName: string;
+  airportName: string;
+  distanceKm: number;
+  airDistanceKm: number;
+  groundToAirportKm: number;
+  estimatedTravelHours: number;
+  estimatedFlightHours: number;
+  timezoneDifferenceHours: number;
+  altitudeMeters: number;
+  altitudeDeltaMeters: number;
+  travelMode: "home" | "road" | "air";
+  travelLoad: "low" | "moderate" | "high";
+};
+
+export const atlasTravelBase = {
+  name: "Academia AGA",
+  address: "Carr. la Venta-Nextipac, 45221 Zapopan, Jal.",
+  city: "Zapopan",
+  country: "Mexico",
+  latitude: 20.746,
+  longitude: -103.537,
+  altitudeMeters: 1580,
+  timezone: "America/Mexico_City",
+};
+
+export const atlasTravelAirport = {
+  name: "Guadalajara International Airport",
+  address: "Carr. Guadalajara - Chapala km 17.5, 45659 Jal.",
+  iata: "GDL",
+  latitude: 20.5217,
+  longitude: -103.3111,
+  altitudeMeters: 1529,
+  timezone: "America/Mexico_City",
 };
 
 export const atlasVenueByHomeTeam: Record<string, AtlasVenue> = {
-  "Atl. San Luis": { venue: "Estadio Alfonso Lastras", city: "San Luis Potosi", country: "Mexico" },
-  "América": { venue: "Estadio Ciudad de los Deportes", city: "Mexico City", country: "Mexico" },
-  "Atlas": { venue: "Estadio Jalisco", city: "Guadalajara", country: "Mexico" },
-  "Charlotte FC": { venue: "Bank of America Stadium", city: "Charlotte, NC", country: "United States" },
-  "Cincinnati": { venue: "TQL Stadium", city: "Cincinnati, OH", country: "United States" },
-  "Columbus Crew": { venue: "Lower.com Field", city: "Columbus, OH", country: "United States" },
-  "Cruz Azul": { venue: "Estadio Olimpico Universitario", city: "Mexico City", country: "Mexico" },
-  "Juárez": { venue: "Estadio Olimpico Benito Juarez", city: "Ciudad Juarez", country: "Mexico" },
-  "León": { venue: "Estadio Leon", city: "Leon", country: "Mexico" },
-  "Necaxa": { venue: "Estadio Victoria", city: "Aguascalientes", country: "Mexico" },
-  "Pachuca": { venue: "Estadio Hidalgo", city: "Pachuca", country: "Mexico" },
-  "Santos": { venue: "Estadio Corona", city: "Torreon", country: "Mexico" },
-  "Tijuana": { venue: "Estadio Caliente", city: "Tijuana", country: "Mexico" },
-  "Toluca": { venue: "Estadio Nemesio Diez", city: "Toluca", country: "Mexico" },
+  "Atl. San Luis": { venue: "Estadio Alfonso Lastras", city: "San Luis Potosi", country: "Mexico", latitude: 22.125, longitude: -100.930, altitudeMeters: 1850, timezone: "America/Mexico_City" },
+  "América": { venue: "Estadio Ciudad de los Deportes", city: "Mexico City", country: "Mexico", latitude: 19.383, longitude: -99.178, altitudeMeters: 2240, timezone: "America/Mexico_City" },
+  "Atlas": { venue: "Estadio Jalisco", city: "Guadalajara", country: "Mexico", latitude: 20.705, longitude: -103.328, altitudeMeters: 1550, timezone: "America/Mexico_City" },
+  "Charlotte FC": { venue: "Bank of America Stadium", city: "Charlotte, NC", country: "United States", latitude: 35.2258, longitude: -80.8528, altitudeMeters: 229, timezone: "America/New_York" },
+  "Cincinnati": { venue: "TQL Stadium", city: "Cincinnati, OH", country: "United States", latitude: 39.1114, longitude: -84.5222, altitudeMeters: 191, timezone: "America/New_York" },
+  "Columbus Crew": { venue: "Lower.com Field", city: "Columbus, OH", country: "United States", latitude: 39.9685, longitude: -83.0172, altitudeMeters: 224, timezone: "America/New_York" },
+  "Cruz Azul": { venue: "Estadio Olimpico Universitario", city: "Mexico City", country: "Mexico", latitude: 19.3319, longitude: -99.1923, altitudeMeters: 2240, timezone: "America/Mexico_City" },
+  "Juárez": { venue: "Estadio Olimpico Benito Juarez", city: "Ciudad Juarez", country: "Mexico", latitude: 31.741, longitude: -106.438, altitudeMeters: 1120, timezone: "America/Ojinaga" },
+  "León": { venue: "Estadio Leon", city: "Leon", country: "Mexico", latitude: 21.115, longitude: -101.657, altitudeMeters: 1815, timezone: "America/Mexico_City" },
+  "Necaxa": { venue: "Estadio Victoria", city: "Aguascalientes", country: "Mexico", latitude: 21.880, longitude: -102.283, altitudeMeters: 1888, timezone: "America/Mexico_City" },
+  "Pachuca": { venue: "Estadio Hidalgo", city: "Pachuca", country: "Mexico", latitude: 20.104, longitude: -98.754, altitudeMeters: 2425, timezone: "America/Mexico_City" },
+  "Santos": { venue: "Estadio Corona", city: "Torreon", country: "Mexico", latitude: 25.651, longitude: -103.360, altitudeMeters: 1120, timezone: "America/Monterrey" },
+  "Tijuana": { venue: "Estadio Caliente", city: "Tijuana", country: "Mexico", latitude: 32.506, longitude: -116.993, altitudeMeters: 45, timezone: "America/Tijuana" },
+  "Toluca": { venue: "Estadio Nemesio Diez", city: "Toluca", country: "Mexico", latitude: 19.287, longitude: -99.667, altitudeMeters: 2660, timezone: "America/Mexico_City" },
 };
+
+export function buildAtlasTravelContext(fixture: AtlasFixture, venue?: AtlasVenue): AtlasTravelContext | undefined {
+  if (!venue) return undefined;
+
+  const isHome = fixture.homeTeam === "Atlas";
+  const distanceKm = isHome ? 0 : haversineKm(atlasTravelBase, venue);
+  const airDistanceKm = isHome ? 0 : haversineKm(atlasTravelAirport, venue);
+  const groundToAirportKm = haversineKm(atlasTravelBase, atlasTravelAirport);
+  const travelMode = isHome ? "home" : distanceKm < 360 ? "road" : "air";
+  const estimatedFlightHours = travelMode === "air" ? roundOne(airDistanceKm / 780 + 1.25) : 0;
+  const estimatedTravelHours = isHome
+    ? 0.5
+    : travelMode === "road"
+      ? roundOne(distanceKm / 72)
+      : roundOne(groundToAirportKm / 45 + estimatedFlightHours + 0.75);
+  const timezoneDifferenceHours = getTimezoneDifferenceHours(atlasTravelBase.timezone, venue.timezone, fixture.date);
+  const altitudeDeltaMeters = Math.round(venue.altitudeMeters - atlasTravelBase.altitudeMeters);
+
+  return {
+    isHome,
+    baseName: atlasTravelBase.name,
+    airportName: `${atlasTravelAirport.name} (${atlasTravelAirport.iata})`,
+    distanceKm: Math.round(distanceKm),
+    airDistanceKm: Math.round(airDistanceKm),
+    groundToAirportKm: Math.round(groundToAirportKm),
+    estimatedTravelHours,
+    estimatedFlightHours,
+    timezoneDifferenceHours,
+    altitudeMeters: venue.altitudeMeters,
+    altitudeDeltaMeters,
+    travelMode,
+    travelLoad: rateTravelLoad(distanceKm, Math.abs(timezoneDifferenceHours), Math.abs(altitudeDeltaMeters), travelMode),
+  };
+}
+
+function rateTravelLoad(distanceKm: number, timezoneShiftHours: number, altitudeShiftMeters: number, travelMode: AtlasTravelContext["travelMode"]) {
+  if (travelMode === "home") return "low";
+  const score =
+    (distanceKm > 2400 ? 3 : distanceKm > 900 ? 2 : distanceKm > 300 ? 1 : 0)
+    + (timezoneShiftHours >= 2 ? 2 : timezoneShiftHours >= 1 ? 1 : 0)
+    + (altitudeShiftMeters > 700 ? 1 : 0);
+
+  if (score >= 4) return "high";
+  if (score >= 2) return "moderate";
+  return "low";
+}
+
+function haversineKm(
+  from: Pick<AtlasVenue, "latitude" | "longitude">,
+  to: Pick<AtlasVenue, "latitude" | "longitude">,
+) {
+  const earthRadiusKm = 6371;
+  const deltaLat = toRadians(to.latitude - from.latitude);
+  const deltaLon = toRadians(to.longitude - from.longitude);
+  const lat1 = toRadians(from.latitude);
+  const lat2 = toRadians(to.latitude);
+  const a = Math.sin(deltaLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function getTimezoneDifferenceHours(baseTimezone: string, venueTimezone: string, date: string) {
+  return roundOne((timezoneOffsetMinutes(venueTimezone, date) - timezoneOffsetMinutes(baseTimezone, date)) / 60);
+}
+
+function timezoneOffsetMinutes(timezone: string, date: string) {
+  const instant = new Date(`${date}T12:00:00Z`);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(instant);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const localAsUtc = Date.UTC(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day),
+    Number(values.hour),
+    Number(values.minute),
+    Number(values.second),
+  );
+  return (localAsUtc - instant.getTime()) / 60000;
+}
+
+function toRadians(value: number) {
+  return value * Math.PI / 180;
+}
+
+function roundOne(value: number) {
+  return Math.round(value * 10) / 10;
+}
 
 export const atlasFirstTeamFixtures: AtlasFixture[] = [
   {
