@@ -1485,6 +1485,8 @@ select:focus-visible {
 }
 
 .calendar-month-heading {
+  position: relative;
+  display: block;
   width: 100%;
   min-height: 34px;
   padding: 0;
@@ -1494,12 +1496,29 @@ select:focus-visible {
   cursor: pointer;
 }
 
+.calendar-month-heading strong {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  line-height: 1;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
 .calendar-month-heading span,
 .calendar-month-title span {
   color: var(--ams-muted);
   font-size: 0.68rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.calendar-month-heading span {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
 }
 
 .calendar-weekdays,
