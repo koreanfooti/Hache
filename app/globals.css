@@ -910,6 +910,104 @@ button {
   padding: 7px 10px;
 }
 
+.athlete-profile-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.athlete-profile-hero {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+  border: 1px solid rgb(215 180 106 / 24%);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 14% 24%, rgb(215 180 106 / 18%), transparent 28%),
+    linear-gradient(135deg, rgb(211 31 47 / 22%), rgb(12 6 8 / 94%));
+  box-shadow: var(--ams-shadow);
+}
+
+.athlete-profile-photo {
+  display: grid;
+  width: 240px;
+  height: 240px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgb(215 180 106 / 35%);
+  border-radius: 18px;
+  background: rgb(0 0 0 / 22%);
+  color: var(--ams-gold);
+  font-size: 3rem;
+  font-weight: 950;
+}
+
+.athlete-profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.athlete-profile-hero h2 {
+  margin: 6px 0;
+  color: #fff;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  line-height: 0.9;
+}
+
+.athlete-profile-hero p {
+  color: var(--ams-muted);
+  font-size: 1rem;
+}
+
+.readiness-command-grid,
+.athlete-profile-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.readiness-command-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 20px;
+}
+
+.readiness-command,
+.athlete-profile-grid article {
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 4%);
+  padding: 14px;
+}
+
+.readiness-command {
+  min-height: 86px;
+}
+
+.readiness-command strong,
+.athlete-profile-grid strong {
+  display: block;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.readiness-command span,
+.athlete-profile-grid span,
+.athlete-profile-grid p {
+  color: var(--ams-muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.readiness-command.is-ready {
+  border-color: rgb(68 210 128 / 45%);
+  background: linear-gradient(135deg, rgb(68 210 128 / 14%), rgb(255 255 255 / 4%));
+}
+
+.athlete-profile-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .player-registry-panel {
   overflow: hidden;
   padding: 18px;
@@ -921,9 +1019,59 @@ button {
   box-shadow: var(--ams-shadow);
 }
 
-.player-registry-panel .panel-heading > strong {
+.player-registry-panel .panel-heading {
+  align-items: start;
+  gap: 16px;
+}
+
+.registry-header-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.registry-header-tools > strong {
   color: var(--ams-gold);
   font-size: 1rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.registry-search {
+  display: grid;
+  gap: 5px;
+  min-width: min(260px, 100%);
+}
+
+.registry-search span {
+  color: var(--ams-muted);
+  font-size: 0.66rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.registry-search input {
+  min-height: 38px;
+  border: 1px solid rgb(215 180 106 / 28%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 26%);
+  color: #fff;
+  font-weight: 850;
+  padding: 8px 13px;
+}
+
+.registry-select-all {
+  min-height: 38px;
+  border: 1px solid rgb(215 180 106 / 42%);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgb(215 180 106 / 18%), rgb(211 31 47 / 25%));
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 950;
+  padding: 8px 12px;
 }
 
 .registry-list {
@@ -953,7 +1101,7 @@ button {
   display: grid;
   grid-template-columns: auto auto;
   flex: 0 0 auto;
-  align-items: center;
+  align-items: start;
   gap: 8px;
 }
 
@@ -985,18 +1133,49 @@ button {
   font-weight: 800;
 }
 
-.registry-number {
+.registry-player-visual {
+  position: relative;
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 58px;
+  height: 58px;
   flex: 0 0 auto;
-  place-items: center;
+  place-items: end start;
   border: 1px solid rgb(215 180 106 / 34%);
   border-radius: 8px;
   background: rgb(0 0 0 / 22%);
+  overflow: hidden;
   color: var(--ams-gold);
   font-size: 0.84rem;
   font-weight: 950;
+}
+
+.registry-player-visual img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.registry-player-visual > span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.registry-player-visual small {
+  position: relative;
+  z-index: 1;
+  min-width: 22px;
+  margin: 4px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 72%);
+  color: #fff;
+  font-size: 0.62rem;
+  line-height: 1;
+  text-align: center;
 }
 
 .source-chips {
@@ -1109,17 +1288,6 @@ button {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgb(255 255 255 / 10%);
-}
-
-.registry-sort-controls span {
-  margin-right: auto;
-  color: var(--ams-muted);
-  font-size: 0.76rem;
-  font-weight: 900;
-  text-transform: uppercase;
 }
 
 .registry-sort-controls button {
@@ -1234,8 +1402,22 @@ button {
   .testing-grid,
   .placeholder-grid,
   .profile-details-grid,
-  .integration-grid {
+  .integration-grid,
+  .athlete-profile-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .athlete-profile-hero {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .athlete-profile-photo {
+    width: 200px;
+    height: 200px;
+  }
+
+  .readiness-command-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -1258,10 +1440,18 @@ button {
   .placeholder-grid,
   .profile-details-grid,
   .integration-grid,
+  .athlete-profile-hero,
+  .athlete-profile-grid,
+  .readiness-command-grid,
   .hero-panel,
   .profile-hero,
   .source-row {
     grid-template-columns: 1fr;
+  }
+
+  .athlete-profile-photo {
+    width: min(100%, 220px);
+    height: 220px;
   }
 
   .source-actions {

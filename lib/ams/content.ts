@@ -7,6 +7,7 @@ export type AmsSection =
   | "recovery"
   | "biography"
   | "external"
+  | "athleteProfile"
   | "calendar"
   | "resources"
   | "settings";
@@ -35,6 +36,7 @@ export const navItems: { id: AmsSection; label: string; eyebrow: string }[] = [
   { id: "recovery", label: "Recovery", eyebrow: "Services" },
   { id: "biography", label: "Biography", eyebrow: "Player profile" },
   { id: "external", label: "External Factors", eyebrow: "Context" },
+  { id: "athleteProfile", label: "Athlete Profile", eyebrow: "Decision hub" },
   { id: "calendar", label: "Calendar", eyebrow: "Planning" },
   { id: "resources", label: "Resources", eyebrow: "Library" },
   { id: "settings", label: "Settings", eyebrow: "Registry" },

@@ -197,6 +197,7 @@ const uiCopy = {
       recovery: "Recovery",
       biography: "Biography",
       external: "External Factors",
+      athleteProfile: "Athlete Profile",
     },
   },
   es: {
@@ -231,6 +232,7 @@ const uiCopy = {
       recovery: "Recuperación",
       biography: "Biografía",
       external: "Factores externos",
+      athleteProfile: "Perfil del atleta",
     },
   },
 } satisfies Record<Language, {
@@ -487,6 +489,12 @@ const panelCopy = {
       copy: "Holding area for match context, travel, off-field availability, and future Opta/PlayerData integrations.",
       items: ["Match context", "Travel", "Availability", "Off-field notes"],
     },
+    athleteProfile: {
+      kicker: "Athlete Dossier",
+      title: "Athlete Profile",
+      copy: "One place for readiness, monitoring decisions, source completeness, baseline bands, quadrants, and exportable coach dashboards.",
+      items: ["Readiness command", "Quadrant dashboard", "Baseline bands", "Coach export"],
+    },
     calendar: {
       kicker: "Planning",
       title: "Schedule / Calendar",
@@ -609,6 +617,12 @@ const panelCopy = {
       title: "Factores externos",
       copy: "Área para contexto de partido, viaje, disponibilidad fuera de cancha y futuras integraciones Opta/PlayerData.",
       items: ["Contexto de partido", "Viaje", "Disponibilidad", "Notas externas"],
+    },
+    athleteProfile: {
+      kicker: "Dossier del atleta",
+      title: "Perfil del atleta",
+      copy: "Un lugar para disponibilidad, decisiones de monitoreo, conexiones de fuente, bandas individuales, cuadrantes y dashboards exportables para staff.",
+      items: ["Comando de disponibilidad", "Dashboard de cuadrantes", "Bandas individuales", "Exportar para coaches"],
     },
     calendar: {
       kicker: "Planificación",
@@ -750,6 +764,13 @@ export default function AmsDashboard() {
 
       return players.some((player) => player.id === playerId) ? [...currentIds, playerId] : currentIds;
     });
+  }
+
+  function setPlayersInView(playerIds: string[]) {
+    const validIds = playerIds.filter((id) => players.some((player) => player.id === id));
+    if (validIds.length) {
+      setVisiblePlayerIds(Array.from(new Set(validIds)));
+    }
   }
 
   function rotateSelectedPlayer(direction: 1 | -1) {
@@ -936,6 +957,9 @@ export default function AmsDashboard() {
           {activeSection === "recovery" && <RecoveryPanel language={language} />}
           {activeSection === "biography" && <BiographyPanel language={language} selectedPlayer={selectedPlayer} />}
           {activeSection === "external" && <ExternalFactorsPanel language={language} />}
+          {activeSection === "athleteProfile" && (
+            <AthleteProfilePanel language={language} selectedPlayer={selectedPlayer} />
+          )}
           {activeSection === "calendar" && <CalendarPanel language={language} />}
           {activeSection === "resources" && <ResourcesPanel language={language} />}
           {activeSection === "settings" && (
@@ -945,6 +969,7 @@ export default function AmsDashboard() {
               sourceData={sourceData}
               visiblePlayerIds={visiblePlayerIds}
               onTogglePlayerInView={togglePlayerInView}
+              onSetPlayersInView={setPlayersInView}
             />
           )}
         </section>
@@ -1038,7 +1063,7 @@ function Sidebar({
   return (
     <nav className="ams-sidebar" aria-label="AMS sections">
       {navItems.filter((item) =>
-        ["load", "injury", "development", "recovery", "biography", "external"].includes(item.id),
+        ["load", "injury", "development", "recovery", "biography", "external", "athleteProfile"].includes(item.id),
       ).map((item) => (
         <button
           key={item.id}
@@ -1460,6 +1485,70 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
       copy={copy.external.copy}
       items={[...copy.external.items]}
     />
+  );
+}
+
+function AthleteProfilePanel({
+  language,
+  selectedPlayer,
+}: {
+  language: Language;
+  selectedPlayer: Player;
+}) {
+  const copy = panelCopy[language];
+  const actions = language === "es"
+    ? ["Listo", "Monitorear", "Modificar", "Recuperar", "Investigar"]
+    : ["Ready", "Monitor", "Modify", "Recover", "Investigate"];
+
+  return (
+    <div className="athlete-profile-panel">
+      <section className="athlete-profile-hero">
+        <div className="athlete-profile-photo">
+          {hasPlayerPhoto(selectedPlayer) ? (
+            <Image src={selectedPlayer.photo} alt="" width={240} height={240} />
+          ) : (
+            <span>{selectedPlayer.number || "—"}</span>
+          )}
+        </div>
+        <div>
+          <span className="section-kicker">{copy.athleteProfile.kicker}</span>
+          <h2>{selectedPlayer.name}</h2>
+          <p>
+            #{selectedPlayer.number} · {selectedPlayer.amsId} · {localizedValue(selectedPlayer.position, language)}
+          </p>
+          <div className="readiness-command-grid">
+            {actions.map((action, index) => (
+              <article className={`readiness-command ${index === 0 ? "is-ready" : ""}`} key={action}>
+                <strong>{action}</strong>
+                <span>
+                  {index === 0
+                    ? language === "es" ? "Estado actual" : "Current call"
+                    : language === "es" ? "Pendiente de datos" : "Awaiting source data"}
+                </span>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="athlete-profile-grid">
+        <article>
+          <span>{language === "es" ? "Pregunta central" : "Core Question"}</span>
+          <strong>{language === "es" ? "¿Se adapta o acumula fatiga?" : "Adapting or accumulating fatigue?"}</strong>
+          <p>{copy.athleteProfile.copy}</p>
+        </article>
+        {copy.athleteProfile.items.map((item) => (
+          <article key={item}>
+            <span>{language === "es" ? "Módulo próximo" : "Next module"}</span>
+            <strong>{item}</strong>
+            <p>
+              {language === "es"
+                ? "Se conectará cuando las fuentes de bienestar, sueño, carga y pruebas estén completas."
+                : "Will connect once wellness, sleep, load, and testing sources are fully loaded."}
+            </p>
+          </article>
+        ))}
+      </section>
+    </div>
   );
 }
 
@@ -2134,20 +2223,38 @@ function SettingsPanel({
   sourceData,
   visiblePlayerIds,
   onTogglePlayerInView,
+  onSetPlayersInView,
 }: {
   language: Language;
   loadSummary: LoadSummary;
   sourceData: SourceData;
   visiblePlayerIds: string[];
   onTogglePlayerInView: (playerId: string) => void;
+  onSetPlayersInView: (playerIds: string[]) => void;
 }) {
   const copy = panelCopy[language];
   const [activePreview, setActivePreview] = useState<RawSourcePreview | null>(null);
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
   const [previewZoom, setPreviewZoom] = useState(100);
+  const [registrySearch, setRegistrySearch] = useState("");
   const [registrySortField, setRegistrySortField] = useState<RegistrySortField>("number");
   const [registrySortDirection, setRegistrySortDirection] = useState<RegistrySortDirection>("asc");
-  const registryRows = buildPlayerRegistryRows(loadSummary, sourceData, registrySortField, registrySortDirection);
+  const registryRows = buildPlayerRegistryRows(loadSummary, sourceData, registrySortField, registrySortDirection)
+    .filter((row) => registryPlayerMatches(row.player, registrySearch));
+  const allVisibleRowsSelected = registryRows.length > 0 && registryRows.every((row) => visiblePlayerIds.includes(row.player.id));
+
+  function toggleVisibleRegistryRows() {
+    if (!registryRows.length) return;
+
+    if (allVisibleRowsSelected) {
+      const filteredIds = new Set(registryRows.map((row) => row.player.id));
+      const nextIds = visiblePlayerIds.filter((id) => !filteredIds.has(id));
+      onSetPlayersInView(nextIds.length ? nextIds : [registryRows[0].player.id]);
+      return;
+    }
+
+    onSetPlayersInView(Array.from(new Set([...visiblePlayerIds, ...registryRows.map((row) => row.player.id)])));
+  }
 
   async function openSourcePreview(source: (typeof dataSources)[number]) {
     setLoadingPath(source.path);
@@ -2213,11 +2320,59 @@ function SettingsPanel({
             <span>{language === "es" ? "Conexiones por jugador" : "Player Source Connections"}</span>
             <h3>{language === "es" ? "Registro de jugadores" : "Player Registry"}</h3>
           </div>
-          <strong>
-            {Math.round(registryRows.reduce((total, row) => total + row.percent, 0) / Math.max(registryRows.length, 1))}%
-            {" "}
-            {language === "es" ? "promedio" : "avg"}
-          </strong>
+          <div className="registry-header-tools">
+            <label className="registry-search">
+              <span>{language === "es" ? "Buscar" : "Search"}</span>
+              <input
+                type="search"
+                value={registrySearch}
+                onChange={(event) => setRegistrySearch(event.target.value)}
+                placeholder={language === "es" ? "Nombre, número o ID..." : "Name, number, or ID..."}
+              />
+            </label>
+            <button className="registry-select-all" type="button" onClick={toggleVisibleRegistryRows}>
+              {allVisibleRowsSelected
+                ? language === "es" ? "Quitar visibles" : "Clear shown"
+                : language === "es" ? "Seleccionar visibles" : "Select all"}
+            </button>
+            <div className="registry-sort-controls" aria-label={language === "es" ? "Ordenar registro" : "Order registry"}>
+              <button
+                className={registrySortField === "number" ? "is-active" : ""}
+                type="button"
+                onClick={() => setRegistrySortField("number")}
+              >
+                {language === "es" ? "Número" : "Number"}
+              </button>
+              <button
+                className={registrySortField === "name" ? "is-active" : ""}
+                type="button"
+                onClick={() => setRegistrySortField("name")}
+              >
+                {language === "es" ? "Nombre" : "A-Z"}
+              </button>
+              <button
+                className={registrySortDirection === "asc" ? "is-active" : ""}
+                type="button"
+                onClick={() => setRegistrySortDirection("asc")}
+                aria-label={language === "es" ? "Orden ascendente" : "Sort ascending"}
+              >
+                ↑
+              </button>
+              <button
+                className={registrySortDirection === "desc" ? "is-active" : ""}
+                type="button"
+                onClick={() => setRegistrySortDirection("desc")}
+                aria-label={language === "es" ? "Orden descendente" : "Sort descending"}
+              >
+                ↓
+              </button>
+            </div>
+            <strong>
+              {Math.round(registryRows.reduce((total, row) => total + row.percent, 0) / Math.max(registryRows.length, 1))}%
+              {" "}
+              {language === "es" ? "promedio" : "avg"}
+            </strong>
+          </div>
         </div>
         <div className="registry-list">
           {registryRows.map((row) => (
@@ -2231,7 +2386,14 @@ function SettingsPanel({
                     onChange={() => onTogglePlayerInView(row.player.id)}
                     aria-label={`${language === "es" ? "Mostrar" : "Show"} ${row.player.name}`}
                   />
-                  <span className="registry-number">{row.player.number || "—"}</span>
+                  <span className="registry-player-visual">
+                    {hasPlayerPhoto(row.player) ? (
+                      <Image src={row.player.photo} alt="" width={54} height={54} />
+                    ) : (
+                      <span>{row.player.number || "—"}</span>
+                    )}
+                    <small>{row.player.number || "—"}</small>
+                  </span>
                 </label>
                 <div>
                   <strong>{row.player.name}</strong>
@@ -2248,39 +2410,6 @@ function SettingsPanel({
               <SyncMeter row={row} language={language} />
             </article>
           ))}
-        </div>
-        <div className="registry-sort-controls">
-          <span>{language === "es" ? "Ordenar registro" : "Order registry"}</span>
-          <button
-            className={registrySortField === "number" ? "is-active" : ""}
-            type="button"
-            onClick={() => setRegistrySortField("number")}
-          >
-            {language === "es" ? "Número" : "Number"}
-          </button>
-          <button
-            className={registrySortField === "name" ? "is-active" : ""}
-            type="button"
-            onClick={() => setRegistrySortField("name")}
-          >
-            {language === "es" ? "Nombre" : "A-Z"}
-          </button>
-          <button
-            className={registrySortDirection === "asc" ? "is-active" : ""}
-            type="button"
-            onClick={() => setRegistrySortDirection("asc")}
-            aria-label={language === "es" ? "Orden ascendente" : "Sort ascending"}
-          >
-            ↑
-          </button>
-          <button
-            className={registrySortDirection === "desc" ? "is-active" : ""}
-            type="button"
-            onClick={() => setRegistrySortDirection("desc")}
-            aria-label={language === "es" ? "Orden descendente" : "Sort descending"}
-          >
-            ↓
-          </button>
         </div>
       </section>
       {activePreview && (
@@ -2482,6 +2611,19 @@ function normalizeIdentityName(value: string | undefined) {
 function playerNumberValue(player: Player) {
   const parsed = Number(player.number);
   return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+}
+
+function registryPlayerMatches(player: Player, searchTerm: string) {
+  const query = normalizeIdentityName(searchTerm);
+  if (!query) return true;
+
+  return [
+    player.name,
+    player.amsId,
+    String(player.number ?? ""),
+    player.position,
+    player.nationality,
+  ].some((value) => normalizeIdentityName(value).includes(query));
 }
 
 function DataList({
