@@ -949,6 +949,26 @@ button {
   gap: 12px;
 }
 
+.registry-selector {
+  display: grid;
+  grid-template-columns: auto auto;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.registry-selector input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ams-gold);
+  cursor: pointer;
+}
+
+.registry-selector input:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .registry-player-main strong,
 .registry-player-main small {
   display: block;
@@ -1081,6 +1101,43 @@ button {
 
 .sync-meter.pending .sync-meter-top span {
   color: #ffb8bc;
+}
+
+.registry-sort-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+}
+
+.registry-sort-controls span {
+  margin-right: auto;
+  color: var(--ams-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.registry-sort-controls button {
+  min-width: 38px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 6%);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 950;
+  padding: 8px 12px;
+}
+
+.registry-sort-controls button.is-active {
+  border-color: rgb(215 180 106 / 55%);
+  background: linear-gradient(135deg, rgb(215 180 106 / 22%), rgb(211 31 47 / 28%));
+  color: #fff5d8;
 }
 
 .raw-table-wrap {

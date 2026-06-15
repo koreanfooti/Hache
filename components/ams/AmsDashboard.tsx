@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { type CSSProperties, type ChangeEvent, type FormEvent, useEffect, useState } from "react";
+import { type CSSProperties, type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
 import {
   type AmsSection,
   type Player,
@@ -115,6 +115,8 @@ type RawSourcePreview = {
 };
 
 type Language = "en" | "es";
+type RegistrySortField = "number" | "name";
+type RegistrySortDirection = "asc" | "desc";
 type CalendarEventCategory = "match" | "training" | "testing" | "medical" | "rtp" | "travel" | "meeting";
 type CalendarEventDepartment = "performance" | "medical" | "technical" | "nutrition" | "academy";
 type CalendarTeam = "first-team" | "u21" | "u19" | "u17" | "u15";
@@ -715,6 +717,7 @@ export default function AmsDashboard() {
   const [activeSection, setActiveSection] = useState<AmsSection>("overview");
   const [language, setLanguage] = useState<Language>("en");
   const [selectedPlayerId, setSelectedPlayerId] = useState("gustavo-ferrareis");
+  const [visiblePlayerIds, setVisiblePlayerIds] = useState(() => players.map((player) => player.id));
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [loadSummary, setLoadSummary] = useState<LoadSummary>({
     rows: [],
@@ -733,31 +736,53 @@ export default function AmsDashboard() {
     status: "Loading clean AMS modules...",
   });
 
-  const selectedPlayer = players.find((player) => player.id === selectedPlayerId) ?? players[0];
+  const visiblePlayers = useMemo(
+    () => players.filter((player) => visiblePlayerIds.includes(player.id)),
+    [visiblePlayerIds],
+  );
+  const selectedPlayer = visiblePlayers.find((player) => player.id === selectedPlayerId) ?? visiblePlayers[0] ?? players[0];
+
+  function togglePlayerInView(playerId: string) {
+    setVisiblePlayerIds((currentIds) => {
+      if (currentIds.includes(playerId)) {
+        return currentIds.length > 1 ? currentIds.filter((id) => id !== playerId) : currentIds;
+      }
+
+      return players.some((player) => player.id === playerId) ? [...currentIds, playerId] : currentIds;
+    });
+  }
 
   function rotateSelectedPlayer(direction: 1 | -1) {
+    const rotationPlayers = visiblePlayers.length ? visiblePlayers : players;
     const currentIndex = Math.max(
       0,
-      players.findIndex((player) => player.id === selectedPlayerId),
+      rotationPlayers.findIndex((player) => player.id === selectedPlayerId),
     );
-    const nextIndex = (currentIndex + direction + players.length) % players.length;
-    setSelectedPlayerId(players[nextIndex].id);
+    const nextIndex = (currentIndex + direction + rotationPlayers.length) % rotationPlayers.length;
+    setSelectedPlayerId(rotationPlayers[nextIndex].id);
   }
+
+  useEffect(() => {
+    if (!visiblePlayers.some((player) => player.id === selectedPlayerId)) {
+      setSelectedPlayerId(visiblePlayers[0]?.id ?? players[0].id);
+    }
+  }, [selectedPlayerId, visiblePlayers]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
       setSelectedPlayerId((currentPlayerId) => {
+        const rotationPlayers = visiblePlayers.length ? visiblePlayers : players;
         const currentIndex = Math.max(
           0,
-          players.findIndex((player) => player.id === currentPlayerId),
+          rotationPlayers.findIndex((player) => player.id === currentPlayerId),
         );
-        const nextIndex = (currentIndex + 1) % players.length;
-        return players[nextIndex].id;
+        const nextIndex = (currentIndex + 1) % rotationPlayers.length;
+        return rotationPlayers[nextIndex].id;
       });
     }, 5200);
 
     return () => window.clearInterval(timer);
-  }, []);
+  }, [visiblePlayers]);
 
   useEffect(() => {
     setCurrentTime(new Date());
@@ -882,9 +907,10 @@ export default function AmsDashboard() {
       />
       <div className="ams-shell">
         <section className="ams-stage">
-          <ContextStrip language={language} playerCount={players.length} />
+          <ContextStrip language={language} playerCount={visiblePlayers.length} />
           <PlayerStrip
             language={language}
+            playersInView={visiblePlayers}
             selectedPlayerId={selectedPlayerId}
             onNext={() => rotateSelectedPlayer(1)}
             onPrevious={() => rotateSelectedPlayer(-1)}
@@ -913,7 +939,13 @@ export default function AmsDashboard() {
           {activeSection === "calendar" && <CalendarPanel language={language} />}
           {activeSection === "resources" && <ResourcesPanel language={language} />}
           {activeSection === "settings" && (
-            <SettingsPanel language={language} loadSummary={loadSummary} sourceData={sourceData} />
+            <SettingsPanel
+              language={language}
+              loadSummary={loadSummary}
+              sourceData={sourceData}
+              visiblePlayerIds={visiblePlayerIds}
+              onTogglePlayerInView={togglePlayerInView}
+            />
           )}
         </section>
       </div>
@@ -1041,18 +1073,20 @@ function ContextStrip({ language, playerCount }: { language: Language; playerCou
 
 function PlayerStrip({
   language,
+  playersInView,
   selectedPlayerId,
   onNext,
   onPrevious,
   onSelect,
 }: {
   language: Language;
+  playersInView: Player[];
   selectedPlayerId: string;
   onNext: () => void;
   onPrevious: () => void;
   onSelect: (playerId: string) => void;
 }) {
-  const carouselPlayers = [...players, ...players];
+  const carouselPlayers = [...playersInView, ...playersInView];
   const copy = uiCopy[language];
 
   return (
@@ -1082,8 +1116,8 @@ function PlayerStrip({
                 type="button"
                 className={player.id === selectedPlayerId ? "player-pill is-active" : "player-pill"}
                 onClick={() => onSelect(player.id)}
-                tabIndex={index >= players.length ? -1 : 0}
-                aria-hidden={index >= players.length}
+                tabIndex={index >= playersInView.length ? -1 : 0}
+                aria-hidden={index >= playersInView.length}
               >
                 <span className="player-photo">
                   {hasPlayerPhoto(player) ? (
@@ -2098,16 +2132,22 @@ function SettingsPanel({
   language,
   loadSummary,
   sourceData,
+  visiblePlayerIds,
+  onTogglePlayerInView,
 }: {
   language: Language;
   loadSummary: LoadSummary;
   sourceData: SourceData;
+  visiblePlayerIds: string[];
+  onTogglePlayerInView: (playerId: string) => void;
 }) {
   const copy = panelCopy[language];
   const [activePreview, setActivePreview] = useState<RawSourcePreview | null>(null);
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
   const [previewZoom, setPreviewZoom] = useState(100);
-  const registryRows = buildPlayerRegistryRows(loadSummary, sourceData);
+  const [registrySortField, setRegistrySortField] = useState<RegistrySortField>("number");
+  const [registrySortDirection, setRegistrySortDirection] = useState<RegistrySortDirection>("asc");
+  const registryRows = buildPlayerRegistryRows(loadSummary, sourceData, registrySortField, registrySortDirection);
 
   async function openSourcePreview(source: (typeof dataSources)[number]) {
     setLoadingPath(source.path);
@@ -2183,7 +2223,16 @@ function SettingsPanel({
           {registryRows.map((row) => (
             <article className="registry-player-row" key={row.player.amsId}>
               <div className="registry-player-main">
-                <span className="registry-number">{row.player.number || "—"}</span>
+                <label className="registry-selector">
+                  <input
+                    type="checkbox"
+                    checked={visiblePlayerIds.includes(row.player.id)}
+                    disabled={visiblePlayerIds.length === 1 && visiblePlayerIds.includes(row.player.id)}
+                    onChange={() => onTogglePlayerInView(row.player.id)}
+                    aria-label={`${language === "es" ? "Mostrar" : "Show"} ${row.player.name}`}
+                  />
+                  <span className="registry-number">{row.player.number || "—"}</span>
+                </label>
                 <div>
                   <strong>{row.player.name}</strong>
                   <small>{row.player.amsId} · {localizedValue(row.player.position, language)}</small>
@@ -2199,6 +2248,39 @@ function SettingsPanel({
               <SyncMeter row={row} language={language} />
             </article>
           ))}
+        </div>
+        <div className="registry-sort-controls">
+          <span>{language === "es" ? "Ordenar registro" : "Order registry"}</span>
+          <button
+            className={registrySortField === "number" ? "is-active" : ""}
+            type="button"
+            onClick={() => setRegistrySortField("number")}
+          >
+            {language === "es" ? "Número" : "Number"}
+          </button>
+          <button
+            className={registrySortField === "name" ? "is-active" : ""}
+            type="button"
+            onClick={() => setRegistrySortField("name")}
+          >
+            {language === "es" ? "Nombre" : "A-Z"}
+          </button>
+          <button
+            className={registrySortDirection === "asc" ? "is-active" : ""}
+            type="button"
+            onClick={() => setRegistrySortDirection("asc")}
+            aria-label={language === "es" ? "Orden ascendente" : "Sort ascending"}
+          >
+            ↑
+          </button>
+          <button
+            className={registrySortDirection === "desc" ? "is-active" : ""}
+            type="button"
+            onClick={() => setRegistrySortDirection("desc")}
+            aria-label={language === "es" ? "Orden descendente" : "Sort descending"}
+          >
+            ↓
+          </button>
         </div>
       </section>
       {activePreview && (
@@ -2315,8 +2397,13 @@ function SyncMeter({ row, language }: { row: PlayerRegistryRow; language: Langua
   );
 }
 
-function buildPlayerRegistryRows(loadSummary: LoadSummary, sourceData: SourceData): PlayerRegistryRow[] {
-  return players.map((player) => {
+function buildPlayerRegistryRows(
+  loadSummary: LoadSummary,
+  sourceData: SourceData,
+  sortField: RegistrySortField,
+  sortDirection: RegistrySortDirection,
+): PlayerRegistryRow[] {
+  const sortedRows = players.map((player) => {
     const auditSources = ["Bio", "Photo", "LigaMX", "SofaScore", "Match", "Sessions"].map((source) => ({
       label: source,
       tone: auditSourceTone(sourceData.syncAudit, player.amsId, source),
@@ -2345,7 +2432,18 @@ function buildPlayerRegistryRows(loadSummary: LoadSummary, sourceData: SourceDat
       totalCount: sourceChecks.length,
       tone,
     };
-  }).sort((a, b) => b.percent - a.percent || a.player.name.localeCompare(b.player.name));
+  });
+
+  return sortedRows.sort((a, b) => {
+    const direction = sortDirection === "asc" ? 1 : -1;
+
+    if (sortField === "number") {
+      const numberDelta = playerNumberValue(a.player) - playerNumberValue(b.player);
+      if (numberDelta !== 0) return numberDelta * direction;
+    }
+
+    return a.player.name.localeCompare(b.player.name) * direction;
+  });
 }
 
 function auditSourceTone(syncAudit: SyncAuditRow[], amsId: string, source: string): RegistryTone {
@@ -2379,6 +2477,11 @@ function normalizeIdentityName(value: string | undefined) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]/gi, "")
     .toLowerCase();
+}
+
+function playerNumberValue(player: Player) {
+  const parsed = Number(player.number);
+  return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
 }
 
 function DataList({
