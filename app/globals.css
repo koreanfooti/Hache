@@ -910,6 +910,49 @@ button {
   padding: 7px 10px;
 }
 
+.athlete-profile-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid rgb(215 180 106 / 26%);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgb(215 180 106 / 12%), rgb(211 31 47 / 10%)),
+    rgb(255 255 255 / 3%);
+  padding: 16px 18px;
+}
+
+.athlete-profile-selector span {
+  display: block;
+  color: var(--ams-muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.athlete-profile-selector strong {
+  display: block;
+  margin-top: 3px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.athlete-profile-selector select,
+.biography-list-controls select,
+.biography-list-controls input {
+  width: min(100%, 360px);
+  border: 1px solid rgb(215 180 106 / 30%);
+  border-radius: 8px;
+  background: rgb(8 4 6 / 88%);
+  color: #fff;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 850;
+  outline: none;
+  padding: 12px 14px;
+}
+
 .athlete-profile-panel {
   display: grid;
   gap: 18px;
@@ -1006,6 +1049,383 @@ button {
 
 .athlete-profile-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.biography-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.biography-hero,
+.biography-player-list,
+.biography-profile-card,
+.biography-detail,
+.biography-deep-panel,
+.biography-stats-panel,
+.biography-table-panel {
+  border: 1px solid rgb(215 180 106 / 24%);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 18% 0%, rgb(211 31 47 / 18%), transparent 34%),
+    linear-gradient(135deg, rgb(24 9 13 / 96%), rgb(10 5 7 / 92%));
+  box-shadow: var(--ams-shadow);
+}
+
+.biography-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px 26px;
+}
+
+.biography-hero h2 {
+  margin: 4px 0 8px;
+  color: #fff;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 0.95;
+}
+
+.biography-hero p,
+.biography-table-panel p,
+.biography-deep-panel p {
+  margin: 0;
+  color: var(--ams-muted);
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.biography-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.biography-player-list {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.biography-player-list .panel-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.biography-player-list .panel-heading h3 {
+  margin: 4px 0 0;
+  color: #fff;
+}
+
+.biography-player-list .panel-heading small {
+  color: var(--ams-gold);
+  font-weight: 950;
+}
+
+.biography-list-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.biography-list-controls select,
+.biography-list-controls input {
+  width: 100%;
+}
+
+.biography-player-list-scroll {
+  display: grid;
+  max-height: 620px;
+  overflow: auto;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.biography-player-row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 4%);
+  color: #fff;
+  padding: 9px;
+  text-align: left;
+}
+
+.biography-player-row.is-active,
+.biography-player-row:hover {
+  border-color: rgb(215 180 106 / 62%);
+  background: linear-gradient(135deg, rgb(211 31 47 / 30%), rgb(215 180 106 / 12%));
+}
+
+.biography-player-thumb {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgb(215 180 106 / 34%);
+  border-radius: 10px;
+  background: rgb(0 0 0 / 26%);
+  color: var(--ams-gold);
+  font-weight: 950;
+}
+
+.biography-player-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.biography-player-row strong,
+.biography-player-row small {
+  display: block;
+}
+
+.biography-player-row small {
+  margin-top: 4px;
+  color: var(--ams-muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.biography-profile {
+  display: grid;
+  gap: 14px;
+}
+
+.biography-profile-card {
+  position: relative;
+  display: grid;
+  min-height: 470px;
+  place-items: center;
+  overflow: hidden;
+  padding: 26px;
+  text-align: center;
+}
+
+.biography-profile-card::before {
+  position: absolute;
+  inset: 14px;
+  border: 1px solid rgb(215 180 106 / 18%);
+  border-radius: 8px;
+  content: "";
+}
+
+.biography-nationality-pill {
+  z-index: 1;
+  border: 1px solid rgb(215 180 106 / 34%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 34%);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 950;
+  padding: 7px 12px;
+}
+
+.biography-profile-card h3 {
+  z-index: 1;
+  margin: 12px 0 0;
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  line-height: 0.92;
+}
+
+.biography-photo-stage {
+  z-index: 1;
+  display: grid;
+  width: min(100%, 390px);
+  min-height: 285px;
+  place-items: end center;
+}
+
+.biography-photo-stage img {
+  width: min(100%, 330px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 28px rgb(0 0 0 / 45%));
+}
+
+.biography-photo-stage strong {
+  display: grid;
+  width: 160px;
+  height: 160px;
+  place-items: center;
+  border: 1px solid rgb(215 180 106 / 35%);
+  border-radius: 28px;
+  color: var(--ams-gold);
+  font-size: 4rem;
+}
+
+.biography-profile-role {
+  z-index: 1;
+  margin: 0;
+  color: var(--ams-muted);
+  font-size: 0.94rem;
+  font-weight: 850;
+}
+
+.biography-detail-grid,
+.biography-deep-grid,
+.biography-kpi-grid,
+.biography-stat-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.biography-detail-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.biography-detail {
+  padding: 15px;
+}
+
+.biography-detail span,
+.biography-deep-heading span,
+.biography-kpi span,
+.biography-contract-row span,
+.biography-stat-tile span {
+  display: block;
+  color: var(--ams-gold);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.biography-detail strong {
+  display: block;
+  margin-top: 8px;
+  color: #fff;
+  font-size: 0.98rem;
+}
+
+.biography-deep-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.biography-deep-panel,
+.biography-stats-panel,
+.biography-table-panel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.biography-deep-heading strong {
+  display: block;
+  margin-top: 5px;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.biography-kpi-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.biography-kpi,
+.biography-stat-tile {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 4%);
+  padding: 14px;
+}
+
+.biography-kpi strong,
+.biography-stat-tile strong {
+  display: block;
+  color: #fff;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.biography-kpi span,
+.biography-stat-tile span {
+  margin-top: 8px;
+  color: var(--ams-muted);
+}
+
+.biography-progress-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  color: var(--ams-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.biography-progress-row b {
+  color: var(--ams-gold);
+}
+
+.biography-progress-track {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+}
+
+.biography-progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2fc36b, var(--ams-gold), var(--ams-red));
+}
+
+.biography-contract-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgb(255 255 255 / 9%);
+  padding-bottom: 10px;
+}
+
+.biography-contract-row strong {
+  color: #fff;
+  text-align: right;
+}
+
+.biography-stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.biography-table-wrap {
+  overflow: auto;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+}
+
+.biography-table-panel table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.biography-table-panel th,
+.biography-table-panel td {
+  border-bottom: 1px solid rgb(255 255 255 / 9%);
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.biography-table-panel th {
+  color: var(--ams-gold);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.biography-table-panel td {
+  color: #fff;
+  font-size: 0.86rem;
 }
 
 .environment-overview-grid,
@@ -1657,9 +2077,16 @@ button {
   .profile-details-grid,
   .integration-grid,
   .athlete-profile-grid,
+  .biography-layout,
+  .biography-detail-grid,
   .environment-overview-grid,
   .environment-fixture-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .biography-deep-grid,
+  .biography-stat-grid {
+    grid-template-columns: 1fr;
   }
 
   .athlete-profile-hero {
@@ -1704,6 +2131,27 @@ button {
   .hero-panel,
   .profile-hero,
   .source-row {
+    grid-template-columns: 1fr;
+  }
+
+  .athlete-profile-selector,
+  .biography-hero,
+  .biography-contract-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .athlete-profile-selector select,
+  .biography-list-controls select,
+  .biography-list-controls input {
+    width: 100%;
+  }
+
+  .biography-layout,
+  .biography-detail-grid,
+  .biography-deep-grid,
+  .biography-kpi-grid,
+  .biography-stat-grid {
     grid-template-columns: 1fr;
   }
 
