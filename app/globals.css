@@ -1139,8 +1139,9 @@ button {
   display: grid;
   max-height: 620px;
   overflow: auto;
-  gap: 8px;
-  padding-right: 4px;
+  grid-auto-rows: minmax(78px, auto);
+  gap: 12px;
+  padding: 4px 6px 8px 0;
 }
 
 .biography-player-row {
@@ -1148,12 +1149,13 @@ button {
   grid-template-columns: 58px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
+  min-height: 78px;
   width: 100%;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 8px;
   background: rgb(255 255 255 / 4%);
   color: #fff;
-  padding: 9px;
+  padding: 10px 12px;
   text-align: left;
 }
 
@@ -1185,13 +1187,23 @@ button {
 .biography-player-row strong,
 .biography-player-row small {
   display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.biography-player-row strong {
+  font-size: 0.98rem;
+  line-height: 1.15;
 }
 
 .biography-player-row small {
-  margin-top: 4px;
+  margin-top: 6px;
   color: var(--ams-muted);
   font-size: 0.76rem;
   font-weight: 850;
+  line-height: 1.15;
 }
 
 .biography-profile {
