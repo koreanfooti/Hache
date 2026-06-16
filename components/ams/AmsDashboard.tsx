@@ -1622,6 +1622,8 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
   const copy = panelCopy[language];
   const [fixtures, setFixtures] = useState<AtlasFixtureFeedItem[]>([]);
   const [weatherPoints, setWeatherPoints] = useState<EnvironmentWeatherPoint[]>([]);
+  const [environmentStartDate, setEnvironmentStartDate] = useState("");
+  const [environmentEndDate, setEnvironmentEndDate] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -1660,17 +1662,25 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
   const environmentFixtures = fixtures
     .filter((fixture) => fixture.travelContext)
     .sort((a, b) => a.date.localeCompare(b.date));
-  const highestLoadFixture = awayFixtures.reduce<AtlasFixtureFeedItem | null>((current, fixture) => {
+  const filteredEnvironmentFixtures = environmentFixtures.filter((fixture) =>
+    (!environmentStartDate || fixture.date >= environmentStartDate)
+    && (!environmentEndDate || fixture.date <= environmentEndDate),
+  );
+  const filteredAwayFixtures = filteredEnvironmentFixtures.filter((fixture) => fixture.travelContext && !fixture.travelContext.isHome);
+  const firstFixtureDate = environmentFixtures[0]?.date ?? "";
+  const lastFixtureDate = environmentFixtures.at(-1)?.date ?? "";
+  const highestLoadFixture = filteredAwayFixtures.reduce<AtlasFixtureFeedItem | null>((current, fixture) => {
     if (!fixture.travelContext) return current;
     if (!current?.travelContext) return fixture;
     return travelLoadScore(fixture.travelContext.travelLoad) > travelLoadScore(current.travelContext.travelLoad) ? fixture : current;
   }, null);
-  const maxDistance = Math.max(...awayFixtures.map((fixture) => fixture.travelContext?.distanceKm ?? 0), 0);
-  const avgTravelHours = awayFixtures.length
-    ? awayFixtures.reduce((total, fixture) => total + (fixture.travelContext?.estimatedTravelHours ?? 0), 0) / awayFixtures.length
+  const maxDistance = Math.max(...filteredAwayFixtures.map((fixture) => fixture.travelContext?.distanceKm ?? 0), 0);
+  const avgTravelHours = filteredAwayFixtures.length
+    ? filteredAwayFixtures.reduce((total, fixture) => total + (fixture.travelContext?.estimatedTravelHours ?? 0), 0) / filteredAwayFixtures.length
     : 0;
   const academyWeather = weatherPoints.find((point) => point.id === "academy");
   const airportWeather = weatherPoints.find((point) => point.id === "airport");
+  const hasDateFilter = Boolean(environmentStartDate || environmentEndDate);
 
   return (
     <div className="panel-stack">
@@ -1705,10 +1715,58 @@ function ExternalFactorsPanel({ language }: { language: Language }) {
           detail={language === "es" ? "Estimación por partido fuera" : "Estimated per away match"}
         />
       </section>
+      <section className="environment-filter-panel">
+        <div>
+          <span className="section-kicker">{language === "es" ? "Filtro de fechas" : "Date Slicer"}</span>
+          <h3>{language === "es" ? "Partidos en vista" : "Games in view"}</h3>
+          <p>
+            {filteredEnvironmentFixtures.length} / {environmentFixtures.length}{" "}
+            {language === "es" ? "partidos visibles" : "games visible"}
+          </p>
+        </div>
+        <div className="environment-date-controls">
+          <label>
+            <span>{language === "es" ? "Desde" : "From"}</span>
+            <input
+              type="date"
+              min={firstFixtureDate}
+              max={environmentEndDate || lastFixtureDate}
+              value={environmentStartDate}
+              onChange={(event) => setEnvironmentStartDate(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>{language === "es" ? "Hasta" : "To"}</span>
+            <input
+              type="date"
+              min={environmentStartDate || firstFixtureDate}
+              max={lastFixtureDate}
+              value={environmentEndDate}
+              onChange={(event) => setEnvironmentEndDate(event.target.value)}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => {
+              setEnvironmentStartDate("");
+              setEnvironmentEndDate("");
+            }}
+            disabled={!hasDateFilter}
+          >
+            {language === "es" ? "Ver todos" : "Show all"}
+          </button>
+        </div>
+      </section>
       <section className="environment-fixture-grid">
-        {environmentFixtures.map((fixture) => (
+        {filteredEnvironmentFixtures.length ? filteredEnvironmentFixtures.map((fixture) => (
           <EnvironmentFixtureCard fixture={fixture} language={language} key={fixture.id} />
-        ))}
+        )) : (
+          <p className="empty-profile">
+            {language === "es"
+              ? "No hay partidos en este rango de fechas."
+              : "No games match this date range."}
+          </p>
+        )}
       </section>
     </div>
   );
