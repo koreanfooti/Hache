@@ -179,6 +179,10 @@ type AtlasTravelContext = {
   isHome: boolean;
   baseName: string;
   airportName: string;
+  directionsOriginName: string;
+  directionsOriginAddress: string;
+  directionsDestinationName: string;
+  googleMapsDirectionsUrl: string;
   distanceKm: number;
   airDistanceKm: number;
   groundToAirportKm: number;
@@ -2190,6 +2194,10 @@ function EnvironmentFixtureCard({ fixture, language }: { fixture: AtlasFixtureFe
       </div>
       <dl className="environment-detail-list">
         <div>
+          <dt>{language === "es" ? "Origen mapa" : "Map origin"}</dt>
+          <dd>{context.directionsOriginName}</dd>
+        </div>
+        <div>
           <dt>{language === "es" ? "Modo" : "Mode"}</dt>
           <dd>{localizedTravelMode(context.travelMode, language)}</dd>
         </div>
@@ -2206,6 +2214,16 @@ function EnvironmentFixtureCard({ fixture, language }: { fixture: AtlasFixtureFe
           <dd>{formatSignedMeters(context.altitudeDeltaMeters)}</dd>
         </div>
       </dl>
+      <a
+        className="environment-map-link"
+        href={context.googleMapsDirectionsUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {language === "es"
+          ? `Abrir Google Maps desde ${context.directionsOriginName}`
+          : `Open Google Maps from ${context.directionsOriginName}`}
+      </a>
     </article>
   );
 }

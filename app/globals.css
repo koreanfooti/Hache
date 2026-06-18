@@ -1674,7 +1674,7 @@ button {
 
 .environment-detail-list {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
   margin: 0;
 }
@@ -1691,6 +1691,26 @@ button {
   color: #fff;
   font-size: 0.96rem;
   font-weight: 950;
+}
+
+.environment-map-link {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(215 180 106 / 42%);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgb(215 180 106 / 18%), rgb(211 31 47 / 24%));
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 950;
+  padding: 9px 13px;
+  text-decoration: none;
+}
+
+.environment-map-link:hover {
+  border-color: rgb(215 180 106 / 70%);
+  background: linear-gradient(135deg, rgb(215 180 106 / 26%), rgb(211 31 47 / 32%));
 }
 
 .player-registry-panel {

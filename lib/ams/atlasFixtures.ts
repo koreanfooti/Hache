@@ -25,6 +25,10 @@ export type AtlasTravelContext = {
   isHome: boolean;
   baseName: string;
   airportName: string;
+  directionsOriginName: string;
+  directionsOriginAddress: string;
+  directionsDestinationName: string;
+  googleMapsDirectionsUrl: string;
   distanceKm: number;
   airDistanceKm: number;
   groundToAirportKm: number;
@@ -83,6 +87,8 @@ export function buildAtlasTravelContext(fixture: AtlasFixture, venue?: AtlasVenu
   const airDistanceKm = isHome ? 0 : haversineKm(atlasTravelAirport, venue);
   const groundToAirportKm = haversineKm(atlasTravelBase, atlasTravelAirport);
   const travelMode = isHome ? "home" : distanceKm < 360 ? "road" : "air";
+  const directionsOrigin = travelMode === "air" ? atlasTravelAirport : atlasTravelBase;
+  const directionsDestination = `${venue.venue}, ${venue.city}, ${venue.country}`;
   const estimatedFlightHours = travelMode === "air" ? roundOne(airDistanceKm / 780 + 1.25) : 0;
   const estimatedTravelHours = isHome
     ? 0.5
@@ -96,6 +102,10 @@ export function buildAtlasTravelContext(fixture: AtlasFixture, venue?: AtlasVenu
     isHome,
     baseName: atlasTravelBase.name,
     airportName: `${atlasTravelAirport.name} (${atlasTravelAirport.iata})`,
+    directionsOriginName: travelMode === "air" ? `${atlasTravelAirport.name} (${atlasTravelAirport.iata})` : atlasTravelBase.name,
+    directionsOriginAddress: directionsOrigin.address,
+    directionsDestinationName: directionsDestination,
+    googleMapsDirectionsUrl: buildGoogleMapsDirectionsUrl(directionsOrigin.address, directionsDestination),
     distanceKm: Math.round(distanceKm),
     airDistanceKm: Math.round(airDistanceKm),
     groundToAirportKm: Math.round(groundToAirportKm),
@@ -107,6 +117,17 @@ export function buildAtlasTravelContext(fixture: AtlasFixture, venue?: AtlasVenu
     travelMode,
     travelLoad: rateTravelLoad(distanceKm, Math.abs(timezoneDifferenceHours), Math.abs(altitudeDeltaMeters), travelMode),
   };
+}
+
+function buildGoogleMapsDirectionsUrl(origin: string, destination: string) {
+  const params = new URLSearchParams({
+    api: "1",
+    origin,
+    destination,
+    travelmode: "driving",
+  });
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
 function rateTravelLoad(distanceKm: number, timezoneShiftHours: number, altitudeShiftMeters: number, travelMode: AtlasTravelContext["travelMode"]) {
