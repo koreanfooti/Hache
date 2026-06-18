@@ -460,7 +460,7 @@ export const dataSources = [
   { label: "Sync audit", path: "/ams/data/clean/sync_audit.csv" },
   { label: "GPS daily rollup", path: "/ams/data/clean/gps/gps_player_daily.csv" },
   { label: "Current roster GPS", path: "/ams/data/clean/gps/gps_player_daily_current_roster.json" },
-  { label: "Injury history", path: "/ams/data/clean/injuries/injury_history_clean.json" },
+  { label: "Injury history", path: "/api/ams/injuries" },
   { label: "Body composition", path: "/ams/data/clean/body_comp/body_comp_clean.json" },
   { label: "FMS assessments", path: "/ams/data/clean/tests/fms_assessments_clean.json" },
   { label: "Y Balance assessments", path: "/ams/data/clean/tests/y_balance_assessments_clean.json" },

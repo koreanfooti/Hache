@@ -4,6 +4,7 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { dataSources } from "@/lib/ams/content";
 import { parseCsv } from "@/lib/ams/data";
+import { getInjuryHistoryFromGoogleSheet } from "@/lib/ams/injury-source";
 
 const MAX_ROWS = 50;
 const allowedSourcePaths = new Set(dataSources.map((source) => source.path));
@@ -26,6 +27,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    if (sourcePath === "/api/ams/injuries") {
+      const payload = await getInjuryHistoryFromGoogleSheet();
+      const rows = payload.rows.slice(0, MAX_ROWS);
+      return NextResponse.json(toPreviewPayload(source, rows, payload.rows.length > MAX_ROWS, payload.rows.length));
+    }
+
     if (sourcePath.endsWith(".csv")) {
       const lines = await readCsvHead(filePath, MAX_ROWS + 1);
       const rows = parseCsv(lines.join("\n")).slice(0, MAX_ROWS);

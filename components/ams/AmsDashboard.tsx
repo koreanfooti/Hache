@@ -96,6 +96,8 @@ type LoadSummary = {
 
 type SourceData = {
   injuries: InjuryRow[];
+  injuryLastSynced?: string;
+  injurySourceLabel?: string;
   bodyComp: BodyCompRow[];
   fms: FmsAssessmentRow[];
   yBalance: YBalanceAssessmentRow[];
@@ -111,6 +113,16 @@ type RawSourcePreview = {
   rowCount: number;
   totalRows?: number;
   truncated: boolean;
+  error?: string;
+};
+
+type InjuryApiPayload = {
+  rows?: InjuryRow[];
+  meta?: {
+    sourceLabel?: string;
+    lastSynced?: string;
+    rowCount?: number;
+  };
   error?: string;
 };
 
@@ -1033,8 +1045,8 @@ export default function AmsDashboard() {
     let cancelled = false;
 
     async function loadModules() {
-      const [injuries, bodyComp, fms, yBalance, syncAudit] = await Promise.all([
-        loadJson<InjuryRow>("/ams/data/clean/injuries/injury_history_clean.json").catch(() => []),
+      const [injuryPayload, bodyComp, fms, yBalance, syncAudit] = await Promise.all([
+        loadInjurySource(),
         loadJson<BodyCompRow>("/ams/data/clean/body_comp/body_comp_clean.json").catch(() => []),
         loadJson<FmsAssessmentRow>("/ams/data/clean/tests/fms_assessments_clean.json").catch(() => []),
         loadJson<YBalanceAssessmentRow>("/ams/data/clean/tests/y_balance_assessments_clean.json").catch(() => []),
@@ -1044,12 +1056,14 @@ export default function AmsDashboard() {
       if (cancelled) return;
 
       setSourceData({
-        injuries,
+        injuries: injuryPayload.rows,
+        injuryLastSynced: injuryPayload.lastSynced,
+        injurySourceLabel: injuryPayload.sourceLabel,
         bodyComp,
         fms,
         yBalance,
         syncAudit,
-        status: `Loaded ${compactNumber(injuries.length + bodyComp.length + fms.length + yBalance.length + syncAudit.length)} clean module records.`,
+        status: `Loaded ${compactNumber(injuryPayload.rows.length + bodyComp.length + fms.length + yBalance.length + syncAudit.length)} clean module records.`,
       });
     }
 
@@ -3235,7 +3249,7 @@ function SettingsPanel({
 function sourceRecordLabel(path: string, loadSummary: LoadSummary, sourceData: SourceData, language: Language) {
   const knownCounts: Record<string, number> = {
     "/ams/data/clean/gps/gps_player_daily_current_roster.json": loadSummary.rows.length,
-    "/ams/data/clean/injuries/injury_history_clean.json": sourceData.injuries.length,
+    "/api/ams/injuries": sourceData.injuries.length,
     "/ams/data/clean/body_comp/body_comp_clean.json": sourceData.bodyComp.length,
     "/ams/data/clean/tests/fms_assessments_clean.json": sourceData.fms.length,
     "/ams/data/clean/tests/y_balance_assessments_clean.json": sourceData.yBalance.length,
@@ -3244,10 +3258,51 @@ function sourceRecordLabel(path: string, loadSummary: LoadSummary, sourceData: S
 
   const count = knownCounts[path];
   if (typeof count === "number") {
+    if (path === "/api/ams/injuries" && sourceData.injuryLastSynced) {
+      return `${compactNumber(count)} ${language === "es" ? "registros" : "records"} · ${language === "es" ? "sincronizado" : "synced"} ${formatLastSynced(sourceData.injuryLastSynced, language)}`;
+    }
+
     return `${compactNumber(count)} ${language === "es" ? "registros cargados" : "loaded records"}`;
   }
 
   return language === "es" ? "Disponible para vista previa" : "Available for preview";
+}
+
+async function loadInjurySource() {
+  try {
+    const response = await fetch("/api/ams/injuries", { cache: "no-store" });
+    const payload = (await response.json()) as InjuryApiPayload;
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to load Google Sheets injury history.");
+    }
+
+    return {
+      rows: payload.rows ?? [],
+      lastSynced: payload.meta?.lastSynced,
+      sourceLabel: payload.meta?.sourceLabel ?? "Published Google Sheet",
+    };
+  } catch {
+    const fallbackRows = await loadJson<InjuryRow>("/ams/data/clean/injuries/injury_history_clean.json").catch(() => []);
+
+    return {
+      rows: fallbackRows,
+      lastSynced: undefined,
+      sourceLabel: "Local fallback",
+    };
+  }
+}
+
+function formatLastSynced(value: string, language: Language) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat(language === "es" ? "es-MX" : "en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function formatRawValue(value: unknown) {
