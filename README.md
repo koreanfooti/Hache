@@ -27,3 +27,20 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the app.
+
+## Production Checks
+
+Run the full local gate before shipping:
+
+```bash
+npm run verify
+```
+
+The app exposes a lightweight health/readiness endpoint at
+[`/api/health`](http://localhost:3000/api/health). It reports whether the app is
+running and whether the required cleaned AMS data files are available under
+`public/ams/data/clean`.
+
+The cleaned AMS data directory is currently ignored by Git, so production
+deployments need that data supplied by storage, a build artifact, or real API
+connectors.
