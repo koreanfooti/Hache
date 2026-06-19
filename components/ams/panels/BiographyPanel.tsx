@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import type { AmsAuthRole, AmsFinancialField } from "@/lib/ams/auth-rules";
+import { shouldMaskFinancialField } from "@/lib/ams/auth-rules";
 import type { Player } from "@/lib/ams/content";
 import { compactNumber } from "@/lib/ams/data";
 import { hasPlayerPhoto } from "@/lib/ams/player-media";
@@ -19,8 +21,10 @@ export function BiographyPanel({
   sourceData,
   visiblePlayers,
   onSelectPlayer,
+  role,
 }: {
   language: AmsLanguage;
+  role: AmsAuthRole;
   selectedPlayer: Player;
   sourceData: SourceData;
   visiblePlayers: Player[];
@@ -42,6 +46,7 @@ export function BiographyPanel({
     return matchesPosition && matchesSearch;
   });
   const selectedExtra = biographyExtraForPlayer(selectedPlayer, sourceData);
+  const restrictedFinancialValue = language === "es" ? "Restringido" : "Restricted";
   const selectedStats = seasonStatsForPlayer(selectedPlayer, sourceData.playerSeasonHistory);
   const recentMatches = recentMatchesForPlayer(selectedPlayer, sourceData.playerMatchHistory);
   const statusLabel = language === "es"
@@ -190,9 +195,19 @@ export function BiographyPanel({
           </div>
           <BiographyContractRow label={language === "es" ? "Club anterior" : "Previous Club"} value={selectedExtra.previousClub} />
           <BiographyContractRow label={language === "es" ? "Llegada" : "Joined"} value={selectedExtra.joined} />
-          <BiographyContractRow label={language === "es" ? "Fin de contrato" : "Contract End"} value={selectedExtra.contractExpires} />
-          <BiographyContractRow label={language === "es" ? "Valor mercado" : "Market Value"} value={selectedExtra.marketValue} />
-          <ProgressMetric label={language === "es" ? "Contrato completado" : "Contract elapsed"} value={selectedExtra.contractProgress} />
+          <BiographyContractRow
+            label={language === "es" ? "Fin de contrato" : "Contract End"}
+            value={maskFinancialValue(role, "contractExpires", selectedExtra.contractExpires, restrictedFinancialValue)}
+          />
+          <BiographyContractRow
+            label={language === "es" ? "Valor mercado" : "Market Value"}
+            value={maskFinancialValue(role, "marketValue", selectedExtra.marketValue, restrictedFinancialValue)}
+          />
+          {shouldMaskFinancialField(role, "contractProgress") ? (
+            <BiographyContractRow label={language === "es" ? "Contrato completado" : "Contract elapsed"} value={restrictedFinancialValue} />
+          ) : (
+            <ProgressMetric label={language === "es" ? "Contrato completado" : "Contract elapsed"} value={selectedExtra.contractProgress} />
+          )}
         </article>
       </section>
 
@@ -332,6 +347,15 @@ function BiographyStat({ label, value }: { label: string; value: string }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+function maskFinancialValue(
+  role: AmsAuthRole,
+  field: AmsFinancialField,
+  value: string,
+  restrictedValue: string,
+) {
+  return shouldMaskFinancialField(role, field) ? restrictedValue : value;
 }
 
 function nationalityFlag(nationality: string) {

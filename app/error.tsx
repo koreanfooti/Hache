@@ -10,7 +10,7 @@ export default function Error({
   return (
     <main className="route-fallback">
       <section className="route-fallback-panel">
-        <span className="section-kicker">Hache AMS</span>
+        <span className="section-kicker">Real AMS</span>
         <h1>Could not load this view</h1>
         <p>
           The dashboard hit an unexpected error. Try reloading the view, then check the health endpoint if it persists.

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { AmsAuthRole } from "@/lib/ams/auth-rules";
+import { canAccessDomain, canAccessRawSources } from "@/lib/ams/auth-rules";
 import { sampleGpsRows } from "@/lib/ams/content";
 import { compactNumber, loadCsv, loadJson, numberValue } from "@/lib/ams/data";
 import { amsSourcePaths } from "@/lib/ams/source-registry";
@@ -50,14 +52,28 @@ const initialSourceData: SourceData = {
   status: "Loading clean AMS modules...",
 };
 
-export function useAmsSources() {
+export function useAmsSources(role: AmsAuthRole = "technicalStaff") {
   const [loadSummary, setLoadSummary] = useState<LoadSummary>(initialLoadSummary);
   const [sourceData, setSourceData] = useState<SourceData>(initialSourceData);
+  const canViewMedical = canAccessDomain(role, "medical");
+  const canViewPerformance = canAccessDomain(role, "performance");
+  const canViewPlayerCare = canAccessDomain(role, "playerCare");
+  const canViewRawSources = canAccessRawSources(role);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadGps() {
+      if (!canViewPerformance) {
+        if (!cancelled) {
+          setLoadSummary({
+            ...initialLoadSummary,
+            status: "WIMU/GPS feed restricted for this role.",
+          });
+        }
+        return;
+      }
+
       try {
         let rows = await loadJson<CleanGpsRow>(amsSourcePaths.currentRosterGps);
         let sourceLabel = "current-roster WIMU/GPS daily records";
@@ -83,7 +99,7 @@ export function useAmsSources() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [canViewPerformance]);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,16 +120,16 @@ export function useAmsSources() {
         playerSeasonHistory,
         playerMatchHistory,
       ] = await Promise.all([
-        loadInjurySource(),
-        loadJson<BodyCompRow>(amsSourcePaths.bodyComp).catch(() => []),
-        loadJson<FmsAssessmentRow>(amsSourcePaths.fmsAssessments).catch(() => []),
-        loadJson<FmsExerciseScoreRow>(amsSourcePaths.fmsExerciseScores).catch(() => []),
-        loadJson<YBalanceAssessmentRow>(amsSourcePaths.yBalanceAssessments).catch(() => []),
-        loadJson<YBalanceMetricRow>(amsSourcePaths.yBalanceMetrics).catch(() => []),
-        loadJson<ValdNordbordTestRow>(amsSourcePaths.valdNordbordTests).catch(() => []),
-        loadJson<ValdNordbordMetricRow>(amsSourcePaths.valdNordbordMetrics).catch(() => []),
-        loadJson<RehabServiceRow>(amsSourcePaths.rehabServices).catch(() => []),
-        loadCsv<SyncAuditRow>(amsSourcePaths.syncAudit).catch(() => []),
+        canViewMedical ? loadInjurySource() : restrictedInjurySource(),
+        canViewMedical || canViewPerformance ? loadJson<BodyCompRow>(amsSourcePaths.bodyComp).catch(() => []) : [],
+        canViewPerformance ? loadJson<FmsAssessmentRow>(amsSourcePaths.fmsAssessments).catch(() => []) : [],
+        canViewPerformance ? loadJson<FmsExerciseScoreRow>(amsSourcePaths.fmsExerciseScores).catch(() => []) : [],
+        canViewPerformance ? loadJson<YBalanceAssessmentRow>(amsSourcePaths.yBalanceAssessments).catch(() => []) : [],
+        canViewPerformance ? loadJson<YBalanceMetricRow>(amsSourcePaths.yBalanceMetrics).catch(() => []) : [],
+        canViewPerformance ? loadJson<ValdNordbordTestRow>(amsSourcePaths.valdNordbordTests).catch(() => []) : [],
+        canViewPerformance ? loadJson<ValdNordbordMetricRow>(amsSourcePaths.valdNordbordMetrics).catch(() => []) : [],
+        canViewMedical || canViewPerformance || canViewPlayerCare ? loadJson<RehabServiceRow>(amsSourcePaths.rehabServices).catch(() => []) : [],
+        canViewRawSources ? loadCsv<SyncAuditRow>(amsSourcePaths.syncAudit).catch(() => []) : [],
         loadJson<PlayerMasterRow>(amsSourcePaths.playerMaster).catch(() => []),
         loadJson<PlayerSeasonHistoryRow>(amsSourcePaths.playerSeasonHistory).catch(() => []),
         loadJson<PlayerMatchHistoryRow>(amsSourcePaths.playerMatchHistory).catch(() => []),
@@ -145,9 +161,17 @@ export function useAmsSources() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [canViewMedical, canViewPerformance, canViewPlayerCare, canViewRawSources]);
 
   return { loadSummary, sourceData };
+}
+
+function restrictedInjurySource() {
+  return Promise.resolve({
+    rows: [],
+    lastSynced: undefined,
+    sourceLabel: "Restricted",
+  });
 }
 
 function summarizeGpsRows(rows: CleanGpsRow[], status: string): LoadSummary {

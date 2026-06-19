@@ -1,5 +1,5 @@
-import AmsDashboard from "@/components/ams/AmsDashboard";
+import { ProtectedAmsApp } from "@/components/ams/auth/ProtectedAmsApp";
 
 export default function Home() {
-  return <AmsDashboard />;
+  return <ProtectedAmsApp />;
 }

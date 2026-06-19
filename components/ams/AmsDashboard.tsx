@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { RealAmsAuthUser } from "@/lib/ams/auth-session";
+import { authRoleLabel } from "@/lib/ams/auth-session";
+import { canAccessSection } from "@/lib/ams/auth-rules";
 import { type AmsSection, navItems, players as fallbackPlayers } from "@/lib/ams/content";
 import { buildRosterPlayers } from "@/lib/ams/roster";
 import { panelCopy } from "@/components/ams/config/copy";
@@ -33,13 +36,30 @@ const sectionMap: Record<AmsSection, string> = Object.fromEntries(
   navItems.map((item) => [item.id, item.label]),
 ) as Record<AmsSection, string>;
 
-export default function AmsDashboard() {
-  const [activeSection, setActiveSection] = useState<AmsSection>("overview");
+export default function AmsDashboard({
+  authUser,
+  onSignOut,
+}: {
+  authUser: RealAmsAuthUser;
+  onSignOut: () => void;
+}) {
+  const defaultSection = defaultSectionForRole(authUser.role);
+  const [activeSection, setActiveSection] = useState<AmsSection>(defaultSection);
   const [language, setLanguage] = useState<Language>("en");
   const [selectedPlayerId, setSelectedPlayerId] = useState("gustavo-ferrareis");
   const [visiblePlayerIds, setVisiblePlayerIds] = useState(() => fallbackPlayers.map((player) => player.id));
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
-  const { loadSummary, sourceData } = useAmsSources();
+  const { loadSummary, sourceData } = useAmsSources(authUser.role);
+  const allowedSections = useMemo(
+    () => navItems.map((item) => item.id).filter((section) => canAccessSection(authUser.role, section)),
+    [authUser.role],
+  );
+  const currentSection = allowedSections.includes(activeSection)
+    ? activeSection
+    : allowedSections[0] ?? "biography";
+  const canOpenCalendar = allowedSections.includes("calendar");
+  const canOpenResources = allowedSections.includes("resources");
+  const canOpenSettings = allowedSections.includes("settings");
   const rosterPlayers = useMemo(
     () => buildRosterPlayers(sourceData.playerMaster),
     [sourceData.playerMaster],
@@ -53,6 +73,12 @@ export default function AmsDashboard() {
     ?? visiblePlayers[0]
     ?? rosterPlayers[0]
     ?? fallbackPlayers[0];
+
+  function selectAllowedSection(section: AmsSection) {
+    if (allowedSections.includes(section)) {
+      setActiveSection(section);
+    }
+  }
 
   function togglePlayerInView(playerId: string) {
     setVisiblePlayerIds((currentIds) => {
@@ -109,13 +135,19 @@ export default function AmsDashboard() {
   return (
     <main className="ams-app">
       <AppHeader
-        activeLabel={sectionMap[activeSection]}
+        activeLabel={sectionMap[currentSection]}
+        canOpenCalendar={canOpenCalendar}
+        canOpenResources={canOpenResources}
+        canOpenSettings={canOpenSettings}
         language={language}
-        onGoHome={() => setActiveSection("overview")}
+        roleLabel={authRoleLabel(authUser.role)}
+        userName={authUser.name}
+        onGoHome={() => selectAllowedSection(defaultSectionForRole(authUser.role))}
         onLanguageChange={setLanguage}
-        onOpenCalendar={() => setActiveSection("calendar")}
-        onOpenResources={() => setActiveSection("resources")}
-        onOpenSettings={() => setActiveSection("settings")}
+        onOpenCalendar={() => selectAllowedSection("calendar")}
+        onOpenResources={() => selectAllowedSection("resources")}
+        onOpenSettings={() => selectAllowedSection("settings")}
+        onSignOut={onSignOut}
       />
       <div className="ams-shell">
         <section className="ams-stage">
@@ -128,8 +160,13 @@ export default function AmsDashboard() {
             onPrevious={() => rotateSelectedPlayer(-1)}
             onSelect={setSelectedPlayerId}
           />
-          <Sidebar activeSection={activeSection} language={language} onSelect={setActiveSection} />
-          {activeSection === "overview" && (
+          <Sidebar
+            activeSection={currentSection}
+            allowedSections={allowedSections}
+            language={language}
+            onSelect={selectAllowedSection}
+          />
+          {currentSection === "overview" && (
             <OverviewPanel
               currentTime={currentTime}
               language={language}
@@ -139,9 +176,9 @@ export default function AmsDashboard() {
               onSelectSection={setActiveSection}
             />
           )}
-          {activeSection === "load" && <LoadPanel copy={panelCopy[language]} language={language} loadSummary={loadSummary} />}
-          {activeSection === "injury" && <InjuryPanel copy={panelCopy[language]} language={language} injuries={sourceData.injuries} />}
-          {activeSection === "development" && (
+          {currentSection === "load" && <LoadPanel copy={panelCopy[language]} language={language} loadSummary={loadSummary} />}
+          {currentSection === "injury" && <InjuryPanel copy={panelCopy[language]} language={language} injuries={sourceData.injuries} />}
+          {currentSection === "development" && (
             <DevelopmentPanel
               copy={panelCopy[language]}
               language={language}
@@ -153,19 +190,20 @@ export default function AmsDashboard() {
               valdNordbordMetrics={sourceData.valdNordbordMetrics}
             />
           )}
-          {activeSection === "bodyComp" && <BodyCompositionPanel copy={panelCopy[language]} language={language} rows={sourceData.bodyComp} />}
-          {activeSection === "recovery" && <RecoveryPanel copy={panelCopy[language]} language={language} rehabServices={sourceData.rehabServices} />}
-          {activeSection === "biography" && (
+          {currentSection === "bodyComp" && <BodyCompositionPanel copy={panelCopy[language]} language={language} rows={sourceData.bodyComp} />}
+          {currentSection === "recovery" && <RecoveryPanel copy={panelCopy[language]} language={language} rehabServices={sourceData.rehabServices} />}
+          {currentSection === "biography" && (
             <BiographyPanel
               language={language}
               selectedPlayer={selectedPlayer}
               sourceData={sourceData}
               visiblePlayers={visiblePlayers}
               onSelectPlayer={setSelectedPlayerId}
+              role={authUser.role}
             />
           )}
-          {activeSection === "external" && <ExternalFactorsPanel language={language} />}
-          {activeSection === "athleteProfile" && (
+          {currentSection === "external" && <ExternalFactorsPanel language={language} />}
+          {currentSection === "athleteProfile" && (
             <AthleteProfilePanel
               language={language}
               selectedPlayer={selectedPlayer}
@@ -173,9 +211,9 @@ export default function AmsDashboard() {
               onSelectPlayer={setSelectedPlayerId}
             />
           )}
-          {activeSection === "calendar" && <CalendarPanel language={language} />}
-          {activeSection === "resources" && <ResourcesPanel language={language} />}
-          {activeSection === "settings" && (
+          {currentSection === "calendar" && <CalendarPanel language={language} />}
+          {currentSection === "resources" && <ResourcesPanel language={language} />}
+          {currentSection === "settings" && (
             <SettingsPanel
               language={language}
               loadSummary={loadSummary}
@@ -190,4 +228,12 @@ export default function AmsDashboard() {
       </div>
     </main>
   );
+}
+
+function defaultSectionForRole(role: RealAmsAuthUser["role"]): AmsSection {
+  if (canAccessSection(role, "overview")) return "overview";
+  if (canAccessSection(role, "load")) return "load";
+  if (canAccessSection(role, "injury")) return "injury";
+  if (canAccessSection(role, "biography")) return "biography";
+  return "calendar";
 }

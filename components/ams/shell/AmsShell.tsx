@@ -11,20 +11,32 @@ import type { LoadSummary, SourceData } from "@/lib/ams/source-types";
 
 export function AppHeader({
   activeLabel,
+  canOpenCalendar,
+  canOpenResources,
+  canOpenSettings,
   language,
+  roleLabel,
+  userName,
   onGoHome,
   onLanguageChange,
   onOpenCalendar,
   onOpenResources,
   onOpenSettings,
+  onSignOut,
 }: {
   activeLabel: string;
+  canOpenCalendar: boolean;
+  canOpenResources: boolean;
+  canOpenSettings: boolean;
   language: AmsLanguage;
+  roleLabel: string;
+  userName: string;
   onGoHome: () => void;
   onLanguageChange: (language: AmsLanguage) => void;
   onOpenCalendar: () => void;
   onOpenResources: () => void;
   onOpenSettings: () => void;
+  onSignOut: () => void;
 }) {
   const copy = uiCopy[language];
 
@@ -44,13 +56,17 @@ export function AppHeader({
         </div>
       </button>
       <div className="ams-header-actions">
-        <button className="resources-action" type="button" onClick={onOpenResources}>
-          <Image src="/ams/assets/resources-document.png" alt="" width={22} height={22} />
-          {copy.resources}
-        </button>
-        <button className="calendar-button" type="button" onClick={onOpenCalendar} aria-label={copy.calendar}>
-          <Image src="/ams/assets/calendar-clock.png" alt="" width={28} height={28} />
-        </button>
+        {canOpenResources ? (
+          <button className="resources-action" type="button" onClick={onOpenResources}>
+            <Image src="/ams/assets/resources-document.png" alt="" width={22} height={22} />
+            {copy.resources}
+          </button>
+        ) : null}
+        {canOpenCalendar ? (
+          <button className="calendar-button" type="button" onClick={onOpenCalendar} aria-label={copy.calendar}>
+            <Image src="/ams/assets/calendar-clock.png" alt="" width={28} height={28} />
+          </button>
+        ) : null}
         <span className="language-action" aria-label={copy.language}>
           <button
             className={language === "en" ? "is-active" : ""}
@@ -69,10 +85,19 @@ export function AppHeader({
             🇲🇽
           </button>
         </span>
-        <button type="button" onClick={onOpenSettings} aria-label={copy.openSettings}>
-          ⚙
-        </button>
+        {canOpenSettings ? (
+          <button type="button" onClick={onOpenSettings} aria-label={copy.openSettings}>
+            ⚙
+          </button>
+        ) : null}
         <span className="active-section-pill">{activeLabel}</span>
+        <span className="auth-user-pill">
+          <strong>{userName}</strong>
+          <small>{roleLabel}</small>
+        </span>
+        <button className="sign-out-action" type="button" onClick={onSignOut}>
+          Sign out
+        </button>
         <button type="button">{copy.exportCsv}</button>
       </div>
     </header>
@@ -81,10 +106,12 @@ export function AppHeader({
 
 export function Sidebar({
   activeSection,
+  allowedSections,
   language,
   onSelect,
 }: {
   activeSection: AmsSection;
+  allowedSections: AmsSection[];
   language: AmsLanguage;
   onSelect: (section: AmsSection) => void;
 }) {
@@ -94,7 +121,8 @@ export function Sidebar({
   return (
     <nav className="ams-sidebar" aria-label="AMS sections">
       {navItems.filter((item) =>
-        ["load", "injury", "development", "recovery", "biography", "external", "athleteProfile"].includes(item.id),
+        allowedSections.includes(item.id)
+        && ["load", "injury", "development", "recovery", "biography", "external", "athleteProfile"].includes(item.id),
       ).map((item) => (
         <button
           key={item.id}

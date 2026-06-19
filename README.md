@@ -1,6 +1,6 @@
-# Hache
+# Real AMS
 
-Hache is a team performance dashboard built with [Next.js](https://nextjs.org).
+Real AMS is a team performance dashboard built with [Next.js](https://nextjs.org).
 It connects to VALD tenants, groups, and athlete profiles so staff can choose a
 team first, inspect the roster, and see player positions when those positions
 are modeled in VALD groups/categories.

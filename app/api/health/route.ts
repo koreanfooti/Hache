@@ -23,7 +23,7 @@ export async function GET() {
 
   return NextResponse.json(
     {
-      service: "hache-ams",
+      service: "real-ams",
       status,
       timestamp: new Date().toISOString(),
       checks: {
