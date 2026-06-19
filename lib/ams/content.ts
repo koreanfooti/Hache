@@ -456,18 +456,6 @@ export const integrationCards = [
   { label: "PlayerData", asset: "/ams/assets/integrations/playerdata.png", status: "Future source" },
 ];
 
-export const dataSources = [
-  { label: "Sync audit", path: "/ams/data/clean/sync_audit.csv" },
-  { label: "GPS daily rollup", path: "/ams/data/clean/gps/gps_player_daily.csv" },
-  { label: "Current roster GPS", path: "/ams/data/clean/gps/gps_player_daily_current_roster.json" },
-  { label: "Injury history", path: "/api/ams/injuries" },
-  { label: "Body composition", path: "/ams/data/clean/body_comp/body_comp_clean.json" },
-  { label: "FMS assessments", path: "/ams/data/clean/tests/fms_assessments_clean.json" },
-  { label: "Y Balance assessments", path: "/ams/data/clean/tests/y_balance_assessments_clean.json" },
-  { label: "VALD NordBord tests", path: "/ams/data/clean/vald_nordbord_tests.json" },
-  { label: "Rehab services", path: "/ams/data/clean/rehab_services/rehab_services_daily_clean.json" },
-];
-
 export const sampleGpsRows = [
   {
     date: "2026-05-01",

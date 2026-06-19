@@ -2,18 +2,22 @@ import { createReadStream } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
-import { dataSources } from "@/lib/ams/content";
 import { parseCsv } from "@/lib/ams/data";
 import { getInjuryHistoryFromGoogleSheet } from "@/lib/ams/injury-source";
+import {
+  amsSourceDefinitions,
+  sourceDefinitionForPath,
+  type AmsSourceDefinition,
+} from "@/lib/ams/source-registry";
 
 const MAX_ROWS = 50;
-const allowedSourcePaths = new Set(dataSources.map((source) => source.path));
+const allowedSourcePaths: ReadonlySet<string> = new Set(amsSourceDefinitions.map((source) => source.path));
 
 type RawRow = Record<string, unknown>;
 
 export async function GET(request: NextRequest) {
   const sourcePath = request.nextUrl.searchParams.get("path") ?? "";
-  const source = dataSources.find((item) => item.path === sourcePath);
+  const source = sourceDefinitionForPath(sourcePath);
 
   if (!source || !allowedSourcePaths.has(sourcePath)) {
     return NextResponse.json({ error: "Unknown source path." }, { status: 404 });
@@ -27,7 +31,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    if (sourcePath === "/api/ams/injuries") {
+    if (source.kind === "api" && source.key === "injuryHistory") {
       const payload = await getInjuryHistoryFromGoogleSheet();
       const rows = payload.rows.slice(0, MAX_ROWS);
       return NextResponse.json(toPreviewPayload(source, rows, payload.rows.length > MAX_ROWS, payload.rows.length));
@@ -53,7 +57,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function toPreviewPayload(source: { label: string; path: string }, rows: RawRow[], truncated: boolean, totalRows?: number) {
+function toPreviewPayload(source: AmsSourceDefinition, rows: RawRow[], truncated: boolean, totalRows?: number) {
   const columns = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
 
   return {
