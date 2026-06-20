@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { players } from "@/lib/ams/content";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import type {
@@ -15,6 +15,7 @@ import {
   MetricCard,
   type AmsLanguage,
 } from "@/components/ams/ui/AmsUi";
+import { NordbordDashboard } from "@/components/ams/panels/NordbordDashboard";
 
 type TestingCategory = "vald" | "fms" | "yBalance" | "cod" | "yoyo";
 type ValdDevice = "nordbord" | "forceframe" | "forcedecks";
@@ -68,11 +69,6 @@ export function TestingBatteryPanel({
   const [selectedCategory, setSelectedCategory] = useState<TestingCategory>("vald");
   const [selectedValdDevice, setSelectedValdDevice] = useState<ValdDevice>("nordbord");
   const flaggedFmsExercises = fmsExerciseScores.filter((row) => numberValue(row.pointScore) <= 1 || Boolean(row.asymmetryRaw)).length;
-  const averageNordbordImbalance = average(valdNordbordTests.map(nordbordMaxForceImbalance));
-  const latestNordbord = useMemo(
-    () => [...valdNordbordTests].sort((a, b) => String(b.testDateUtc).localeCompare(String(a.testDateUtc))).slice(0, 6),
-    [valdNordbordTests],
-  );
   const categories: TestingCategoryCardData[] = [
     {
       copy: copy.development.valdCopy ?? labels.valdCopy,
@@ -138,11 +134,9 @@ export function TestingBatteryPanel({
 
       {selectedCategory === "vald" ? (
         <ValdCategoryPanel
-          averageNordbordImbalance={averageNordbordImbalance}
           copy={copy}
           language={language}
           labels={labels}
-          latestNordbord={latestNordbord}
           metrics={valdNordbordMetrics}
           selectedValdDevice={selectedValdDevice}
           setSelectedValdDevice={setSelectedValdDevice}
@@ -230,21 +224,17 @@ function TestingCategoryCard({
 }
 
 function ValdCategoryPanel({
-  averageNordbordImbalance,
   copy,
   language,
   labels,
-  latestNordbord,
   metrics,
   selectedValdDevice,
   setSelectedValdDevice,
   tests,
 }: {
-  averageNordbordImbalance: number;
   copy: TestingBatteryCopy;
   language: AmsLanguage;
   labels: ReturnType<typeof testingLabels>;
-  latestNordbord: ValdNordbordTestRow[];
   metrics: ValdNordbordMetricRow[];
   selectedValdDevice: ValdDevice;
   setSelectedValdDevice: (device: ValdDevice) => void;
@@ -297,11 +287,8 @@ function ValdCategoryPanel({
 
       {selectedValdDevice === "nordbord" ? (
         <NordbordDashboard
-          averageNordbordImbalance={averageNordbordImbalance}
           copy={copy}
           language={language}
-          labels={labels}
-          latestNordbord={latestNordbord}
           metrics={metrics}
           tests={tests}
         />
@@ -355,76 +342,6 @@ function ValdDeviceCard({
         <small>{device.stat}</small>
       </div>
     </button>
-  );
-}
-
-function NordbordDashboard({
-  averageNordbordImbalance,
-  copy,
-  language,
-  labels,
-  latestNordbord,
-  metrics,
-  tests,
-}: {
-  averageNordbordImbalance: number;
-  copy: TestingBatteryCopy;
-  language: AmsLanguage;
-  labels: ReturnType<typeof testingLabels>;
-  latestNordbord: ValdNordbordTestRow[];
-  metrics: ValdNordbordMetricRow[];
-  tests: ValdNordbordTestRow[];
-}) {
-  const averageLeftMaxForce = average(tests.map((row) => row.leftMaxForce));
-  const averageRightMaxForce = average(tests.map((row) => row.rightMaxForce));
-  const maximumImbalance = Math.max(0, ...tests.map(nordbordMaxForceImbalance));
-  const latestMetricRows = metrics.slice(0, 6);
-
-  return (
-    <article className="testing-dashboard-panel">
-      <div className="testing-dashboard-header">
-        <div>
-          <span>VALD / NordBord</span>
-          <h4>{labels.nordbordDashboard}</h4>
-          <p>{copy.development.nordbordCopy ?? labels.nordbordCopy}</p>
-        </div>
-        <strong>{compactNumber(tests.length)} {copy.common.tests}</strong>
-      </div>
-
-      <section className="metric-grid testing-summary-grid">
-        <MetricCard label={labels.maxLeftForce} value={`${compactNumber(averageLeftMaxForce, 1)} N`} detail={labels.groupAverage} />
-        <MetricCard label={labels.maxRightForce} value={`${compactNumber(averageRightMaxForce, 1)} N`} detail={labels.groupAverage} />
-        <MetricCard label={labels.avgImbalance} value={`${compactNumber(averageNordbordImbalance, 1)}%`} detail={labels.maxForceAsymmetry} />
-        <MetricCard label={labels.maxImbalance} value={`${compactNumber(maximumImbalance, 1)}%`} detail={labels.highestLoadedTest} />
-      </section>
-
-      <section className="testing-dashboard-lists">
-        <DataList
-          emptyLabel={copy.common.noRecords}
-          language={language}
-          title={labels.latestNordbordTests}
-          subtitle={`${compactNumber(metrics.length)} ${labels.valdMetricRows}`}
-          rows={latestNordbord.map((row) => [
-            playerNameForAmsId(row.amsId),
-            formatShortDate(row.testDateUtc) || copy.common.noDate,
-            row.testTypeName || "NordBord",
-            `${compactNumber(numberValue(row.leftMaxForce), 1)} / ${compactNumber(numberValue(row.rightMaxForce), 1)} N`,
-          ])}
-        />
-        <DataList
-          emptyLabel={copy.common.noRecords}
-          language={language}
-          title={labels.forcePerKg}
-          subtitle={labels.metricDetailRows}
-          rows={latestMetricRows.map((row) => [
-            playerNameForAmsId(row.amsId),
-            row.testId || copy.common.noData,
-            `${compactNumber(numberValue(row.leftMaxForcePerKg), 1)} / ${compactNumber(numberValue(row.rightMaxForcePerKg), 1)} N/kg`,
-            `${compactNumber(numberValue(row.leftAvgTimeToMaxForceSeconds), 2)} / ${compactNumber(numberValue(row.rightAvgTimeToMaxForceSeconds), 2)} s`,
-          ])}
-        />
-      </section>
-    </article>
   );
 }
 
@@ -782,22 +699,8 @@ function average(values: unknown[]) {
   return numericValues.reduce((total, value) => total + value, 0) / numericValues.length;
 }
 
-function nordbordMaxForceImbalance(row: ValdNordbordTestRow) {
-  const left = numberValue(row.leftMaxForce);
-  const right = numberValue(row.rightMaxForce);
-  const peak = Math.max(left, right);
-  return peak ? Math.abs(left - right) / peak * 100 : 0;
-}
-
 function playerNameForAmsId(amsId: string | undefined) {
   return players.find((player) => player.amsId === amsId)?.name ?? amsId ?? "Unknown player";
-}
-
-function formatShortDate(value: string | undefined) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value.slice(0, 10);
-  return date.toISOString().slice(0, 10);
 }
 
 function unique(values: unknown[]) {
