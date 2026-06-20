@@ -37,16 +37,32 @@ export type InjuryRow = {
 };
 
 export type BodyCompRow = {
+  sourceCategory?: string;
+  playerId?: string;
   playerName?: string;
   player_name?: string;
   category?: string;
+  date?: string;
   testDate?: string;
   weightKg?: number;
   heightCm?: number;
   bmi?: number;
-  muscleKg?: number;
   adiposeKg?: number;
+  muscleKg?: number;
+  residualKg?: number;
+  boneKg?: number;
   skinfold6?: number;
+  basalKcal?: number;
+  restKcal?: number;
+  lightKcal?: number;
+  moderateKcal?: number;
+  matchKcal?: number;
+  waistCm?: number;
+  hipCm?: number;
+  chestCm?: number;
+  armCm?: number;
+  thighCm?: number;
+  calfCm?: number;
 };
 
 export type FmsAssessmentRow = {

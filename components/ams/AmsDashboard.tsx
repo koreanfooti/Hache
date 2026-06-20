@@ -186,9 +186,17 @@ export default function AmsDashboard({
               yBalanceMetrics={sourceData.yBalanceMetrics}
               valdNordbordTests={sourceData.valdNordbordTests}
               valdNordbordMetrics={sourceData.valdNordbordMetrics}
+              onOpenBodyComposition={() => selectAllowedSection("bodyComp")}
             />
           )}
-          {currentSection === "bodyComp" && <BodyCompositionPanel copy={panelCopy[language]} language={language} rows={sourceData.bodyComp} />}
+          {currentSection === "bodyComp" && (
+            <BodyCompositionPanel
+              copy={panelCopy[language]}
+              language={language}
+              rows={sourceData.bodyComp}
+              onBackToDevelopment={() => selectAllowedSection("development")}
+            />
+          )}
           {currentSection === "recovery" && <RecoveryPanel copy={panelCopy[language]} language={language} rehabServices={sourceData.rehabServices} />}
           {currentSection === "biography" && (
             <BiographyPanel
