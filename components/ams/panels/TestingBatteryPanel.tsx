@@ -16,7 +16,7 @@ import {
   type AmsLanguage,
 } from "@/components/ams/ui/AmsUi";
 
-type TestingCategory = "vald" | "fms" | "yBalance" | "cmj" | "cod" | "yoyo";
+type TestingCategory = "vald" | "fms" | "yBalance" | "cod" | "yoyo";
 type ValdDevice = "nordbord" | "forceframe" | "forcedecks";
 
 type TestingBatteryCopy = {
@@ -99,14 +99,6 @@ export function TestingBatteryPanel({
       title: labels.yBalanceTitle,
     },
     {
-      copy: copy.development.cmjCopy ?? labels.cmjCopy,
-      eyebrow: labels.jumpTesting,
-      id: "cmj",
-      label: "CMJ",
-      stat: copy.common.waitingForSource,
-      title: labels.cmjTitle,
-    },
-    {
       copy: copy.development.codCopy ?? labels.codCopy,
       eyebrow: labels.movement,
       id: "cod",
@@ -176,17 +168,6 @@ export function TestingBatteryPanel({
           language={language}
           metrics={yBalanceMetrics}
           rows={yBalance}
-        />
-      ) : null}
-
-      {selectedCategory === "cmj" ? (
-        <TestingPlaceholderDashboard
-          copy={copy}
-          labels={labels}
-          title={labels.cmjDashboard}
-          subtitle={labels.jumpTesting}
-          body={copy.development.cmjCopy ?? labels.cmjCopy}
-          chips={[labels.jumpHeight, labels.impulse, labels.landing, labels.asymmetry]}
         />
       ) : null}
 
