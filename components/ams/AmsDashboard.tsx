@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { RealAmsAuthUser } from "@/lib/ams/auth-session";
-import { authRoleLabel } from "@/lib/ams/auth-session";
 import { canAccessSection } from "@/lib/ams/auth-rules";
 import { type AmsSection, navItems, players as fallbackPlayers } from "@/lib/ams/content";
 import { buildRosterPlayers } from "@/lib/ams/roster";
+import { localizedAuthRoleLabel } from "@/components/ams/auth/auth-copy";
 import { panelCopy } from "@/components/ams/config/copy";
+import { useAmsLanguage } from "@/components/ams/hooks/useAmsLanguage";
 import { useAmsSources } from "@/components/ams/hooks/useAmsSources";
 import { AthleteProfilePanel } from "@/components/ams/panels/AthleteProfilePanel";
 import { BiographyPanel } from "@/components/ams/panels/BiographyPanel";
@@ -28,9 +29,6 @@ import {
   PlayerStrip,
   Sidebar,
 } from "@/components/ams/shell/AmsShell";
-import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
-
-type Language = AmsLanguage;
 
 const sectionMap: Record<AmsSection, string> = Object.fromEntries(
   navItems.map((item) => [item.id, item.label]),
@@ -45,7 +43,7 @@ export default function AmsDashboard({
 }) {
   const defaultSection = defaultSectionForRole(authUser.role);
   const [activeSection, setActiveSection] = useState<AmsSection>(defaultSection);
-  const [language, setLanguage] = useState<Language>("en");
+  const [language, setLanguage] = useAmsLanguage();
   const [selectedPlayerId, setSelectedPlayerId] = useState("gustavo-ferrareis");
   const [visiblePlayerIds, setVisiblePlayerIds] = useState(() => fallbackPlayers.map((player) => player.id));
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
@@ -140,7 +138,7 @@ export default function AmsDashboard({
         canOpenResources={canOpenResources}
         canOpenSettings={canOpenSettings}
         language={language}
-        roleLabel={authRoleLabel(authUser.role)}
+        roleLabel={localizedAuthRoleLabel(authUser.role, language)}
         userName={authUser.name}
         onGoHome={() => selectAllowedSection(defaultSectionForRole(authUser.role))}
         onLanguageChange={setLanguage}

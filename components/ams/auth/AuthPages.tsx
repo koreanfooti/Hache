@@ -2,19 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import type { AmsAuthRole } from "@/lib/ams/auth-rules";
 import {
-  authRoleLabel,
   authRoleOptions,
   demoAuthUsers,
   demoPassword,
 } from "@/lib/ams/auth-session";
+import { authCopy, localizedAuthError, localizedAuthRoleLabel } from "@/components/ams/auth/auth-copy";
 import { useAuth } from "@/components/ams/auth/AuthProvider";
+import { useAmsLanguage } from "@/components/ams/hooks/useAmsLanguage";
+import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 
 export function SignInPage() {
   const router = useRouter();
   const { signIn, status } = useAuth();
+  const [language, setLanguage] = useAmsLanguage();
+  const copy = authCopy[language].signIn;
+  const commonCopy = authCopy[language].common;
   const [email, setEmail] = useState("technical@realams.local");
   const [password, setPassword] = useState(demoPassword);
   const [error, setError] = useState("");
@@ -41,27 +46,29 @@ export function SignInPage() {
 
   return (
     <AuthShell
-      eyebrow="Real AMS"
-      title="Sign in"
-      copy="Choose a staff account to open the correct role-based workspace."
-      footer={<span>Need an account? <Link href="/sign-up">Create one</Link></span>}
+      copy={copy.copy}
+      eyebrow={commonCopy.appName}
+      footer={<span>{copy.footerPrefix} <Link href="/sign-up">{copy.footerLink}</Link></span>}
+      language={language}
+      title={copy.title}
+      onLanguageChange={setLanguage}
     >
       <form className="auth-form" onSubmit={submitSignIn}>
         <div className="auth-field">
-          <label htmlFor="sign-in-email">Email</label>
+          <label htmlFor="sign-in-email">{copy.fields.email}</label>
           <input id="sign-in-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
         </div>
         <div className="auth-field">
-          <label htmlFor="sign-in-password">Password</label>
+          <label htmlFor="sign-in-password">{copy.fields.password}</label>
           <input id="sign-in-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />
         </div>
-        {error ? <p className="auth-error">{error}</p> : null}
+        {error ? <p className="auth-error">{localizedAuthError(error, language)}</p> : null}
         <button className="primary-button" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Signing in..." : "Sign in"}
+          {isSubmitting ? copy.buttons.submitting : copy.buttons.idle}
         </button>
       </form>
       <section className="auth-demo-list">
-        <span>Demo accounts</span>
+        <span>{commonCopy.demoAccounts}</span>
         {demoAuthUsers.map((user) => (
           <button
             key={user.id}
@@ -72,7 +79,7 @@ export function SignInPage() {
               setError("");
             }}
           >
-            <strong>{authRoleLabel(user.role)}</strong>
+            <strong>{localizedAuthRoleLabel(user.role, language)}</strong>
             <small>{user.email}</small>
           </button>
         ))}
@@ -84,6 +91,9 @@ export function SignInPage() {
 export function SignUpPage() {
   const router = useRouter();
   const { signUp, status } = useAuth();
+  const [language, setLanguage] = useAmsLanguage();
+  const copy = authCopy[language].signUp;
+  const commonCopy = authCopy[language].common;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -112,38 +122,40 @@ export function SignUpPage() {
 
   return (
     <AuthShell
-      eyebrow="Real AMS"
-      title="Create account"
-      copy="Create a local staff account and assign a rulebook role."
-      footer={<span>Already have an account? <Link href="/sign-in">Sign in</Link></span>}
+      copy={copy.copy}
+      eyebrow={commonCopy.appName}
+      footer={<span>{copy.footerPrefix} <Link href="/sign-in">{copy.footerLink}</Link></span>}
+      language={language}
+      title={copy.title}
+      onLanguageChange={setLanguage}
     >
       <form className="auth-form" onSubmit={submitSignUp}>
         <div className="auth-field">
-          <label htmlFor="sign-up-name">Name</label>
+          <label htmlFor="sign-up-name">{copy.fields.name}</label>
           <input id="sign-up-name" value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" />
         </div>
         <div className="auth-field">
-          <label htmlFor="sign-up-email">Email</label>
+          <label htmlFor="sign-up-email">{copy.fields.email}</label>
           <input id="sign-up-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
         </div>
         <div className="auth-field">
-          <label htmlFor="sign-up-password">Password</label>
+          <label htmlFor="sign-up-password">{copy.fields.password}</label>
           <input id="sign-up-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" />
         </div>
         <div className="auth-field">
-          <label htmlFor="sign-up-role">Role</label>
+          <label htmlFor="sign-up-role">{copy.fields.role}</label>
           <select id="sign-up-role" value={role} onChange={(event) => setRole(event.target.value as AmsAuthRole)}>
             {authRoleOptions.map((option) => (
               <option key={option.role} value={option.role}>
-                {option.label}
+                {localizedAuthRoleLabel(option.role, language)}
               </option>
             ))}
           </select>
         </div>
-        <p className="auth-role-help">{authRoleOptions.find((option) => option.role === role)?.description}</p>
-        {error ? <p className="auth-error">{error}</p> : null}
+        <p className="auth-role-help">{commonCopy.roles[role]?.description}</p>
+        {error ? <p className="auth-error">{localizedAuthError(error, language)}</p> : null}
         <button className="primary-button" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Creating account..." : "Create account"}
+          {isSubmitting ? copy.buttons.submitting : copy.buttons.idle}
         </button>
       </form>
     </AuthShell>
@@ -155,19 +167,45 @@ function AuthShell({
   copy,
   eyebrow,
   footer,
+  language,
+  onLanguageChange,
   title,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   copy: string;
   eyebrow: string;
-  footer: React.ReactNode;
+  footer: ReactNode;
+  language: AmsLanguage;
+  onLanguageChange: (language: AmsLanguage) => void;
   title: string;
 }) {
+  const commonCopy = authCopy[language].common;
+
   return (
     <main className="route-fallback auth-page">
       <section className="route-fallback-panel auth-card">
         <div className="auth-card-heading">
-          <span className="section-kicker">{eyebrow}</span>
+          <div className="auth-heading-bar">
+            <span className="section-kicker">{eyebrow}</span>
+            <span className="auth-language-action" aria-label={commonCopy.language}>
+              <button
+                className={language === "en" ? "is-active" : ""}
+                type="button"
+                onClick={() => onLanguageChange("en")}
+                aria-label={commonCopy.switchToEnglish}
+              >
+                🇬🇧
+              </button>
+              <button
+                className={language === "es" ? "is-active" : ""}
+                type="button"
+                onClick={() => onLanguageChange("es")}
+                aria-label={commonCopy.switchToSpanish}
+              >
+                🇲🇽
+              </button>
+            </span>
+          </div>
           <h1>{title}</h1>
           <p>{copy}</p>
         </div>

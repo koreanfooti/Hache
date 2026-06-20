@@ -21,10 +21,19 @@ export type InjuryRow = {
   injuryType?: string;
   injury?: string;
   bodyRegion?: string;
+  laterality?: string;
   cause?: string;
+  biomechanicalProcess?: string;
   startDate?: string;
   endDate?: string;
+  startDateRaw?: string;
+  endDateRaw?: string;
+  rehabDays?: number;
+  excludedDays?: number;
+  readaptationDays?: number;
   totalDaysLost?: number;
+  mapX?: number;
+  mapY?: number;
 };
 
 export type BodyCompRow = {
