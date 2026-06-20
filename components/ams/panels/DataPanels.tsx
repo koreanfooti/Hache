@@ -42,6 +42,8 @@ type InjuryMapDot = {
   mapY: number;
 };
 
+const gustavoFerrareisTestPlayer = "Gustavo Ferrareis";
+
 export type DataPanelCopy = {
   common: Record<string, string>;
   load: Record<string, string>;
@@ -122,13 +124,20 @@ export function InjuryPanel({
   language: AmsLanguage;
   injuries: InjuryRow[];
 }) {
-  const [selectedPlayer, setSelectedPlayer] = useState("all");
+  const [selectedPlayer, setSelectedPlayer] = useState(gustavoFerrareisTestPlayer);
   const [selectedType, setSelectedType] = useState("all");
   const [selectedYear, setSelectedYear] = useState("all");
   const [selectedCause, setSelectedCause] = useState<InjuryCauseFilter>("all");
   const allLabel = copy.injury.all ?? "All";
   const playerOptions = useMemo(
-    () => ["all", ...unique(injuries.map((injury) => injury.playerName).filter(Boolean))],
+    () => {
+      const injuryPlayers = unique(injuries.map((injury) => injury.playerName).filter(Boolean));
+      const orderedPlayers = injuryPlayers.includes(gustavoFerrareisTestPlayer)
+        ? injuryPlayers
+        : [gustavoFerrareisTestPlayer, ...injuryPlayers];
+
+      return ["all", ...orderedPlayers];
+    },
     [injuries],
   );
   const typeOptions = useMemo(
@@ -238,7 +247,7 @@ export function InjuryPanel({
             <Image src="/ams/assets/injuries/body-map.png" alt="" width={400} height={350} priority={false} />
             <div className="injury-map-dots" aria-label={copy.injury.bodyMap ?? "Body Map"}>
               {injuryDots.map((dot) => {
-                const size = 8 + (dot.count / Math.max(1, injuryDots[0]?.count ?? 1)) * 10;
+                const size = 15 + (dot.count / Math.max(1, injuryDots[0]?.count ?? 1)) * 9;
                 const title = `${dot.count} · ${displayInjuryRegion(dot.bodyRegion, language)} · ${displayInjurySide(dot.laterality, language)} · ${compactNumber(dot.days)} ${copy.injury.daysLabel ?? "days"}`;
 
                 return (

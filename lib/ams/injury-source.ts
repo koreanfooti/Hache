@@ -24,6 +24,8 @@ export type InjurySourceRow = {
   excludedDays: number;
   observationDays: number;
   totalDaysLost: number;
+  mapX: number;
+  mapY: number;
   source: "google-sheets";
   sourceUrl: string;
 };
@@ -79,6 +81,7 @@ function normalizeInjuryRow(row: RawSheetRow, index: number): InjurySourceRow {
   const matchedPlayer = rosterByName.get(normalizeName(sourcePlayerName));
   const injury = cleanText(row["Lesión"]);
   const bodyRegion = inferBodyRegion(injury);
+  const coordinates = injuryMapCoordinates(bodyRegion, row.Lateralidad);
   const startDate = normalizeDate(row["Fecha Inicio"]);
   const endDate = normalizeDate(row["Fecha Fin"]);
 
@@ -99,6 +102,8 @@ function normalizeInjuryRow(row: RawSheetRow, index: number): InjurySourceRow {
     excludedDays: numberValue(row["Excluído"]),
     observationDays: numberValue(row["En observación/Readaptación"]),
     totalDaysLost: numberValue(row["Días de Baja Totales"]),
+    mapX: coordinates.mapX,
+    mapY: coordinates.mapY,
     source: "google-sheets",
     sourceUrl: injuryGoogleSheetHtmlUrl,
   };
@@ -167,25 +172,81 @@ function monthNumber(value: string) {
 function inferBodyRegion(injury: string) {
   const normalized = normalizeName(injury);
   const regions: Array<[string, string]> = [
-    ["rodilla", "Knee"],
-    ["ligamento colateral medial rodilla", "Knee"],
-    ["aductor", "Groin / Adductor"],
-    ["recto femoral", "Thigh"],
-    ["lumbar", "Lumbar"],
-    ["astrágalo", "Ankle"],
-    ["astragalo", "Ankle"],
-    ["peroneo", "Ankle"],
-    ["codo", "Elbow"],
-    ["isqu", "Hamstring"],
-    ["tobillo", "Ankle"],
-    ["hombro", "Shoulder"],
-    ["cuadriceps", "Thigh"],
-    ["cuádriceps", "Thigh"],
-    ["gemelo", "Calf"],
-    ["soleo", "Calf"],
-    ["sóleo", "Calf"],
-    ["pie", "Foot"],
+    ["nariz", "head"],
+    ["conmocion", "head"],
+    ["conmoción", "head"],
+    ["cabeza", "head"],
+    ["cuello", "neck"],
+    ["hombro", "shoulder"],
+    ["brazo", "upper_arm"],
+    ["codo", "elbow"],
+    ["muneca", "wrist_hand"],
+    ["muñeca", "wrist_hand"],
+    ["mano", "wrist_hand"],
+    ["pecho", "chest"],
+    ["abdomen", "abdomen"],
+    ["lumbar", "lumbar"],
+    ["espalda", "back"],
+    ["gluteo", "glute"],
+    ["glúteo", "glute"],
+    ["aductor", "hip_groin"],
+    ["ingle", "hip_groin"],
+    ["recto femoral", "quad_thigh"],
+    ["cuadriceps", "quad_thigh"],
+    ["cuádriceps", "quad_thigh"],
+    ["muslo", "quad_thigh"],
+    ["isqu", "hamstring"],
+    ["biceps femoral", "hamstring"],
+    ["bíceps femoral", "hamstring"],
+    ["semimembranoso", "hamstring"],
+    ["semitendinoso", "hamstring"],
+    ["rodilla", "knee"],
+    ["ligamento colateral medial rodilla", "knee"],
+    ["gemelo", "calf"],
+    ["soleo", "calf"],
+    ["sóleo", "calf"],
+    ["pantorrilla", "calf"],
+    ["astrágalo", "ankle"],
+    ["astragalo", "ankle"],
+    ["peroneo", "ankle"],
+    ["tobillo", "ankle"],
+    ["pie", "foot"],
   ];
 
-  return regions.find(([needle]) => normalized.includes(normalizeName(needle)))?.[1] ?? "Unclassified";
+  return regions.find(([needle]) => normalized.includes(normalizeName(needle)))?.[1] ?? "other";
+}
+
+function injuryMapCoordinates(bodyRegion: string, laterality: unknown) {
+  const normalizedSide = normalizeName(cleanText(laterality));
+  const isLeft = normalizedSide.includes("izquierda");
+  const isRight = normalizedSide.includes("derecha");
+  const coordinates: Record<string, { center: [number, number]; left?: [number, number]; right?: [number, number] }> = {
+    abdomen: { center: [20, 41] },
+    ankle: { center: [19, 92], left: [23, 92], right: [15, 92] },
+    back: { center: [72, 38] },
+    calf: { center: [69, 84], left: [73, 84], right: [65, 84] },
+    chest: { center: [20, 30] },
+    elbow: { center: [13, 43], left: [15, 43], right: [11, 43] },
+    foot: { center: [19, 97], left: [24, 97], right: [14, 97] },
+    glute: { center: [76, 54], left: [76, 54], right: [68, 54] },
+    hamstring: { center: [72, 65], left: [68, 65], right: [76, 65] },
+    head: { center: [25, 10], left: [24, 10], right: [26, 10] },
+    hip_groin: { center: [24, 51], left: [28, 51], right: [20, 51] },
+    knee: { center: [19, 79], left: [23, 79], right: [15, 79] },
+    lumbar: { center: [72, 44] },
+    neck: { center: [25, 18] },
+    other: { center: [50, 50] },
+    quad_thigh: { center: [20, 66], left: [24, 66], right: [16, 66] },
+    shoulder: { center: [15, 22], left: [17, 22], right: [13, 22] },
+    upper_arm: { center: [12, 33], left: [16, 33], right: [10, 33] },
+    wrist_hand: { center: [8, 52], left: [12, 52], right: [6, 52] },
+  };
+  const regionCoordinates = coordinates[bodyRegion] ?? coordinates.other;
+  const [mapX, mapY] = isLeft && regionCoordinates.left
+    ? regionCoordinates.left
+    : isRight && regionCoordinates.right
+      ? regionCoordinates.right
+      : regionCoordinates.center;
+
+  return { mapX, mapY };
 }

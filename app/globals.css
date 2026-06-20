@@ -2227,8 +2227,8 @@ button {
 
 .injury-history-layout {
   display: grid;
-  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
-  gap: 14px;
+  grid-template-columns: minmax(360px, 0.74fr) minmax(0, 1fr);
+  gap: 16px;
 }
 
 .injury-map-card,
@@ -2244,7 +2244,7 @@ button {
 .injury-body-map-wrap {
   position: relative;
   display: grid;
-  width: min(100%, 460px);
+  width: min(100%, 620px);
   margin: 16px auto 0;
   place-items: center;
   overflow: hidden;
@@ -2282,7 +2282,7 @@ button {
   box-shadow: 0 5px 14px rgb(0 0 0 / 32%);
   color: #fff;
   cursor: help;
-  font-size: 0.5rem;
+  font-size: 0.62rem;
   font-weight: 950;
   line-height: 1;
   padding: 0;
@@ -2298,46 +2298,91 @@ button {
 .injury-table-wrap {
   max-height: 560px;
   overflow: auto;
-  border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 8px;
-  background: rgb(0 0 0 / 18%);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .injury-table {
-  width: max-content;
-  min-width: 1080px;
+  width: 100%;
+  min-width: 920px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .injury-table th,
 .injury-table td {
-  max-width: 300px;
-  border-bottom: 1px solid rgb(255 255 255 / 8%);
-  color: rgb(255 255 255 / 78%);
-  font-size: 0.78rem;
-  padding: 10px 12px;
+  border-bottom: 1px solid rgb(255 255 255 / 11%);
+  color: rgb(255 255 255 / 86%);
+  font-size: clamp(0.82rem, 0.86vw, 1rem);
+  line-height: 1.08;
+  padding: 18px 10px;
   text-align: left;
   vertical-align: top;
+  white-space: normal;
+  word-break: normal;
 }
 
 .injury-table th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: rgb(31 9 14 / 98%);
+  background: rgb(16 7 10 / 98%);
   color: var(--ams-gold);
-  font-size: 0.68rem;
+  font-size: clamp(0.7rem, 0.72vw, 0.84rem);
   font-weight: 950;
   letter-spacing: 0.04em;
+  line-height: 1.08;
+  padding-block: 16px;
   text-transform: uppercase;
 }
 
 .injury-table td strong {
+  display: block;
   color: #fff;
+  font-size: clamp(0.9rem, 0.92vw, 1.08rem);
+  line-height: 1.02;
+}
+
+.injury-table th:nth-child(1),
+.injury-table td:nth-child(1) {
+  width: 14%;
 }
 
 .injury-table td:nth-child(2) {
-  min-width: 340px;
+  width: 23%;
+}
+
+.injury-table th:nth-child(3),
+.injury-table td:nth-child(3) {
+  width: 11%;
+}
+
+.injury-table th:nth-child(4),
+.injury-table td:nth-child(4) {
+  width: 12%;
+}
+
+.injury-table th:nth-child(5),
+.injury-table td:nth-child(5) {
+  width: 7%;
+}
+
+.injury-table th:nth-child(6),
+.injury-table td:nth-child(6) {
+  width: 9%;
+}
+
+.injury-table th:nth-child(7),
+.injury-table td:nth-child(7),
+.injury-table th:nth-child(8),
+.injury-table td:nth-child(8) {
+  width: 9%;
+}
+
+.injury-table th:nth-child(9),
+.injury-table td:nth-child(9) {
+  width: 6%;
 }
 
 .injury-empty-state {
