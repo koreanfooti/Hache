@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useMemo, useState, type CSSProperties } from "react";
-import { metricDefinitions, players } from "@/lib/ams/content";
+import { metricDefinitions } from "@/lib/ams/content";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import { injuryGoogleSheetHtmlUrl } from "@/lib/ams/injury-source";
 import type {
@@ -22,6 +22,7 @@ import {
   localizedValue,
   type AmsLanguage,
 } from "@/components/ams/ui/AmsUi";
+import { TestingBatteryPanel } from "@/components/ams/panels/TestingBatteryPanel";
 
 type RecoveryCopy = Record<string, string | readonly string[]> & {
   kicker: string;
@@ -30,7 +31,7 @@ type RecoveryCopy = Record<string, string | readonly string[]> & {
 };
 
 type InjuryCauseFilter = "all" | "direct" | "indirect";
-type DevelopmentView = "position" | "blocks" | "battery";
+type DevelopmentView = "idle" | "position" | "blocks" | "battery";
 
 type InjuryMapDot = {
   bodyRegion?: string;
@@ -342,19 +343,6 @@ export function DevelopmentPanel({
   onOpenBodyComposition: () => void;
 }) {
   const [developmentView, setDevelopmentView] = useState<DevelopmentView>("battery");
-  const latestFms = [...fms].sort((a, b) => String(b.dateIso).localeCompare(String(a.dateIso))).slice(0, 5);
-  const latestNordbord = [...valdNordbordTests]
-    .sort((a, b) => String(b.testDateUtc).localeCompare(String(a.testDateUtc)))
-    .slice(0, 5);
-  const averageNordbordImbalance = average(
-    valdNordbordTests.map((row) => {
-      const left = numberValue(row.leftMaxForce);
-      const right = numberValue(row.rightMaxForce);
-      const peak = Math.max(left, right);
-      return peak ? Math.abs(left - right) / peak * 100 : 0;
-    }),
-  );
-  const flaggedFmsExercises = fmsExerciseScores.filter((row) => numberValue(row.pointScore) <= 1 || Boolean(row.asymmetryRaw)).length;
 
   return (
     <div className="panel-stack development-panel">
@@ -385,7 +373,8 @@ export function DevelopmentPanel({
         <button
           className={developmentView === "battery" ? "development-module-card module-action is-active" : "development-module-card module-action"}
           type="button"
-          onClick={() => setDevelopmentView("battery")}
+          aria-expanded={developmentView === "battery"}
+          onClick={() => setDevelopmentView((currentView) => (currentView === "battery" ? "idle" : "battery"))}
         >
           <span>{copy.development.testing ?? "Testing"}</span>
           <strong>{copy.development.battery ?? "Battery"}</strong>
@@ -394,62 +383,17 @@ export function DevelopmentPanel({
       </section>
 
       {developmentView === "battery" ? (
-        <section className="testing-battery-page">
-          <div className="panel-heading">
-            <div>
-              <h3>{copy.development.valdTesting ?? "VALD Testing Battery"}</h3>
-              <span>{copy.development.valdTestingSub ?? "Strength, asymmetry, force, and readiness testing pipeline"}</span>
-            </div>
-          </div>
-          <article className="testing-brand-card">
-            <Image src="/ams/assets/testing/vald-logo.png" alt="" width={190} height={86} />
-            <div>
-              <strong>VALD</strong>
-              <p>{copy.development.valdCopy}</p>
-            </div>
-          </article>
-          <section className="testing-device-grid">
-            <TestingDeviceCard image="/ams/assets/testing/nordbord-logo.png" title="NordBord" copy={copy.development.nordbordCopy} stat={`${compactNumber(valdNordbordTests.length)} ${copy.common.tests}`} />
-            <TestingDeviceCard label="02" title="ForceFrame" copy={copy.development.forceframeCopy ?? "Isometric strength profiles across hip, groin, shoulder, and trunk tests."} stat={copy.common.pending} />
-            <TestingDeviceCard label="03" title="ForceDecks" copy={copy.development.forcedecksCopy ?? "Jump, landing, balance, and force-time metrics for neuromuscular monitoring."} stat={copy.common.pending} />
-            <TestingDeviceCard image="/ams/assets/testing/fms-logo.jpeg" title="FMS" copy={copy.development.fmsCopy} stat={`${compactNumber(fms.length)} ${copy.common.records}`} />
-            <TestingDeviceCard image="/ams/assets/testing/ybt-logo.svg" title="YBT" copy={copy.development.ybtCopy} stat={`${compactNumber(yBalance.length)} ${copy.common.tests}`} />
-            <TestingDeviceCard label="CMJ" title="Countermovement Jump" copy={copy.development.cmjCopy ?? "Jump height, impulse, landing, and asymmetry readiness tests."} stat={copy.common.waitingForSource} />
-            <TestingDeviceCard label="COD" title="Change of Direction" copy={copy.development.codCopy ?? "505, agility, and braking strategy inputs for movement profiling."} stat={copy.common.waitingForSource} />
-            <TestingDeviceCard label="YY" title="Yo-Yo / Aerobic" copy={copy.development.yoyoCopy ?? "Aerobic capacity and intermittent recovery testing records."} stat={copy.common.waitingForSource} />
-          </section>
-          <section className="metric-grid testing-summary-grid">
-            <MetricCard label={copy.development.fmsAssessments} value={compactNumber(fms.length)} detail={copy.development.movementRecords} />
-            <MetricCard label="FMS exercise rows" value={compactNumber(fmsExerciseScores.length)} detail={`${compactNumber(flaggedFmsExercises)} priority/asymmetry flags`} />
-            <MetricCard label="NordBord tests" value={compactNumber(valdNordbordTests.length)} detail={`${compactNumber(averageNordbordImbalance, 1)}% avg max-force asymmetry`} />
-            <MetricCard label={copy.development.yBalanceTests} value={compactNumber(yBalance.length)} detail={`${compactNumber(yBalanceMetrics.length)} metric rows`} />
-          </section>
-          <DataList
-            emptyLabel={copy.common.noRecords}
-            language={language}
-            title={copy.development.latestFmsAssessments}
-            subtitle={copy.development.cleanedMovementResults}
-            rows={latestFms.map((row) => [
-              row.matchedAthleteName || copy.common.unknownPlayer,
-              row.dateIso || copy.common.noDate,
-              String(row.totalScore ?? copy.common.noScore),
-              row.scoreBand || row.riskFlag || copy.common.noFlag,
-            ])}
-          />
-          <DataList
-            emptyLabel={copy.common.noRecords}
-            language={language}
-            title="Latest NordBord Tests"
-            subtitle={`${compactNumber(valdNordbordMetrics.length)} VALD metric rows available`}
-            rows={latestNordbord.map((row) => [
-              playerNameForAmsId(row.amsId),
-              formatShortDate(row.testDateUtc) || copy.common.noDate,
-              row.testTypeName || "NordBord",
-              `${compactNumber(numberValue(row.leftMaxForce), 1)} / ${compactNumber(numberValue(row.rightMaxForce), 1)} N`,
-            ])}
-          />
-        </section>
-      ) : (
+        <TestingBatteryPanel
+          copy={copy}
+          language={language}
+          fms={fms}
+          fmsExerciseScores={fmsExerciseScores}
+          yBalance={yBalance}
+          yBalanceMetrics={yBalanceMetrics}
+          valdNordbordTests={valdNordbordTests}
+          valdNordbordMetrics={valdNordbordMetrics}
+        />
+      ) : developmentView === "idle" ? null : (
         <section className="development-detail-panel">
           <span>{developmentView === "position" ? copy.development.physicalBenchmarking : copy.development.developmentPlan}</span>
           <h3>{developmentView === "position" ? copy.development.positionProfile : copy.development.blocks}</h3>
@@ -457,31 +401,6 @@ export function DevelopmentPanel({
         </section>
       )}
     </div>
-  );
-}
-
-function TestingDeviceCard({
-  copy,
-  image,
-  label,
-  stat,
-  title,
-}: {
-  copy: string;
-  image?: string;
-  label?: string;
-  stat: string;
-  title: string;
-}) {
-  return (
-    <article className="testing-device-card">
-      {image ? <Image src={image} alt="" width={124} height={84} /> : <span>{label}</span>}
-      <div>
-        <strong>{title}</strong>
-        <p>{copy}</p>
-        <small>{stat}</small>
-      </div>
-    </article>
   );
 }
 
@@ -1077,15 +996,4 @@ function mostCommon(values: unknown[]) {
     if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
   });
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
-}
-
-function playerNameForAmsId(amsId: string | undefined) {
-  return players.find((player) => player.amsId === amsId)?.name ?? amsId ?? "Unknown player";
-}
-
-function formatShortDate(value: string | undefined) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value.slice(0, 10);
-  return date.toISOString().slice(0, 10);
 }
