@@ -3178,6 +3178,12 @@ button {
   gap: 5px;
 }
 
+.nordbord-chart-legend .nordbord-reference-name {
+  color: var(--ams-gold);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
 .nordbord-chart-legend i {
   display: inline-block;
   width: 18px;
@@ -3195,6 +3201,29 @@ button {
 .nordbord-force-bar.is-right {
   fill: #2495ff;
   background: #2495ff;
+}
+
+.nordbord-chart-legend .is-reference {
+  width: 24px;
+  height: 3px;
+}
+
+.nordbord-chart-legend .is-p25,
+.nordbord-reference-line.is-p25 {
+  background: #ff3b30;
+  stroke: #ff3b30;
+}
+
+.nordbord-chart-legend .is-p50,
+.nordbord-reference-line.is-p50 {
+  background: #f4c34f;
+  stroke: #f4c34f;
+}
+
+.nordbord-chart-legend .is-p75,
+.nordbord-reference-line.is-p75 {
+  background: #42c45a;
+  stroke: #42c45a;
 }
 
 .nordbord-grid-line {
@@ -3219,6 +3248,24 @@ button {
   fill: var(--ams-muted);
   font-size: 7.6px;
   font-weight: 750;
+}
+
+.nordbord-reference-line {
+  fill: none;
+  opacity: 0.9;
+  stroke-dasharray: 7 6;
+  stroke-linecap: round;
+  stroke-width: 2.4;
+}
+
+.nordbord-reference-label {
+  fill: #fff;
+  font-size: 8px;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: rgb(0 0 0 / 70%);
+  stroke-width: 3px;
+  text-anchor: end;
 }
 
 .nordbord-asymmetry-line {

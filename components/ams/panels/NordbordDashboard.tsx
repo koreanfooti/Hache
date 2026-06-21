@@ -4,6 +4,7 @@ import { players, type Player } from "@/lib/ams/content";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import { hasPlayerPhoto } from "@/lib/ams/player-media";
 import type { ValdNordbordMetricRow, ValdNordbordTestRow } from "@/lib/ams/types";
+import { getNordbordIsopronoReference, type NordbordIsopronoReference } from "@/lib/ams/valdReferences";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 
 type NordbordDashboardProps = {
@@ -94,6 +95,8 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
   const averageAsymmetry = average(asymmetryValues);
   const maximumAsymmetry = Math.max(0, ...asymmetryValues.map((value) => Math.abs(value)));
   const selectedMetric = metrics.find((row) => row.testId === latestTest?.testId);
+  const isopronoReference = getNordbordIsopronoReference(activePlayer.position);
+  const isopronoReferenceLabel = isopronoReference ? referenceDisplayLabel(isopronoReference, language) : "";
 
   return (
     <article className="nordbord-powerbi-dashboard">
@@ -239,7 +242,7 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
 
           {series.length ? (
             <>
-              <ForceBarChart labels={labels} points={series} />
+              <ForceBarChart labels={labels} points={series} reference={isopronoReference} referenceLabel={isopronoReferenceLabel} />
               <AsymmetryLineChart labels={labels} points={series} />
             </>
           ) : (
@@ -267,14 +270,25 @@ function NordbordKpi({ label, tone = "neutral", value }: { label: string; tone?:
   );
 }
 
-function ForceBarChart({ labels, points }: { labels: ReturnType<typeof nordbordLabels>; points: ForceSeriesPoint[] }) {
+function ForceBarChart({
+  labels,
+  points,
+  reference,
+  referenceLabel,
+}: {
+  labels: ReturnType<typeof nordbordLabels>;
+  points: ForceSeriesPoint[];
+  reference?: NordbordIsopronoReference;
+  referenceLabel: string;
+}) {
   const width = 980;
   const height = 318;
   const padding = { bottom: 66, left: 42, right: 20, top: 30 };
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
   const values = points.flatMap((point) => [point.left, point.right]);
-  const maxForce = Math.max(100, ...values) * 1.16;
+  const referenceValues = reference?.lines.map((line) => line.value) ?? [];
+  const maxForce = Math.max(100, ...values, ...referenceValues) * 1.16;
   const slot = innerWidth / Math.max(1, points.length);
   const barWidth = Math.max(10, Math.min(24, slot * 0.23));
   const yFor = (value: number) => padding.top + innerHeight - (value / maxForce) * innerHeight;
@@ -284,11 +298,31 @@ function ForceBarChart({ labels, points }: { labels: ReturnType<typeof nordbordL
       <div className="nordbord-chart-legend">
         <span><i className="is-left" />{labels.leftMaxForce}</span>
         <span><i className="is-right" />{labels.rightMaxForce}</span>
+        {reference ? (
+          <>
+            <span className="nordbord-reference-name">{labels.isopronoReference}: {referenceLabel}</span>
+            {reference.lines.map((line) => (
+              <span key={line.key}><i className={`is-reference is-${line.key}`} />P{line.percentile} {compactNumber(line.value, 0)}</span>
+            ))}
+          </>
+        ) : null}
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={labels.forceChart}>
         {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
           const y = padding.top + innerHeight - tick * innerHeight;
           return <line className="nordbord-grid-line" key={tick} x1={padding.left} x2={width - padding.right} y1={y} y2={y} />;
+        })}
+        {reference?.lines.map((line) => {
+          const y = yFor(line.value);
+
+          return (
+            <g key={line.key}>
+              <line className={`nordbord-reference-line is-${line.key}`} x1={padding.left} x2={width - padding.right} y1={y} y2={y} />
+              <text className={`nordbord-reference-label is-${line.key}`} x={width - padding.right - 4} y={y - 5}>
+                P{line.percentile} {compactNumber(line.value, 0)}
+              </text>
+            </g>
+          );
         })}
         {points.map((point, index) => {
           const centerX = padding.left + slot * index + slot / 2;
@@ -363,6 +397,7 @@ function nordbordLabels(language: AmsLanguage) {
       from: "Desde",
       height: "Altura",
       info: "Información",
+      isopronoReference: "Referencia Isoprono (N)",
       latestTest: "Última prueba",
       leftChange: "L cambio de max %",
       leftMaxForce: "L max fuerza (N)",
@@ -398,6 +433,7 @@ function nordbordLabels(language: AmsLanguage) {
     from: "From",
     height: "Height",
     info: "Information",
+    isopronoReference: "Isoprono (N) reference",
     latestTest: "Latest test",
     leftChange: "L change from max %",
     leftMaxForce: "L max force (N)",
@@ -544,4 +580,10 @@ function positionLabel(position: string | undefined, language: AmsLanguage) {
     : {};
 
   return labels[position ?? ""] ?? position ?? "-";
+}
+
+function referenceDisplayLabel(reference: NordbordIsopronoReference, language: AmsLanguage) {
+  const label = language === "es" ? reference.esLabel : reference.enLabel;
+  if (!reference.isAggregate) return label;
+  return language === "es" ? `${label} prom.` : `${label} avg.`;
 }
