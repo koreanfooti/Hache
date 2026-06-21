@@ -26,7 +26,6 @@ type ForceSeriesPoint = {
   type: string;
 };
 
-const atlasLogo = "/ams/assets/hp-ams-logo.svg";
 const nordbordLogo = "/ams/assets/testing/nordbord-logo.png";
 
 export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDashboardProps) {
@@ -37,6 +36,8 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
   const [selectedPosition, setSelectedPosition] = useState("all");
   const [selectedPlayerId, setSelectedPlayerId] = useState(playerIds[0] ?? "");
   const [selectedTestType, setSelectedTestType] = useState("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [hiddenTestIds, setHiddenTestIds] = useState<string[]>([]);
   const allDates = useMemo(() => unique(orderedTests.map((row) => dateInputValue(row.testDateUtc))).sort(), [orderedTests]);
   const [fromDate, setFromDate] = useState(allDates[0] ?? "");
   const [toDate, setToDate] = useState(allDates.at(-1) ?? "");
@@ -58,7 +59,7 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
     [activePlayerId, orderedTests],
   );
   const testTypeOptions = useMemo(() => ["all", ...unique(activePlayerRows.map((row) => row.testTypeName))], [activePlayerRows]);
-  const filteredRows = useMemo(
+  const rowsBeforeTestFilter = useMemo(
     () => activePlayerRows.filter((row) => {
       const date = dateInputValue(row.testDateUtc);
       const isAfterFrom = !fromDate || !date || date >= fromDate;
@@ -68,6 +69,18 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
       return isAfterFrom && isBeforeTo && isType;
     }),
     [activePlayerRows, fromDate, selectedTestType, toDate],
+  );
+  const testFilterOptions = useMemo(
+    () => rowsBeforeTestFilter.map((row) => ({
+      id: nordbordTestKey(row),
+      label: formatDisplayDate(row.testDateUtc),
+      type: row.testTypeName ?? "NordBord",
+    })),
+    [rowsBeforeTestFilter],
+  );
+  const filteredRows = useMemo(
+    () => rowsBeforeTestFilter.filter((row) => !hiddenTestIds.includes(nordbordTestKey(row))),
+    [hiddenTestIds, rowsBeforeTestFilter],
   );
   const series = useMemo(() => filteredRows.map(rowToSeriesPoint), [filteredRows]);
   const latestTest = filteredRows.at(-1);
@@ -109,14 +122,50 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
         </div>
         <div className="nordbord-atlas-lockup">
           <span>Atlas FC {language === "es" ? "Rendimiento" : "Performance"}</span>
-          <Image src={atlasLogo} alt="Atlas FC" width={76} height={76} />
+          <button className="nordbord-filter-toggle" type="button" onClick={() => setIsFilterOpen((isOpen) => !isOpen)}>
+            {labels.filters}
+          </button>
         </div>
       </header>
+
+      <aside className={isFilterOpen ? "nordbord-filter-drawer is-open" : "nordbord-filter-drawer"} aria-label={labels.filters}>
+        <div className="nordbord-filter-header">
+          <strong>{labels.filters}</strong>
+          <button type="button" onClick={() => setIsFilterOpen(false)}>{labels.close}</button>
+        </div>
+        <div className="nordbord-filter-actions">
+          <button type="button" onClick={() => setHiddenTestIds([])}>{labels.selectAll}</button>
+          <button type="button" onClick={() => setHiddenTestIds(testFilterOptions.map((option) => option.id))}>{labels.clear}</button>
+        </div>
+        <div className="nordbord-filter-section">
+          <span>{labels.testDates}</span>
+          <div className="nordbord-date-checkboxes">
+            {testFilterOptions.map((option) => {
+              const isChecked = !hiddenTestIds.includes(option.id);
+
+              return (
+                <label key={option.id}>
+                  <input
+                    checked={isChecked}
+                    type="checkbox"
+                    onChange={() => setHiddenTestIds((currentIds) => (
+                      isChecked
+                        ? [...currentIds, option.id]
+                        : currentIds.filter((id) => id !== option.id)
+                    ))}
+                  />
+                  <span>{option.label}</span>
+                  <small>{option.type}</small>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      </aside>
 
       <section className="nordbord-layout">
         <aside className="nordbord-player-panel">
           <div className="nordbord-player-photo-card">
-            <Image className="nordbord-player-crest" src={atlasLogo} alt="" width={210} height={210} />
             {hasPlayerPhoto(activePlayer) ? (
               <Image className="nordbord-player-photo" src={activePlayer.photo} alt="" width={240} height={240} />
             ) : (
@@ -220,37 +269,27 @@ function NordbordKpi({ label, tone = "neutral", value }: { label: string; tone?:
 
 function ForceBarChart({ labels, points }: { labels: ReturnType<typeof nordbordLabels>; points: ForceSeriesPoint[] }) {
   const width = 980;
-  const height = 292;
-  const padding = { bottom: 54, left: 42, right: 20, top: 30 };
+  const height = 330;
+  const padding = { bottom: 84, left: 42, right: 20, top: 30 };
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
   const values = points.flatMap((point) => [point.left, point.right]);
-  const p25 = percentile(values, 25);
-  const p50 = percentile(values, 50);
-  const p75 = percentile(values, 75);
-  const maxForce = Math.max(100, ...values, p75) * 1.16;
+  const maxForce = Math.max(100, ...values) * 1.16;
   const slot = innerWidth / Math.max(1, points.length);
   const barWidth = Math.max(10, Math.min(24, slot * 0.23));
   const yFor = (value: number) => padding.top + innerHeight - (value / maxForce) * innerHeight;
-  const lineY = (value: number) => yFor(value);
 
   return (
     <section className="nordbord-chart-card">
       <div className="nordbord-chart-legend">
         <span><i className="is-left" />{labels.leftMaxForce}</span>
         <span><i className="is-right" />{labels.rightMaxForce}</span>
-        <span><i className="is-p50" />{labels.percentile50}</span>
-        <span><i className="is-p75" />{labels.percentile75}</span>
-        <span><i className="is-p25" />{labels.percentile25}</span>
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={labels.forceChart}>
         {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
           const y = padding.top + innerHeight - tick * innerHeight;
           return <line className="nordbord-grid-line" key={tick} x1={padding.left} x2={width - padding.right} y1={y} y2={y} />;
         })}
-        <ThresholdLine label={`${labels.median}: ${compactNumber(p50, 0)}`} value={p50} x1={padding.left} x2={width - padding.right} y={lineY(p50)} tone="p50" />
-        <ThresholdLine label={compactNumber(p75, 0)} value={p75} x1={padding.left} x2={width - padding.right} y={lineY(p75)} tone="p75" />
-        <ThresholdLine label={compactNumber(p25, 0)} value={p25} x1={padding.left} x2={width - padding.right} y={lineY(p25)} tone="p25" />
         {points.map((point, index) => {
           const centerX = padding.left + slot * index + slot / 2;
           const leftHeight = innerHeight - (yFor(point.left) - padding.top);
@@ -262,7 +301,7 @@ function ForceBarChart({ labels, points }: { labels: ReturnType<typeof nordbordL
               <rect className="nordbord-force-bar is-right" x={centerX + 2} y={yFor(point.right)} width={barWidth} height={Math.max(2, rightHeight)} rx="2" />
               <text className="nordbord-bar-value" x={centerX - barWidth / 2 - 2} y={yFor(point.left) - 8}>{compactNumber(point.left, 0)}</text>
               <text className="nordbord-bar-value" x={centerX + barWidth / 2 + 2} y={yFor(point.right) - 8}>{compactNumber(point.right, 0)}</text>
-              <text className="nordbord-axis-label" transform={`translate(${centerX - 18} ${height - 18}) rotate(-36)`}>{point.displayDate}</text>
+              <text className="nordbord-axis-label" transform={`translate(${centerX - 16} ${height - 28}) rotate(-34)`}>{point.displayDate}</text>
             </g>
           );
         })}
@@ -273,8 +312,8 @@ function ForceBarChart({ labels, points }: { labels: ReturnType<typeof nordbordL
 
 function AsymmetryLineChart({ labels, points }: { labels: ReturnType<typeof nordbordLabels>; points: ForceSeriesPoint[] }) {
   const width = 980;
-  const height = 192;
-  const padding = { bottom: 44, left: 42, right: 20, top: 20 };
+  const height = 230;
+  const padding = { bottom: 70, left: 42, right: 20, top: 24 };
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
   const values = points.map((point) => point.asymmetry);
@@ -297,22 +336,13 @@ function AsymmetryLineChart({ labels, points }: { labels: ReturnType<typeof nord
             <g key={point.testId}>
               <circle className="nordbord-asymmetry-dot" cx={x} cy={y} r="3.6" />
               <text className="nordbord-line-value" x={x} y={y - 10}>{compactNumber(point.asymmetry, 0)}</text>
-              <text className="nordbord-axis-label" transform={`translate(${x - 18} ${height - 14}) rotate(-32)`}>{point.displayDate}</text>
+              <text className="nordbord-axis-label" transform={`translate(${x - 16} ${height - 28}) rotate(-32)`}>{point.displayDate}</text>
             </g>
           );
         })}
         <text className="nordbord-y-label" transform={`translate(15 ${height / 2 + 30}) rotate(-90)`}>{labels.asymmetry}</text>
       </svg>
     </section>
-  );
-}
-
-function ThresholdLine({ label, tone, x1, x2, y }: { label: string; tone: string; value: number; x1: number; x2: number; y: number }) {
-  return (
-    <g>
-      <line className={`nordbord-threshold-line is-${tone}`} x1={x1} x2={x2} y1={y} y2={y} />
-      <text className={`nordbord-threshold-label is-${tone}`} x={x1 + 14} y={y - 7}>{label}</text>
-    </g>
   );
 }
 
@@ -326,6 +356,7 @@ function nordbordLabels(language: AmsLanguage) {
       avgAsymmetry: "Promedio desequilibrio (%)",
       category: "Categoría",
       dateSlicer: "Filtro de fecha",
+      filters: "Filtros",
       foot: "Pie",
       forceChart: "Fuerza máxima izquierda y derecha por fecha",
       forcePerKg: "Fuerza por kg",
@@ -335,16 +366,16 @@ function nordbordLabels(language: AmsLanguage) {
       latestTest: "Última prueba",
       leftChange: "L cambio de max %",
       leftMaxForce: "L max fuerza (N)",
+      clear: "Limpiar",
+      close: "Cerrar",
       maxAsymmetry: "Max desequilibrio (%)",
-      median: "Mediana",
       number: "Número",
-      percentile25: "Percentil 25",
-      percentile50: "Percentil 50",
-      percentile75: "Percentil 75",
       player: "Jugador",
       position: "Posición",
       rightChange: "R cambio de max %",
       rightMaxForce: "R max fuerza (N)",
+      selectAll: "Seleccionar todo",
+      testDates: "Fechas de prueba",
       timeToMax: "Tiempo al pico",
       title: "Prueba - NordBord",
       to: "Hasta",
@@ -360,6 +391,7 @@ function nordbordLabels(language: AmsLanguage) {
     avgAsymmetry: "Average asymmetry (%)",
     category: "Category",
     dateSlicer: "Date slicer",
+    filters: "Filters",
     foot: "Foot",
     forceChart: "Left and right max force by date",
     forcePerKg: "Force per kg",
@@ -369,16 +401,16 @@ function nordbordLabels(language: AmsLanguage) {
     latestTest: "Latest test",
     leftChange: "L change from max %",
     leftMaxForce: "L max force (N)",
+    clear: "Clear",
+    close: "Close",
     maxAsymmetry: "Max asymmetry (%)",
-    median: "Median",
     number: "Number",
-    percentile25: "25th percentile",
-    percentile50: "50th percentile",
-    percentile75: "75th percentile",
     player: "Player",
     position: "Position",
     rightChange: "R change from max %",
     rightMaxForce: "R max force (N)",
+    selectAll: "Select all",
+    testDates: "Test dates",
     timeToMax: "Time to max",
     title: "Test - NordBord",
     to: "To",
@@ -397,7 +429,7 @@ function rowToSeriesPoint(row: ValdNordbordTestRow): ForceSeriesPoint {
   return {
     asymmetry: signedAsymmetry(left, right),
     date: dateInputValue(row.testDateUtc),
-    displayDate: formatShortDate(row.testDateUtc),
+    displayDate: formatAxisDate(row.testDateUtc),
     left,
     right,
     testId: row.testId ?? `${row.amsId}-${row.testDateUtc}`,
@@ -421,16 +453,6 @@ function changeTone(value: number) {
   if (value <= -10) return "orange";
   if (value <= -5) return "gold";
   return "neutral";
-}
-
-function percentile(values: number[], percent: number) {
-  const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
-  if (!sorted.length) return 0;
-  const index = (percent / 100) * (sorted.length - 1);
-  const lower = Math.floor(index);
-  const upper = Math.ceil(index);
-  const weight = index - lower;
-  return sorted[lower] * (1 - weight) + sorted[upper] * weight;
 }
 
 function maxValue(values: unknown[]) {
@@ -466,11 +488,27 @@ function dateInputValue(value: string | undefined) {
   return formatShortDate(value);
 }
 
+function nordbordTestKey(row: ValdNordbordTestRow) {
+  return row.testId ?? `${row.amsId}-${row.testDateUtc}-${row.testTypeName}`;
+}
+
 function formatShortDate(value: string | undefined) {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value.slice(0, 10);
   return date.toISOString().slice(0, 10);
+}
+
+function formatDisplayDate(value: string | undefined) {
+  const date = new Date(value || "");
+  if (Number.isNaN(date.getTime())) return value?.slice(0, 10) || "-";
+  return new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
+}
+
+function formatAxisDate(value: string | undefined) {
+  const date = new Date(value || "");
+  if (Number.isNaN(date.getTime())) return value?.slice(5, 10) || "-";
+  return new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "2-digit" }).format(date);
 }
 
 function unique(values: unknown[]) {

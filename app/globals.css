@@ -2730,14 +2730,17 @@ button {
 }
 
 .nordbord-powerbi-dashboard {
+  position: relative;
   overflow: hidden;
-  border: 2px solid rgb(255 255 255 / 82%);
+  border: 1px solid rgb(215 180 106 / 32%);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgb(0 0 0 / 78%), rgb(0 0 0 / 58%)),
-    radial-gradient(circle at 50% 44%, rgb(211 31 47 / 32%), transparent 36%),
-    repeating-linear-gradient(135deg, rgb(255 255 255 / 5%) 0 2px, transparent 2px 7px),
-    #060606;
+    linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px),
+    linear-gradient(rgb(255 255 255 / 3%) 1px, transparent 1px),
+    radial-gradient(circle at 14% 15%, rgb(116 9 18 / 42%), transparent 34%),
+    radial-gradient(circle at 82% 60%, rgb(226 29 50 / 16%), transparent 36%),
+    #070405;
+  background-size: 78px 78px, 78px 78px, auto, auto, auto;
   box-shadow: 0 24px 70px rgb(0 0 0 / 36%);
 }
 
@@ -2746,8 +2749,10 @@ button {
   grid-template-columns: minmax(280px, 0.9fr) minmax(420px, 1.35fr) minmax(210px, 0.7fr);
   gap: 18px;
   align-items: center;
-  border-bottom: 2px solid rgb(255 255 255 / 84%);
-  background: #cf2103;
+  border-bottom: 1px solid rgb(215 180 106 / 30%);
+  background:
+    radial-gradient(circle at 22% 0%, rgb(226 29 50 / 22%), transparent 34%),
+    linear-gradient(135deg, rgb(116 9 18 / 92%), rgb(24 8 12 / 96%));
   padding: 14px 18px;
 }
 
@@ -2778,9 +2783,9 @@ button {
 .nordbord-player-select select {
   width: 100%;
   min-height: 38px;
-  border: 2px solid rgb(255 255 255 / 70%);
-  border-radius: 0;
-  background: rgb(0 0 0 / 14%);
+  border: 1px solid rgb(215 180 106 / 44%);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 28%);
   color: #fff;
   font: inherit;
   font-size: 0.9rem;
@@ -2798,7 +2803,7 @@ button {
 .nordbord-title-lockup h3 {
   margin: 0;
   color: #fff;
-  font-size: clamp(2.3rem, 5.2vw, 4.8rem);
+  font-size: clamp(2.2rem, 4.9vw, 4.6rem);
   font-weight: 850;
   letter-spacing: 0.01em;
   line-height: 0.9;
@@ -2815,13 +2820,110 @@ button {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  color: #fff;
-  font-weight: 850;
+  color: var(--ams-muted);
+  font-weight: 900;
 }
 
-.nordbord-atlas-lockup img {
-  width: 74px;
-  height: auto;
+.nordbord-filter-toggle {
+  border: 1px solid rgb(215 180 106 / 38%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 30%);
+  color: var(--ams-gold);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 950;
+  padding: 9px 13px;
+  text-transform: uppercase;
+}
+
+.nordbord-filter-drawer {
+  position: absolute;
+  top: 86px;
+  right: 16px;
+  z-index: 9;
+  display: grid;
+  width: min(330px, calc(100% - 32px));
+  max-height: calc(100% - 108px);
+  gap: 14px;
+  overflow: auto;
+  border: 1px solid rgb(215 180 106 / 36%);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 16% 0%, rgb(226 29 50 / 16%), transparent 36%),
+    rgb(12 5 7 / 96%);
+  box-shadow: 0 20px 70px rgb(0 0 0 / 48%);
+  opacity: 0;
+  padding: 16px;
+  pointer-events: none;
+  transform: translateX(calc(100% + 28px));
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.nordbord-filter-drawer.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.nordbord-filter-header,
+.nordbord-filter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.nordbord-filter-header strong,
+.nordbord-filter-section > span {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.nordbord-filter-header button,
+.nordbord-filter-actions button {
+  border: 1px solid rgb(215 180 106 / 28%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 5%);
+  color: var(--ams-gold);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 950;
+  padding: 7px 10px;
+}
+
+.nordbord-filter-section {
+  display: grid;
+  gap: 10px;
+}
+
+.nordbord-date-checkboxes {
+  display: grid;
+  gap: 8px;
+}
+
+.nordbord-date-checkboxes label {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 9px;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 4%);
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 850;
+  padding: 9px;
+}
+
+.nordbord-date-checkboxes input {
+  accent-color: var(--ams-red);
+}
+
+.nordbord-date-checkboxes small {
+  color: var(--ams-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
 }
 
 .nordbord-layout {
@@ -2843,19 +2945,11 @@ button {
   min-height: 230px;
   place-items: end center;
   overflow: hidden;
-  border: 3px solid #fff;
+  border: 1px solid rgb(215 180 106 / 32%);
   border-radius: 22px;
-  background: rgb(0 0 0 / 68%);
-}
-
-.nordbord-player-crest {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  width: 210px;
-  height: auto;
-  opacity: 0.86;
-  transform: translateX(-50%);
+  background:
+    radial-gradient(circle at 50% 0%, rgb(226 29 50 / 24%), transparent 42%),
+    linear-gradient(145deg, rgb(42 11 16 / 78%), rgb(0 0 0 / 68%));
 }
 
 .nordbord-player-photo {
@@ -2885,9 +2979,9 @@ button {
 .nordbord-player-title,
 .nordbord-info-card h4 {
   display: block;
-  border: 3px solid #fff;
+  border: 1px solid rgb(215 180 106 / 38%);
   border-radius: 20px;
-  background: #cf2103;
+  background: linear-gradient(135deg, var(--ams-red-dark), rgb(35 9 13 / 92%));
   color: #fff;
   font-size: 1.45rem;
   font-weight: 950;
@@ -2899,13 +2993,14 @@ button {
 .nordbord-info-card {
   display: grid;
   overflow: hidden;
-  border: 3px solid #fff;
-  background: rgb(0 0 0 / 74%);
+  border: 1px solid rgb(215 180 106 / 32%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 42%);
 }
 
 .nordbord-info-card h4 {
   border: 0;
-  border-bottom: 3px solid #fff;
+  border-bottom: 1px solid rgb(215 180 106 / 32%);
   border-radius: 0;
   margin: 0;
 }
@@ -2914,7 +3009,7 @@ button {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
-  border-bottom: 2px solid rgb(255 255 255 / 76%);
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
   padding: 10px 12px;
 }
 
@@ -2955,9 +3050,9 @@ button {
   display: grid;
   min-height: 54px;
   place-items: center;
-  border: 3px solid #fff;
+  border: 1px solid rgb(215 180 106 / 38%);
   border-radius: 18px;
-  background: #cf2103;
+  background: linear-gradient(135deg, var(--ams-red-dark), rgb(38 8 12 / 92%));
   color: #fff;
   font-size: 1.05rem;
   font-weight: 950;
@@ -2967,17 +3062,17 @@ button {
   display: flex;
   flex-wrap: wrap;
   overflow: hidden;
-  border: 3px solid #fff;
+  border: 1px solid rgb(215 180 106 / 34%);
   border-radius: 22px;
-  background: #050505;
+  background: rgb(0 0 0 / 36%);
   padding: 8px;
 }
 
 .nordbord-position-button {
   flex: 1 1 150px;
   min-height: 40px;
-  border: 1px solid #000;
-  background: #cf2103;
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(116 9 18 / 72%);
   color: #fff;
   cursor: pointer;
   font: inherit;
@@ -2989,7 +3084,8 @@ button {
 }
 
 .nordbord-position-button.is-active {
-  background: #333;
+  background: linear-gradient(135deg, var(--ams-red), var(--ams-red-dark));
+  color: #fff;
 }
 
 .nordbord-kpi-row {
@@ -3003,9 +3099,9 @@ button {
   min-height: 84px;
   align-content: center;
   justify-items: center;
-  border: 3px solid #fff;
+  border: 1px solid rgb(215 180 106 / 34%);
   border-radius: 14px;
-  background: rgb(0 0 0 / 64%);
+  background: rgb(0 0 0 / 42%);
   color: #fff;
   padding: 10px;
   text-align: center;
@@ -3029,26 +3125,29 @@ button {
 }
 
 .nordbord-kpi-card.is-positive {
-  background: #0f8f43;
+  background: linear-gradient(135deg, #0f5d38, #123323);
 }
 
 .nordbord-kpi-card.is-gold {
-  background: #c49212;
+  background: linear-gradient(135deg, #8f6b19, #442f0b);
 }
 
 .nordbord-kpi-card.is-orange {
-  background: #e26d0a;
+  background: linear-gradient(135deg, #b14d13, #4c1e0c);
 }
 
 .nordbord-kpi-card.is-red {
-  background: #e00000;
+  background: linear-gradient(135deg, var(--ams-red), var(--ams-red-dark));
 }
 
 .nordbord-chart-card {
   overflow-x: auto;
-  border: 3px solid #fff;
-  background: rgb(0 0 0 / 58%);
-  padding: 8px 12px 4px;
+  border: 1px solid rgb(215 180 106 / 30%);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 0%, rgb(116 9 18 / 24%), transparent 42%),
+    rgb(0 0 0 / 30%);
+  padding: 10px 12px 6px;
 }
 
 .nordbord-line-card {
@@ -3088,26 +3187,14 @@ button {
 
 .nordbord-chart-legend .is-left,
 .nordbord-force-bar.is-left {
-  fill: #ffad05;
-  background: #ffad05;
+  fill: var(--ams-gold);
+  background: var(--ams-gold);
 }
 
 .nordbord-chart-legend .is-right,
 .nordbord-force-bar.is-right {
-  fill: #1f97ff;
-  background: #1f97ff;
-}
-
-.nordbord-chart-legend .is-p50 {
-  background: #e6d6c9;
-}
-
-.nordbord-chart-legend .is-p75 {
-  background: #00e460;
-}
-
-.nordbord-chart-legend .is-p25 {
-  background: #ff2e22;
+  fill: var(--ams-blue);
+  background: var(--ams-blue);
 }
 
 .nordbord-grid-line {
@@ -3120,58 +3207,23 @@ button {
   stroke-dasharray: 5 5;
 }
 
-.nordbord-threshold-line {
-  fill: none;
-  stroke-width: 3;
-  stroke-dasharray: 5 5;
-}
-
-.nordbord-threshold-line.is-p50 {
-  stroke: #e6d6c9;
-}
-
-.nordbord-threshold-line.is-p75 {
-  stroke: #00e460;
-}
-
-.nordbord-threshold-line.is-p25 {
-  stroke: #ff2e22;
-}
-
-.nordbord-threshold-label {
-  font-size: 11px;
-  font-weight: 850;
-}
-
-.nordbord-threshold-label.is-p50 {
-  fill: #dfd4ff;
-}
-
-.nordbord-threshold-label.is-p75 {
-  fill: #00e460;
-}
-
-.nordbord-threshold-label.is-p25 {
-  fill: #ff2e22;
-}
-
 .nordbord-bar-value,
 .nordbord-line-value {
   fill: #fff;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 800;
   text-anchor: middle;
 }
 
 .nordbord-axis-label {
-  fill: #fff;
-  font-size: 10px;
+  fill: var(--ams-muted);
+  font-size: 8.5px;
   font-weight: 750;
 }
 
 .nordbord-asymmetry-line {
   fill: none;
-  stroke: #ff1f14;
+  stroke: var(--ams-red);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 5;
@@ -3179,7 +3231,7 @@ button {
 
 .nordbord-asymmetry-dot {
   fill: #fff;
-  stroke: #ff1f14;
+  stroke: var(--ams-red);
   stroke-width: 2;
 }
 

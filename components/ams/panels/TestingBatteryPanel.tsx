@@ -19,6 +19,7 @@ import { NordbordDashboard } from "@/components/ams/panels/NordbordDashboard";
 
 type TestingCategory = "vald" | "fms" | "yBalance" | "cod" | "yoyo";
 type ValdDevice = "nordbord" | "forceframe" | "forcedecks";
+type SelectedValdDevice = ValdDevice | "none";
 
 type TestingBatteryCopy = {
   common: Record<string, string>;
@@ -67,7 +68,7 @@ export function TestingBatteryPanel({
 }: TestingBatteryPanelProps) {
   const labels = testingLabels(language);
   const [selectedCategory, setSelectedCategory] = useState<TestingCategory>("vald");
-  const [selectedValdDevice, setSelectedValdDevice] = useState<ValdDevice>("nordbord");
+  const [selectedValdDevice, setSelectedValdDevice] = useState<SelectedValdDevice>("nordbord");
   const flaggedFmsExercises = fmsExerciseScores.filter((row) => numberValue(row.pointScore) <= 1 || Boolean(row.asymmetryRaw)).length;
   const categories: TestingCategoryCardData[] = [
     {
@@ -236,8 +237,8 @@ function ValdCategoryPanel({
   language: AmsLanguage;
   labels: ReturnType<typeof testingLabels>;
   metrics: ValdNordbordMetricRow[];
-  selectedValdDevice: ValdDevice;
-  setSelectedValdDevice: (device: ValdDevice) => void;
+  selectedValdDevice: SelectedValdDevice;
+  setSelectedValdDevice: (device: SelectedValdDevice) => void;
   tests: ValdNordbordTestRow[];
 }) {
   const deviceCards: ValdDeviceCardData[] = [
@@ -280,7 +281,7 @@ function ValdCategoryPanel({
             device={device}
             isActive={selectedValdDevice === device.id}
             key={device.id}
-            onClick={() => setSelectedValdDevice(device.id)}
+            onClick={() => setSelectedValdDevice(selectedValdDevice === device.id ? "none" : device.id)}
           />
         ))}
       </section>
