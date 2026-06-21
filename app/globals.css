@@ -3187,14 +3187,14 @@ button {
 
 .nordbord-chart-legend .is-left,
 .nordbord-force-bar.is-left {
-  fill: var(--ams-gold);
-  background: var(--ams-gold);
+  fill: #ff9f0a;
+  background: #ff9f0a;
 }
 
 .nordbord-chart-legend .is-right,
 .nordbord-force-bar.is-right {
-  fill: var(--ams-blue);
-  background: var(--ams-blue);
+  fill: #2495ff;
+  background: #2495ff;
 }
 
 .nordbord-grid-line {
@@ -3217,7 +3217,7 @@ button {
 
 .nordbord-axis-label {
   fill: var(--ams-muted);
-  font-size: 8.5px;
+  font-size: 7.6px;
   font-weight: 750;
 }
 

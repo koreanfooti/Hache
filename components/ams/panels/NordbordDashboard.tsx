@@ -269,8 +269,8 @@ function NordbordKpi({ label, tone = "neutral", value }: { label: string; tone?:
 
 function ForceBarChart({ labels, points }: { labels: ReturnType<typeof nordbordLabels>; points: ForceSeriesPoint[] }) {
   const width = 980;
-  const height = 330;
-  const padding = { bottom: 84, left: 42, right: 20, top: 30 };
+  const height = 318;
+  const padding = { bottom: 66, left: 42, right: 20, top: 30 };
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
   const values = points.flatMap((point) => [point.left, point.right]);
@@ -301,7 +301,7 @@ function ForceBarChart({ labels, points }: { labels: ReturnType<typeof nordbordL
               <rect className="nordbord-force-bar is-right" x={centerX + 2} y={yFor(point.right)} width={barWidth} height={Math.max(2, rightHeight)} rx="2" />
               <text className="nordbord-bar-value" x={centerX - barWidth / 2 - 2} y={yFor(point.left) - 8}>{compactNumber(point.left, 0)}</text>
               <text className="nordbord-bar-value" x={centerX + barWidth / 2 + 2} y={yFor(point.right) - 8}>{compactNumber(point.right, 0)}</text>
-              <text className="nordbord-axis-label" transform={`translate(${centerX - 16} ${height - 28}) rotate(-34)`}>{point.displayDate}</text>
+              <text className="nordbord-axis-label" transform={`translate(${centerX - 18} ${height - 20}) rotate(-30)`}>{point.displayDate}</text>
             </g>
           );
         })}
@@ -312,8 +312,8 @@ function ForceBarChart({ labels, points }: { labels: ReturnType<typeof nordbordL
 
 function AsymmetryLineChart({ labels, points }: { labels: ReturnType<typeof nordbordLabels>; points: ForceSeriesPoint[] }) {
   const width = 980;
-  const height = 230;
-  const padding = { bottom: 70, left: 42, right: 20, top: 24 };
+  const height = 214;
+  const padding = { bottom: 54, left: 42, right: 20, top: 24 };
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
   const values = points.map((point) => point.asymmetry);
@@ -336,7 +336,7 @@ function AsymmetryLineChart({ labels, points }: { labels: ReturnType<typeof nord
             <g key={point.testId}>
               <circle className="nordbord-asymmetry-dot" cx={x} cy={y} r="3.6" />
               <text className="nordbord-line-value" x={x} y={y - 10}>{compactNumber(point.asymmetry, 0)}</text>
-              <text className="nordbord-axis-label" transform={`translate(${x - 16} ${height - 28}) rotate(-32)`}>{point.displayDate}</text>
+              <text className="nordbord-axis-label" transform={`translate(${x - 18} ${height - 18}) rotate(-28)`}>{point.displayDate}</text>
             </g>
           );
         })}
@@ -507,8 +507,8 @@ function formatDisplayDate(value: string | undefined) {
 
 function formatAxisDate(value: string | undefined) {
   const date = new Date(value || "");
-  if (Number.isNaN(date.getTime())) return value?.slice(5, 10) || "-";
-  return new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "2-digit" }).format(date);
+  if (Number.isNaN(date.getTime())) return value?.slice(0, 10) || "-";
+  return new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "2-digit", year: "2-digit" }).format(date);
 }
 
 function unique(values: unknown[]) {
