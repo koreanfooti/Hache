@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { parseCsv } from "@/lib/ams/data";
-import { getInjuryHistoryFromGoogleSheet } from "@/lib/ams/injury-source";
+import { getInjuryHistoryFromGoogleSheet } from "@/lib/ams/server";
 import {
   amsSourceDefinitions,
   sourceDefinitionForPath,

@@ -5,7 +5,7 @@ import type {
   PlayerMasterRow,
   PlayerMatchHistoryRow,
   PlayerSeasonHistoryRow,
-} from "@/lib/ams/source-types";
+} from "@/lib/ams/types";
 
 export type PlayerSeasonStats = {
   appearances: number;

@@ -9,7 +9,7 @@ import type {
   ValdNordbordTestRow,
   YBalanceAssessmentRow,
   YBalanceMetricRow,
-} from "@/lib/ams/source-types";
+} from "@/lib/ams/types";
 import {
   DataList,
   MetricCard,

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getInjuryHistoryFromGoogleSheet } from "@/lib/ams/injury-source";
+import { getInjuryHistoryFromGoogleSheet } from "@/lib/ams/server";
 
 export async function GET() {
   try {

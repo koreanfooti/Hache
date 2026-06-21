@@ -11,7 +11,7 @@ import {
 } from "@/lib/ams/auth-session";
 import { authCopy, localizedAuthError, localizedAuthRoleLabel } from "@/components/ams/auth/auth-copy";
 import { useAuth } from "@/components/ams/auth/AuthProvider";
-import { useAmsLanguage } from "@/components/ams/hooks/useAmsLanguage";
+import { useAmsLanguage } from "@/components/ams/hooks/client";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 
 export function SignInPage() {

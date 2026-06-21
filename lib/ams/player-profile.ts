@@ -1,7 +1,7 @@
 import type { Player } from "@/lib/ams/content";
 import { playerProfileFallbacks } from "@/lib/ams/player-fallbacks";
 import { playerBirthDate, previousClubForPlayer } from "@/lib/ams/roster";
-import type { SourceData } from "@/lib/ams/source-types";
+import type { SourceData } from "@/lib/ams/types";
 
 export type PlayerBiographyExtra = {
   birthDate: string;

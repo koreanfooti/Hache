@@ -18,7 +18,7 @@ import type {
   RawSourcePreview,
   SourceData,
   SyncAuditRow,
-} from "@/lib/ams/source-types";
+} from "@/lib/ams/types";
 
 type RegistrySortField = "number" | "name";
 type RegistrySortDirection = "asc" | "desc";

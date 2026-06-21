@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { players, type Player } from "@/lib/ams/content";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import { hasPlayerPhoto } from "@/lib/ams/player-media";
-import type { ValdNordbordMetricRow, ValdNordbordTestRow } from "@/lib/ams/source-types";
+import type { ValdNordbordMetricRow, ValdNordbordTestRow } from "@/lib/ams/types";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 
 type NordbordDashboardProps = {

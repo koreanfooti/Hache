@@ -47,8 +47,8 @@ export type BodyCompRow = {
   weightKg?: number;
   heightCm?: number;
   bmi?: number;
-  adiposeKg?: number;
   muscleKg?: number;
+  adiposeKg?: number;
   residualKg?: number;
   boneKg?: number;
   skinfold6?: number;

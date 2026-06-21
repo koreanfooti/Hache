@@ -7,7 +7,7 @@ import { compactNumber } from "@/lib/ams/data";
 import { hasPlayerPhoto } from "@/lib/ams/player-media";
 import { panelCopy, uiCopy } from "@/components/ams/config/copy";
 import { QuickCard, type AmsLanguage } from "@/components/ams/ui/AmsUi";
-import type { LoadSummary, SourceData } from "@/lib/ams/source-types";
+import type { LoadSummary, SourceData } from "@/lib/ams/types";
 
 export function AppHeader({
   activeLabel,

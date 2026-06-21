@@ -1,5 +1,5 @@
 import { compactNumber } from "@/lib/ams/data";
-import type { LoadSummary, SourceData } from "@/lib/ams/source-types";
+import type { LoadSummary, SourceData } from "@/lib/ams/types";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 
 export const amsSourcePaths = {

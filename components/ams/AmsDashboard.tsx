@@ -7,19 +7,18 @@ import { type AmsSection, navItems, players as fallbackPlayers } from "@/lib/ams
 import { buildRosterPlayers } from "@/lib/ams/roster";
 import { localizedAuthRoleLabel } from "@/components/ams/auth/auth-copy";
 import { panelCopy } from "@/components/ams/config/copy";
-import { useAmsLanguage } from "@/components/ams/hooks/useAmsLanguage";
-import { useAmsSources } from "@/components/ams/hooks/useAmsSources";
+import { useAmsLanguage, useAmsSources } from "@/components/ams/hooks/client";
 import { AthleteProfilePanel } from "@/components/ams/panels/AthleteProfilePanel";
 import { BiographyPanel } from "@/components/ams/panels/BiographyPanel";
 import { CalendarPanel } from "@/components/ams/panels/CalendarPanel";
 import {
   BodyCompositionPanel,
   DevelopmentPanel,
-  InjuryPanel,
   LoadPanel,
   RecoveryPanel,
 } from "@/components/ams/panels/DataPanels";
 import { ExternalFactorsPanel } from "@/components/ams/panels/ExternalFactorsPanel";
+import { InjuryPanel } from "@/components/ams/panels/InjuryPanel";
 import { ResourcesPanel } from "@/components/ams/panels/ResourcesPanel";
 import { SettingsPanel } from "@/components/ams/panels/SettingsPanel";
 import {

@@ -12,7 +12,7 @@ import {
   recentMatchesForPlayer,
   seasonStatsForPlayer,
 } from "@/lib/ams/roster";
-import type { SourceData } from "@/lib/ams/source-types";
+import type { SourceData } from "@/lib/ams/types";
 import { localizedValue, type AmsLanguage } from "@/components/ams/ui/AmsUi";
 
 export function BiographyPanel({
