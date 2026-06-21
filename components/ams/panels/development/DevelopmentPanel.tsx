@@ -7,7 +7,7 @@ import type {
   YBalanceAssessmentRow,
   YBalanceMetricRow,
 } from "@/lib/ams/types";
-import { TestingBatteryPanel } from "@/components/ams/panels/TestingBatteryPanel";
+import { TestingBatteryPanel } from "@/components/ams/panels/testing";
 import type { DataPanelCopy } from "@/components/ams/panels/panelTypes";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 
