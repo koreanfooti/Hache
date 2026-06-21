@@ -132,7 +132,10 @@ export function BiographyPanel({
         <article className="biography-profile">
           <section className="biography-profile-card">
             <span className="biography-nationality-pill">
-              {nationalityFlag(selectedPlayer.nationality)} {localizedValue(selectedPlayer.nationality, language)}
+              <span className="biography-nationality-flag" aria-hidden="true">
+                {nationalityFlag(selectedPlayer.nationality)}
+              </span>
+              <strong>{localizedValue(selectedPlayer.nationality, language)}</strong>
             </span>
             <h3>{selectedPlayer.name}</h3>
             <div className="biography-photo-stage">
@@ -360,11 +363,11 @@ function maskFinancialValue(
 
 function nationalityFlag(nationality: string) {
   const normalized = nationality.toLowerCase();
-  if (normalized.includes("mexico")) return "MX";
-  if (normalized.includes("colombia")) return "CO";
-  if (normalized.includes("argentin")) return "AR";
-  if (normalized.includes("brazil")) return "BR";
-  if (normalized.includes("spain")) return "ES";
-  if (normalized.includes("uruguay")) return "UY";
-  return "INT";
+  if (normalized.includes("mexico")) return "🇲🇽";
+  if (normalized.includes("colombia")) return "🇨🇴";
+  if (normalized.includes("argentin")) return "🇦🇷";
+  if (normalized.includes("brazil")) return "🇧🇷";
+  if (normalized.includes("spain")) return "🇪🇸";
+  if (normalized.includes("uruguay")) return "🇺🇾";
+  return "🏳️";
 }
