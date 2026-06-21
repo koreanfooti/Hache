@@ -377,7 +377,7 @@ function nordbordLabels(language: AmsLanguage) {
       selectAll: "Seleccionar todo",
       testDates: "Fechas de prueba",
       timeToMax: "Tiempo al pico",
-      title: "Prueba - NordBord",
+      title: "NordBord",
       to: "Hasta",
       unassigned: "Sin asignar",
     };
@@ -412,7 +412,7 @@ function nordbordLabels(language: AmsLanguage) {
     selectAll: "Select all",
     testDates: "Test dates",
     timeToMax: "Time to max",
-    title: "Test - NordBord",
+    title: "NordBord",
     to: "To",
     unassigned: "Unassigned",
   };
