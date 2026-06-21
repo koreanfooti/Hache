@@ -8,7 +8,7 @@ export const uiCopy = {
     assistantPrompt: "How can H help you?",
     assistantStatus:
       "RAG-ready placeholder. Connect a private vector database and LLM endpoint when the backend is ready.",
-    appEyebrow: "Atlas FC Performance Operations",
+    appEyebrow: "Atlas FC High Performance",
     appTitle: "Athlete Monitoring System",
     ask: "Ask",
     calendar: "Calendar",
@@ -43,7 +43,7 @@ export const uiCopy = {
     assistantPrompt: "¿Cómo puede ayudarte H?",
     assistantStatus:
       "Marcador listo para RAG. Conecta una base vectorial privada y un endpoint LLM cuando el backend esté listo.",
-    appEyebrow: "Operaciones de rendimiento Atlas FC",
+    appEyebrow: "Atlas FC High Performance",
     appTitle: "Sistema de monitoreo de atletas",
     ask: "Preguntar",
     calendar: "Calendario",

@@ -46,8 +46,8 @@ export function AppHeader({
         <Image
           src="/ams/assets/clubs/10445.png"
           alt="Atlas FC crest"
-          width={64}
-          height={64}
+          width={86}
+          height={86}
           priority
         />
         <div>
