@@ -146,6 +146,7 @@ function moduleNavMark(section: AmsSection) {
     development: "P",
     injury: "+",
     load: "L",
+    matchHistory: "M",
     recovery: "R",
   };
 

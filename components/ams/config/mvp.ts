@@ -9,6 +9,7 @@ export const mvpVisibleSections = [
   "bodyComp",
   "recovery",
   "biography",
+  "matchHistory",
   "calendar",
   "settings",
 ] as const satisfies readonly AmsSection[];
@@ -20,6 +21,7 @@ export const mvpSidebarSections = [
   "bodyComp",
   "recovery",
   "biography",
+  "matchHistory",
 ] as const satisfies readonly AmsSection[];
 
 export const mvpSourceKeys = [
@@ -110,11 +112,13 @@ export function mvpSectionLabel(section: AmsSection, language: AmsLanguage) {
     en: {
       overview: "Command Center",
       bodyComp: "Body Composition",
+      matchHistory: "Match History",
       settings: "Data Sources",
     },
     es: {
       overview: "Centro de mando",
       bodyComp: "Composición corporal",
+      matchHistory: "Historial de partidos",
       settings: "Fuentes de datos",
     },
   };

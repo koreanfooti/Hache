@@ -18,6 +18,7 @@ import {
   RecoveryPanel,
 } from "@/components/ams/panels/DataPanels";
 import { InjuryPanel } from "@/components/ams/panels/InjuryPanel";
+import { MatchHistoryPanel } from "@/components/ams/panels/MatchHistoryPanel";
 import { SettingsPanel } from "@/components/ams/panels/SettingsPanel";
 import {
   AppHeader,
@@ -209,6 +210,13 @@ export default function AmsDashboard({
               visiblePlayers={visiblePlayers}
               onSelectPlayer={setSelectedPlayerId}
               role={authUser.role}
+            />
+          )}
+          {currentSection === "matchHistory" && (
+            <MatchHistoryPanel
+              language={language}
+              loadSummary={loadSummary}
+              sourceData={sourceData}
             />
           )}
           {currentSection === "calendar" && <CalendarPanel language={language} />}

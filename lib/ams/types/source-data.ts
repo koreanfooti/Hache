@@ -12,6 +12,13 @@ export type CleanGpsRow = GpsDailyRow & {
   maxSpeedKmh?: string;
   rollupSourceTask?: string;
   isMatch?: string;
+  playerPosition?: string;
+  position?: string;
+  session_name?: string;
+  shirtNumber?: string | number;
+  sourceSessionId?: string;
+  wimuPosition?: string;
+  wimuShirtNumber?: string | number;
 };
 
 export type InjuryRow = {
