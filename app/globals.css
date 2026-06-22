@@ -6731,6 +6731,7 @@ body,
 .dashboard-hero,
 .dashboard-roster,
 .dashboard-focus-card,
+.dashboard-assistant-card,
 .dashboard-kpi-grid > button,
 .dashboard-session-card,
 .dashboard-trend-card,
@@ -6758,6 +6759,8 @@ body,
 .dashboard-source-section > span,
 .dashboard-focus-player > span,
 .dashboard-focus-metrics span,
+.dashboard-assistant-shell > span,
+.dashboard-assistant-example span,
 .dashboard-roster > span {
   color: var(--ams-gold);
   font-size: 0.72rem;
@@ -7000,6 +7003,109 @@ body,
   padding: 8px 12px;
 }
 
+.dashboard-assistant-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(28px, 4vw, 54px);
+  border-color: rgb(215 29 44 / 34%);
+  background:
+    radial-gradient(circle at 82% 8%, rgb(219 20 39 / 28%), transparent 34%),
+    linear-gradient(135deg, rgb(77 8 16 / 45%), rgb(12 9 10 / 88%) 58%),
+    rgb(15 11 12 / 90%);
+}
+
+.dashboard-assistant-card time {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  border: 1px solid rgb(215 180 106 / 20%);
+  border-radius: 7px;
+  background: rgb(0 0 0 / 18%);
+  color: rgb(255 255 255 / 48%);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
+.dashboard-assistant-shell {
+  display: grid;
+  gap: 14px;
+  width: min(880px, 100%);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.dashboard-assistant-shell h2 {
+  margin: 4px 0 2px;
+  color: #fff;
+  font-size: clamp(2.45rem, 6vw, 4.7rem);
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+}
+
+.dashboard-assistant-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(128px, 180px);
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.dashboard-assistant-form input,
+.dashboard-assistant-form button {
+  min-height: 58px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 900;
+}
+
+.dashboard-assistant-form input {
+  border: 1px solid rgb(215 180 106 / 24%);
+  background: rgb(7 5 6 / 72%);
+  color: #fff;
+  padding: 0 18px;
+}
+
+.dashboard-assistant-form input::placeholder {
+  color: rgb(255 255 255 / 34%);
+}
+
+.dashboard-assistant-form button {
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: linear-gradient(135deg, #ff2d3f, #ad0d19);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 16px 28px rgb(172 8 22 / 24%);
+}
+
+.dashboard-assistant-shell p {
+  margin: 0;
+  color: rgb(255 255 255 / 48%);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.dashboard-assistant-example {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  border: 1px solid rgb(215 180 106 / 20%);
+  border-radius: 10px;
+  background: rgb(31 12 11 / 52%);
+  padding: 18px;
+  text-align: left;
+}
+
+.dashboard-assistant-example strong {
+  display: block;
+  border: 1px solid rgb(215 180 106 / 18%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 3%);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1.35;
+  padding: 14px 16px;
+}
+
 .dashboard-kpi-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -7237,6 +7343,24 @@ body,
     gap: 18px;
   }
 
+  .dashboard-assistant-card {
+    padding: 26px 18px;
+  }
+
+  .dashboard-assistant-card time {
+    position: static;
+    justify-self: start;
+    margin-bottom: 4px;
+  }
+
+  .dashboard-assistant-shell {
+    text-align: left;
+  }
+
+  .dashboard-assistant-form {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-player-count {
     justify-items: start;
   }
@@ -7272,6 +7396,7 @@ body,
 .ams-app .dashboard-hero,
 .ams-app .dashboard-roster,
 .ams-app .dashboard-focus-card,
+.ams-app .dashboard-assistant-card,
 .ams-app .dashboard-kpi-grid > button,
 .ams-app .dashboard-session-card,
 .ams-app .dashboard-trend-card,
@@ -7314,6 +7439,8 @@ body,
 .ams-app .dashboard-source-section > span,
 .ams-app .dashboard-focus-player > span,
 .ams-app .dashboard-focus-metrics span,
+.ams-app .dashboard-assistant-shell > span,
+.ams-app .dashboard-assistant-example span,
 .ams-app .dashboard-roster > span {
   display: block;
   color: var(--ams-gold);
@@ -7542,6 +7669,109 @@ body,
   padding: 8px 12px;
 }
 
+.ams-app .dashboard-assistant-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(28px, 4vw, 54px);
+  border-color: rgb(215 29 44 / 34%) !important;
+  background:
+    radial-gradient(circle at 82% 8%, rgb(219 20 39 / 28%), transparent 34%),
+    linear-gradient(135deg, rgb(77 8 16 / 45%), rgb(12 9 10 / 88%) 58%),
+    rgb(15 11 12 / 90%) !important;
+}
+
+.ams-app .dashboard-assistant-card time {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  border: 1px solid rgb(215 180 106 / 20%);
+  border-radius: 7px;
+  background: rgb(0 0 0 / 18%);
+  color: rgb(255 255 255 / 48%);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
+.ams-app .dashboard-assistant-shell {
+  display: grid !important;
+  gap: 14px;
+  width: min(880px, 100%);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.ams-app .dashboard-assistant-shell h2 {
+  margin: 4px 0 2px;
+  color: #fff;
+  font-size: clamp(2.45rem, 6vw, 4.7rem);
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+}
+
+.ams-app .dashboard-assistant-form {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(128px, 180px);
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.ams-app .dashboard-assistant-form input,
+.ams-app .dashboard-assistant-form button {
+  min-height: 58px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 900;
+}
+
+.ams-app .dashboard-assistant-form input {
+  border: 1px solid rgb(215 180 106 / 24%);
+  background: rgb(7 5 6 / 72%);
+  color: #fff;
+  padding: 0 18px;
+}
+
+.ams-app .dashboard-assistant-form input::placeholder {
+  color: rgb(255 255 255 / 34%);
+}
+
+.ams-app .dashboard-assistant-form button {
+  border: 1px solid rgb(255 255 255 / 8%);
+  background: linear-gradient(135deg, #ff2d3f, #ad0d19);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 16px 28px rgb(172 8 22 / 24%);
+}
+
+.ams-app .dashboard-assistant-shell p {
+  margin: 0;
+  color: rgb(255 255 255 / 48%);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.ams-app .dashboard-assistant-example {
+  display: grid !important;
+  gap: 10px;
+  margin-top: 8px;
+  border: 1px solid rgb(215 180 106 / 20%);
+  border-radius: 10px;
+  background: rgb(31 12 11 / 52%);
+  padding: 18px;
+  text-align: left;
+}
+
+.ams-app .dashboard-assistant-example strong {
+  display: block;
+  border: 1px solid rgb(215 180 106 / 18%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 3%);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1.35;
+  padding: 14px 16px;
+}
+
 .ams-app .dashboard-kpi-grid {
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
@@ -7742,6 +7972,24 @@ body,
   .ams-app .dashboard-focus-player > div,
   .ams-app .dashboard-focus-metrics,
   .ams-app .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ams-app .dashboard-assistant-card {
+    padding: 26px 18px;
+  }
+
+  .ams-app .dashboard-assistant-card time {
+    position: static;
+    justify-self: start;
+    margin-bottom: 4px;
+  }
+
+  .ams-app .dashboard-assistant-shell {
+    text-align: left;
+  }
+
+  .ams-app .dashboard-assistant-form {
     grid-template-columns: 1fr;
   }
 

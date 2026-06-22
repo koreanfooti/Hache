@@ -262,14 +262,13 @@ export function OverviewPanel({
   const sectionLabels: Partial<Record<AmsSection, string>> = copy.sections;
   const dashboardCopy = dashboardLabels(language);
   const dateText = dashboardDateLabel(currentTime, language);
-  const overviewCopy = overviewLabels(language, selectedPlayer.name);
+  const overviewCopy = overviewLabels(language);
   const playerRows = playerLoadRows(selectedPlayer, loadSummary.rows);
   const sessionRows = (playerRows.length ? playerRows : loadSummary.rows)
     .filter((row) => row.date)
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
     .slice(0, 7);
   const trendRows = [...sessionRows].reverse().slice(-6);
-  const lastDistanceKm = loadDistanceKm(sessionRows[0]);
   const sourceCards = mvpSourceCards.map((card) => ({
     ...card,
     count: sourceCount(card.id, loadSummary, sourceData),
@@ -317,18 +316,6 @@ export function OverviewPanel({
 
   return (
     <div className="dashboard-page">
-      <section className="dashboard-hero">
-        <div>
-          <span>{dashboardCopy.kicker}</span>
-          <h2>{overviewCopy.title}</h2>
-          <p>{dashboardCopy.heroBody}</p>
-        </div>
-        <div className="dashboard-player-count">
-          <strong>{visiblePlayers.length}</strong>
-          <small>{copy.playersInView}</small>
-        </div>
-      </section>
-
       <section className="dashboard-roster" aria-label={copy.playerCarousel}>
         <span>{dashboardCopy.squadRoster}</span>
         <div className="dashboard-roster-track">
@@ -356,45 +343,25 @@ export function OverviewPanel({
         </div>
       </section>
 
-      <section className="dashboard-focus-card">
-        <div className="dashboard-focus-player">
-          <span>{overviewCopy.player}</span>
-          <div>
-            <span className="dashboard-focus-photo">
-              {hasPlayerPhoto(selectedPlayer) ? (
-                <Image src={selectedPlayer.photo} alt="" width={76} height={76} />
-              ) : (
-                <b>{selectedPlayer.number || ""}</b>
-              )}
-            </span>
-            <div>
-              <h3>{selectedPlayer.name}</h3>
-              <p>#{selectedPlayer.number || "-"} · {selectedPlayer.amsId}</p>
-              <div className="dashboard-focus-tags">
-                <small>{selectedPlayer.status === "synced" ? dashboardCopy.active : dashboardCopy.review}</small>
-                <small>{selectedPlayer.position}</small>
-              </div>
-            </div>
+      <section className="dashboard-assistant-card" aria-labelledby="ask-h-heading">
+        <time>{dateText}</time>
+        <div className="dashboard-assistant-shell">
+          <span>{dashboardCopy.assistantKicker}</span>
+          <h2 id="ask-h-heading">{dashboardCopy.assistantTitle}</h2>
+          <form className="dashboard-assistant-form" onSubmit={(event) => event.preventDefault()}>
+            <input
+              aria-label={dashboardCopy.assistantPlaceholder}
+              placeholder={dashboardCopy.assistantPlaceholder}
+              type="search"
+            />
+            <button type="submit">{dashboardCopy.assistantAsk}</button>
+          </form>
+          <p>{dashboardCopy.assistantStatus}</p>
+          <div className="dashboard-assistant-example">
+            <span>{dashboardCopy.assistantExampleLabel}</span>
+            <strong>{dashboardCopy.assistantExamplePrompt.replace("{player}", selectedPlayer.name)}</strong>
           </div>
         </div>
-        <div className="dashboard-focus-metrics">
-          <article>
-            <span>{overviewCopy.medical}</span>
-            <strong>{compactNumber(sourceData.injuries.length)}</strong>
-            <small>{overviewCopy.injuryRows}</small>
-          </article>
-          <article>
-            <span>{overviewCopy.performance}</span>
-            <strong>{compactNumber(loadSummary.rows.length)}</strong>
-            <small>{overviewCopy.gpsRows}</small>
-          </article>
-          <article>
-            <span>{dashboardCopy.lastSession}</span>
-            <strong>{compactNumber(lastDistanceKm, 1)}</strong>
-            <small>{dashboardCopy.totalDistanceKm}</small>
-          </article>
-        </div>
-        <time>{dateText}</time>
       </section>
 
       <section className="dashboard-kpi-grid">
@@ -506,51 +473,53 @@ export function OverviewPanel({
 function dashboardLabels(language: AmsLanguage) {
   if (language === "es") {
     return {
-      active: "Activo",
+      assistantAsk: "Preguntar",
+      assistantExampleLabel: "Ejemplo RAG",
+      assistantExamplePrompt: "Prueba: muestra el riesgo RTP de isquios de {player} esta semana.",
+      assistantKicker: "Asistente privado de rendimiento",
+      assistantPlaceholder: "Pregunta sobre un jugador, lesión, sesión, prueba o recurso...",
+      assistantStatus: "Marcador listo para RAG. Conecta una base vectorial privada y un endpoint LLM cuando el backend esté listo.",
+      assistantTitle: "¿Cómo puede ayudarte H?",
       avgLoad: "Carga media 7 dias",
       connectedSources: "Fuentes conectadas",
       date: "Fecha",
       distance: "Distancia (km)",
-      heroBody: "Vista integrada para carga diaria, riesgo medico, desarrollo, recuperacion, biografia y cobertura de fuentes.",
       highSpeed: "Alta velocidad",
-      kicker: "Monitoreo primer equipo",
-      lastSession: "Ultima sesion",
       lastSix: "Ultimas 6 semanas",
       latestRows: "Ultimas filas GPS",
       loadScore: "Carga",
       monotonyIndex: "Indice monotonia",
       peakSession: "Pico sesion",
       records: "registros",
-      review: "Revision",
       sessionLog: "Registro de sesiones",
       sessionType: "Tipo de sesion",
       squadRoster: "Plantilla",
-      totalDistanceKm: "distancia total (km)",
       weeklyLoadTrend: "Tendencia carga semanal",
     };
   }
 
   return {
-    active: "Active",
+    assistantAsk: "Ask",
+    assistantExampleLabel: "Example RAG",
+    assistantExamplePrompt: "Try: Show {player}'s hamstring RTP risk this week.",
+    assistantKicker: "Private performance assistant",
+    assistantPlaceholder: "Ask about a player, injury, session, test, or resource...",
+    assistantStatus: "RAG-ready placeholder. Connect a private vector database and LLM endpoint when the backend is ready.",
+    assistantTitle: "How can H help you?",
     avgLoad: "7-day avg load",
     connectedSources: "Connected data sources",
     date: "Date",
     distance: "Distance (km)",
-    heroBody: "Integrated staff view for daily load, medical risk, development, recovery, biography, and source coverage.",
     highSpeed: "High speed",
-    kicker: "First team monitoring",
-    lastSession: "Last session",
     lastSix: "Last 6 weeks",
     latestRows: "Latest GPS rows",
     loadScore: "Load score",
     monotonyIndex: "Monotony index",
     peakSession: "Peak session",
     records: "records",
-    review: "Review",
     sessionLog: "Session log",
     sessionType: "Session type",
     squadRoster: "Squad roster",
-    totalDistanceKm: "total distance (km)",
     weeklyLoadTrend: "Weekly load trend",
   };
 }
@@ -634,31 +603,15 @@ function dashboardDateLabel(value: Date | null, language: AmsLanguage) {
   }).format(value);
 }
 
-function overviewLabels(language: AmsLanguage, playerName: string) {
+function overviewLabels(language: AmsLanguage) {
   if (language === "es") {
     return {
-      body: `Vista ejecutiva para revisar carga, historial médico, pruebas, composición y recuperación antes de profundizar en ${playerName}.`,
-      gpsRows: "filas WIMU/GPS cargadas",
-      injuryRows: "registros médicos limpios",
-      kicker: "MVP listo para dirección",
-      medical: "Cobertura médica",
-      performance: "Cobertura física",
-      player: "Jugador en foco",
       sourceRegistry: "fuentes activas",
-      title: "Centro de mando médico y rendimiento",
     };
   }
 
   return {
-    body: `Director view for checking load, medical history, testing, composition, and recovery before drilling into ${playerName}.`,
-    gpsRows: "loaded WIMU/GPS rows",
-    injuryRows: "clean medical records",
-    kicker: "Presentation-ready MVP",
-    medical: "Medical coverage",
-    performance: "Performance coverage",
-    player: "Player in focus",
     sourceRegistry: "active sources",
-    title: "Medical and performance command center",
   };
 }
 
