@@ -30,6 +30,7 @@ type MatchSummary = {
 };
 
 type MatchPlayer = {
+  card?: "yellow";
   id: string;
   name: string;
   number: string;
@@ -40,6 +41,8 @@ type MatchPlayer = {
   hsrMeters: number;
   sprintMeters: number;
   maxSpeed: number;
+  subEvent?: "in" | "out";
+  subMinute?: number;
   x: number;
   y: number;
 };
@@ -84,7 +87,7 @@ export function MatchHistoryPanel({
   const activeTeamName = selectedMatch
     ? selectedTeamView === "opponent" ? opponentTeamForMatch(selectedMatch) : "Atlas"
     : "Atlas";
-  const activeFormation = formationForPlayers(pitchPlayers, selectedTeamView === "opponent" ? referenceFormation(selectedMatch) : undefined);
+  const activeFormation = formationForPlayers(pitchPlayers, referenceFormation(selectedMatch, selectedTeamView));
 
   function updateDateFilter(value: string) {
     setDateFilter(value);
@@ -228,6 +231,8 @@ export function MatchHistoryPanel({
                     style={{ "--x": `${player.x}%`, "--y": `${player.y}%` } as React.CSSProperties}
                     title={`${player.name} · ${compactNumber(player.totalDistanceKm, 1)} km`}
                   >
+                    {player.subEvent ? <i className={`match-sub-badge is-${player.subEvent}`}>{player.subEvent === "in" ? "↑" : "↓"}</i> : null}
+                    {player.card ? <i className={`match-card-badge is-${player.card}`} aria-label={`${player.card} card`} /> : null}
                     <span className={player.photo ? "has-photo" : ""}>
                       {player.photo ? <Image alt="" src={player.photo} width={42} height={42} /> : <b>{player.number || initials(player.name)}</b>}
                     </span>
@@ -286,6 +291,11 @@ function PlayerLoadRow({ player, compact = false }: { player: MatchPlayer; compa
         <strong>{playerNameWithNumber(player)}</strong>
         <small>{player.position || "-"}{compact ? "" : ` · ${compactNumber(player.minutes, 0)} min`}</small>
       </div>
+      {player.subEvent && player.subMinute ? (
+        <em className={`match-sub-chip is-${player.subEvent}`}>
+          {player.subEvent === "in" ? "↑" : "↓"} {player.subMinute}&prime;
+        </em>
+      ) : null}
       <span>{compactNumber(player.totalDistanceKm, 1)} km</span>
     </article>
   );
@@ -387,7 +397,185 @@ function buildMatchPlayers(match: MatchSummary) {
   }
 
   const players = Array.from(byPlayer.values()).sort((a, b) => b.minutes - a.minutes || b.totalDistanceKm - a.totalDistanceKm);
+  if (isDefaultReferenceMatch(match)) {
+    return buildAtlasReferencePlayers(players);
+  }
   return assignPitchPositions(ensureAtlasGoalkeeper(players));
+}
+
+function buildAtlasReferencePlayers(gpsPlayers: MatchPlayer[]) {
+  const playerMap = new Map<string, MatchPlayer>();
+  for (const player of gpsPlayers) {
+    playerMap.set(player.id, player);
+    playerMap.set(normalizeText(player.name), player);
+  }
+
+  return [
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0001",
+      name: "Camilo Vargas",
+      number: "12",
+      position: "Goalkeeper",
+      x: 50,
+      y: 87,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0026",
+      name: "Jorge Rodríguez",
+      number: "25",
+      position: "Left back",
+      card: "yellow",
+      x: 13,
+      y: 74,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0005",
+      name: "Rodrigo Schlegel",
+      number: "21",
+      position: "Centre back",
+      x: 37,
+      y: 74,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0004",
+      name: "Manuel Capasso",
+      number: "28",
+      position: "Centre back",
+      x: 63,
+      y: 74,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0006",
+      name: "Gustavo Ferrareis",
+      number: "3",
+      position: "Right back",
+      subEvent: "out",
+      subMinute: 78,
+      x: 87,
+      y: 74,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0012",
+      name: "Aldo Rocha",
+      number: "26",
+      position: "Defensive midfield",
+      subEvent: "out",
+      subMinute: 58,
+      x: 50,
+      y: 58,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0014",
+      name: "Sergio I. Hernández Flores",
+      number: "199",
+      position: "Wide midfield",
+      subEvent: "out",
+      subMinute: 75,
+      x: 13,
+      y: 42,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0016",
+      name: "Paulo Ramírez",
+      number: "15",
+      position: "Central midfield",
+      subEvent: "out",
+      subMinute: 70,
+      x: 37,
+      y: 42,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0020",
+      name: "Arturo González",
+      number: "58",
+      position: "Central midfield",
+      x: 63,
+      y: 42,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0013",
+      name: "Victor Rios",
+      number: "27",
+      position: "Wide midfield",
+      card: "yellow",
+      x: 87,
+      y: 42,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0021",
+      name: "Eduardo Aguirre",
+      number: "19",
+      position: "Forward",
+      subEvent: "out",
+      subMinute: 75,
+      x: 50,
+      y: 28,
+    }),
+    atlasReferencePlayer(playerMap, {
+      name: "Andrés Montaño",
+      number: "",
+      position: "Substitute",
+      subEvent: "in",
+      subMinute: 75,
+      x: 50,
+      y: 50,
+    }),
+    atlasReferencePlayer(playerMap, {
+      name: "Jeremy Márquez",
+      number: "",
+      position: "Substitute",
+      subEvent: "in",
+      subMinute: 70,
+      x: 50,
+      y: 50,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0015",
+      name: "Édgar Zaldívar",
+      number: "6",
+      position: "Substitute",
+      subEvent: "in",
+      subMinute: 78,
+      x: 50,
+      y: 50,
+    }),
+    atlasReferencePlayer(playerMap, {
+      amsId: "AMS-ATLAS-0010",
+      name: "Mateo García",
+      number: "8",
+      position: "Substitute",
+      subEvent: "in",
+      subMinute: 58,
+      x: 50,
+      y: 50,
+    }),
+  ];
+}
+
+function atlasReferencePlayer(
+  playerMap: Map<string, MatchPlayer>,
+  reference: Pick<MatchPlayer, "name" | "number" | "position" | "x" | "y"> & Partial<Pick<MatchPlayer, "card" | "id" | "subEvent" | "subMinute">> & { amsId?: string },
+): MatchPlayer {
+  const gpsPlayer = (reference.amsId ? playerMap.get(reference.amsId) : undefined) ?? playerMap.get(normalizeText(reference.name));
+  const rosterPlayer = atlasRoster.find((player) => player.amsId === reference.amsId || normalizeText(player.name) === normalizeText(reference.name));
+
+  return {
+    id: reference.amsId ?? reference.id ?? normalizeText(reference.name),
+    name: reference.name,
+    number: reference.number || String(rosterPlayer?.number ?? gpsPlayer?.number ?? ""),
+    photo: rosterPlayer?.photo ?? gpsPlayer?.photo,
+    position: reference.position,
+    minutes: gpsPlayer?.minutes ?? (reference.subEvent === "in" ? 90 - (reference.subMinute ?? 90) : 90),
+    totalDistanceKm: gpsPlayer?.totalDistanceKm ?? 0,
+    hsrMeters: gpsPlayer?.hsrMeters ?? 0,
+    sprintMeters: gpsPlayer?.sprintMeters ?? 0,
+    maxSpeed: gpsPlayer?.maxSpeed ?? 0,
+    card: reference.card,
+    subEvent: reference.subEvent,
+    subMinute: reference.subMinute,
+    x: reference.x,
+    y: reference.y,
+  };
 }
 
 function buildOpponentPlayers(match: MatchSummary) {
@@ -587,8 +775,9 @@ function formationForPlayers(players: MatchPlayer[], fallback?: string) {
   return [defenders, midfielders, forwards].filter((count) => count > 0).join("-");
 }
 
-function referenceFormation(match: MatchSummary | undefined) {
-  return match && isDefaultReferenceMatch(match) ? "5-4-1" : undefined;
+function referenceFormation(match: MatchSummary | undefined, teamView: TeamView) {
+  if (!match || !isDefaultReferenceMatch(match)) return undefined;
+  return teamView === "atlas" ? "4-1-4-1" : "5-4-1";
 }
 
 function opponentTeamForMatch(match: MatchSummary) {
