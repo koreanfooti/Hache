@@ -7,8 +7,10 @@ import { atlasFirstTeamFixtures } from "@/lib/ams/atlasFixtures";
 import type { CleanGpsRow, LoadSummary, PlayerMatchHistoryRow, SourceData } from "@/lib/ams/types";
 
 type MatchSummary = {
+  aggregate?: string;
   id: string;
   date: string;
+  detailLine?: string;
   displayDate: string;
   competition: string;
   phase: string;
@@ -20,6 +22,7 @@ type MatchSummary = {
   venue: string;
   status: string;
   source: string;
+  scorers?: string[];
   playerRows: PlayerMatchHistoryRow[];
   gpsRows: CleanGpsRow[];
 };
@@ -38,6 +41,8 @@ type MatchPlayer = {
   y: number;
 };
 
+const DEFAULT_MATCH_DATE = "2026-05-09";
+
 export function MatchHistoryPanel({
   language,
   loadSummary,
@@ -52,8 +57,13 @@ export function MatchHistoryPanel({
     () => buildMatchSummaries(sourceData.playerMatchHistory, loadSummary.rows),
     [sourceData.playerMatchHistory, loadSummary.rows],
   );
+  const [dateFilter, setDateFilter] = useState(DEFAULT_MATCH_DATE);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
-  const selectedMatch = matches.find((match) => match.id === selectedMatchId) ?? matches[0];
+  const visibleMatches = dateFilter ? matches.filter((match) => match.date === dateFilter) : matches;
+  const selectedMatch = visibleMatches.find((match) => match.id === selectedMatchId)
+    ?? visibleMatches[0]
+    ?? matches.find(isDefaultReferenceMatch)
+    ?? matches[0];
   const matchPlayers = useMemo(
     () => selectedMatch ? buildMatchPlayers(selectedMatch) : [],
     [selectedMatch],
@@ -61,6 +71,12 @@ export function MatchHistoryPanel({
   const pitchPlayers = matchPlayers.slice(0, 11);
   const reservePlayers = matchPlayers.slice(11);
   const totals = summarizeMatchPlayers(matchPlayers);
+
+  function updateDateFilter(value: string) {
+    setDateFilter(value);
+    const nextMatch = value ? matches.find((match) => match.date === value) : matches.find(isDefaultReferenceMatch) ?? matches[0];
+    setSelectedMatchId(nextMatch?.id ?? null);
+  }
 
   if (!selectedMatch) {
     return (
@@ -92,29 +108,46 @@ export function MatchHistoryPanel({
       <section className="match-history-layout">
         <aside className="match-history-list" aria-label={copy.matchList}>
           <div className="panel-heading">
-            <span>{copy.matchList}</span>
-            <strong>{matches.length} {copy.matches}</strong>
+            <div className="match-list-title">
+              <span>{copy.matchList}</span>
+              <strong>{visibleMatches.length} / {matches.length} {copy.matches}</strong>
+            </div>
+            <div className="match-list-controls">
+              <label>
+                <span>{copy.dateFilter}</span>
+                <input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(event) => updateDateFilter(event.target.value)}
+                />
+              </label>
+              <button type="button" onClick={() => updateDateFilter("")}>
+                {copy.allDates}
+              </button>
+            </div>
           </div>
           <div className="match-history-scroll">
-            {matches.map((match) => (
+            {visibleMatches.length ? visibleMatches.map((match) => (
               <button
                 className={match.id === selectedMatch.id ? "is-active" : ""}
                 key={match.id}
                 type="button"
                 onClick={() => setSelectedMatchId(match.id)}
               >
-                <span>{match.displayDate}</span>
+                <span>{formatMatchDate(match.date, match.displayDate, language)}</span>
                 <strong>{match.homeTeam} {scoreValue(match.homeGoals)} - {scoreValue(match.awayGoals)} {match.awayTeam}</strong>
                 <small>{match.competition} · {match.round}</small>
               </button>
-            ))}
+            )) : (
+              <p className="match-history-no-results">{copy.noDateMatches}</p>
+            )}
           </div>
         </aside>
 
         <main className="match-history-main">
           <section className="match-score-card">
             <div className="match-score-meta">
-              <span>{selectedMatch.competition} · {selectedMatch.displayDate}</span>
+              <span>{selectedMatch.competition} · {formatMatchDate(selectedMatch.date, selectedMatch.displayDate, language)}</span>
               <strong>{selectedMatch.status}</strong>
             </div>
             <div className="match-score-line">
@@ -122,7 +155,16 @@ export function MatchHistoryPanel({
               <span className="match-score-dash">-</span>
               <TeamScore team={selectedMatch.awayTeam} goals={selectedMatch.awayGoals} />
             </div>
-            <p>{selectedMatch.phase || selectedMatch.round} · {selectedMatch.venue || copy.venuePending}</p>
+            {selectedMatch.scorers?.length ? (
+              <div className="match-score-events">
+                {selectedMatch.scorers.map((scorer) => <span key={scorer}>{scorer}</span>)}
+              </div>
+            ) : null}
+            <p>{[
+              selectedMatch.detailLine || selectedMatch.phase || selectedMatch.round,
+              selectedMatch.aggregate,
+              selectedMatch.venue || copy.venuePending,
+            ].filter(Boolean).join(" · ")}</p>
           </section>
 
           <section className="match-kpi-grid">
@@ -268,6 +310,7 @@ function buildMatchSummaries(matchRows: PlayerMatchHistoryRow[], gpsRows: CleanG
 
   const matches = Array.from(matchMap.values()).sort((a, b) => String(b.date).localeCompare(String(a.date)));
   for (const match of matches) {
+    applyReferenceMatchDetails(match);
     match.gpsRows = gpsRows.filter((row) => rowBelongsToMatch(row, match));
   }
 
@@ -389,6 +432,20 @@ function parseFixtureScore(score: string | undefined, homeTeam: string, awayTeam
   return match ? [Number(match[1]), Number(match[2])] : [undefined, undefined];
 }
 
+function applyReferenceMatchDetails(match: MatchSummary) {
+  if (!isDefaultReferenceMatch(match)) return;
+  match.detailLine = "Quarter-final · Leg 2 of 2";
+  match.aggregate = "Aggregate: 4 - 2";
+  match.scorers = ["José Paradela 32'"];
+  match.source = "Google example + LigaMX cache";
+}
+
+function isDefaultReferenceMatch(match: MatchSummary) {
+  return match.date === DEFAULT_MATCH_DATE
+    && normalizeText(match.homeTeam).includes("cruz azul")
+    && normalizeText(match.awayTeam).includes("atlas");
+}
+
 function positionLabel(row: CleanGpsRow) {
   return String(row.wimuPosition ?? row.position ?? row.playerPosition ?? "-").trim();
 }
@@ -435,6 +492,18 @@ function scoreValue(value: number | undefined) {
   return typeof value === "number" ? value : "-";
 }
 
+function formatMatchDate(value: string, fallback: string, language: AmsLanguage) {
+  if (!value) return fallback;
+  const parsed = new Date(`${value}T12:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+  return new Intl.DateTimeFormat(language === "es" ? "es-MX" : "en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+    year: "numeric",
+  }).format(parsed);
+}
+
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -443,6 +512,8 @@ function matchCopy(language: AmsLanguage) {
   if (language === "es") {
     return {
       description: "Historial de partidos estilo Google con marcador, lista de partidos y vista de cancha conectada a fuentes limpias del AMS.",
+      allDates: "Todas",
+      dateFilter: "Fecha",
       empty: "No hay historial de partidos cargado todavía.",
       fieldView: "Vista de cancha",
       hsr: "HSR",
@@ -450,6 +521,7 @@ function matchCopy(language: AmsLanguage) {
       matchList: "Partidos",
       matches: "partidos",
       maxSpeed: "Velocidad máx.",
+      noDateMatches: "No hay partidos en esta fecha.",
       onField: "En cancha",
       photoNote: "Fotos omitidas por ahora; usando números e iniciales.",
       source: "Fuente",
@@ -465,6 +537,8 @@ function matchCopy(language: AmsLanguage) {
 
   return {
     description: "Google-style match history with scoreline, match list, and pitch view connected to clean AMS sources.",
+    allDates: "All",
+    dateFilter: "Date",
     empty: "No match history is loaded yet.",
     fieldView: "Field view",
     hsr: "HSR",
@@ -472,6 +546,7 @@ function matchCopy(language: AmsLanguage) {
     matchList: "Matches",
     matches: "matches",
     maxSpeed: "Max speed",
+    noDateMatches: "No matches on this date.",
     onField: "On field",
     photoNote: "Photos ignored for now; using numbers and initials.",
     source: "Source",
