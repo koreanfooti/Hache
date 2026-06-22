@@ -20,7 +20,7 @@ export function SignInPage() {
   const [language, setLanguage] = useAmsLanguage();
   const copy = authCopy[language].signIn;
   const commonCopy = authCopy[language].common;
-  const [email, setEmail] = useState("technical@realams.local");
+  const [email, setEmail] = useState("director@realams.local");
   const [password, setPassword] = useState(demoPassword);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,7 +48,7 @@ export function SignInPage() {
     <AuthShell
       copy={copy.copy}
       eyebrow={commonCopy.appName}
-      footer={<span>{copy.footerPrefix} <Link href="/sign-up">{copy.footerLink}</Link></span>}
+      footer={<span>{language === "es" ? "MVP local con cuentas demo para staff." : "Local MVP with staff demo accounts."}</span>}
       language={language}
       title={copy.title}
       onLanguageChange={setLanguage}

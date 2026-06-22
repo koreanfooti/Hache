@@ -1,5 +1,5 @@
-import { SignUpPage } from "@/components/ams/auth/AuthPages";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <SignUpPage />;
+  redirect("/sign-in");
 }

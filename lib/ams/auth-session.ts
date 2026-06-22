@@ -24,14 +24,14 @@ export type AuthRoleOption = {
 
 export const authRoleOptions: AuthRoleOption[] = [
   {
-    role: "technicalStaff",
-    label: "Technical Staff",
-    description: "Full football staff access.",
-  },
-  {
     role: "medicalPerformanceDirector",
     label: "Medical and Performance Director",
     description: "Director-level full access.",
+  },
+  {
+    role: "technicalStaff",
+    label: "Technical Staff",
+    description: "Full football staff access.",
   },
   {
     role: "administration",
@@ -57,17 +57,17 @@ export const authRoleOptions: AuthRoleOption[] = [
 
 export const demoAuthUsers: StoredRealAmsAuthUser[] = [
   {
-    id: "demo-technical",
-    name: "Technical Staff Demo",
-    email: "technical@realams.local",
-    role: "technicalStaff",
-    password: demoPassword,
-  },
-  {
     id: "demo-director",
     name: "Medical Performance Director Demo",
     email: "director@realams.local",
     role: "medicalPerformanceDirector",
+    password: demoPassword,
+  },
+  {
+    id: "demo-technical",
+    name: "Technical Staff Demo",
+    email: "technical@realams.local",
+    role: "technicalStaff",
     password: demoPassword,
   },
   {

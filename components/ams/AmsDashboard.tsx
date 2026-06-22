@@ -7,8 +7,8 @@ import { type AmsSection, navItems, players as fallbackPlayers } from "@/lib/ams
 import { buildRosterPlayers } from "@/lib/ams/roster";
 import { localizedAuthRoleLabel } from "@/components/ams/auth/auth-copy";
 import { panelCopy } from "@/components/ams/config/copy";
+import { isMvpVisibleSection, mvpSectionLabel } from "@/components/ams/config/mvp";
 import { useAmsLanguage, useAmsSources } from "@/components/ams/hooks/client";
-import { AthleteProfilePanel } from "@/components/ams/panels/AthleteProfilePanel";
 import { BiographyPanel } from "@/components/ams/panels/BiographyPanel";
 import { CalendarPanel } from "@/components/ams/panels/CalendarPanel";
 import {
@@ -17,16 +17,14 @@ import {
   LoadPanel,
   RecoveryPanel,
 } from "@/components/ams/panels/DataPanels";
-import { ExternalFactorsPanel } from "@/components/ams/panels/ExternalFactorsPanel";
 import { InjuryPanel } from "@/components/ams/panels/InjuryPanel";
-import { ResourcesPanel } from "@/components/ams/panels/ResourcesPanel";
 import { SettingsPanel } from "@/components/ams/panels/SettingsPanel";
 import {
   AppHeader,
   ContextStrip,
+  ModuleNav,
   OverviewPanel,
   PlayerStrip,
-  Sidebar,
 } from "@/components/ams/shell/AmsShell";
 
 const sectionMap: Record<AmsSection, string> = Object.fromEntries(
@@ -48,14 +46,15 @@ export default function AmsDashboard({
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const { loadSummary, sourceData } = useAmsSources(authUser.role);
   const allowedSections = useMemo(
-    () => navItems.map((item) => item.id).filter((section) => canAccessSection(authUser.role, section)),
+    () => navItems
+      .map((item) => item.id)
+      .filter((section) => canAccessSection(authUser.role, section) && isMvpVisibleSection(section)),
     [authUser.role],
   );
   const currentSection = allowedSections.includes(activeSection)
     ? activeSection
     : allowedSections[0] ?? "biography";
   const canOpenCalendar = allowedSections.includes("calendar");
-  const canOpenResources = allowedSections.includes("resources");
   const canOpenSettings = allowedSections.includes("settings");
   const rosterPlayers = useMemo(
     () => buildRosterPlayers(sourceData.playerMaster),
@@ -132,9 +131,8 @@ export default function AmsDashboard({
   return (
     <main className="ams-app">
       <AppHeader
-        activeLabel={sectionMap[currentSection]}
+        activeLabel={mvpSectionLabel(currentSection, language) ?? sectionMap[currentSection]}
         canOpenCalendar={canOpenCalendar}
-        canOpenResources={canOpenResources}
         canOpenSettings={canOpenSettings}
         language={language}
         roleLabel={localizedAuthRoleLabel(authUser.role, language)}
@@ -142,27 +140,30 @@ export default function AmsDashboard({
         onGoHome={() => selectAllowedSection(defaultSectionForRole(authUser.role))}
         onLanguageChange={setLanguage}
         onOpenCalendar={() => selectAllowedSection("calendar")}
-        onOpenResources={() => selectAllowedSection("resources")}
         onOpenSettings={() => selectAllowedSection("settings")}
         onSignOut={onSignOut}
       />
+      <ModuleNav
+        activeSection={currentSection}
+        allowedSections={allowedSections}
+        language={language}
+        onSelect={selectAllowedSection}
+      />
       <div className="ams-shell">
         <section className="ams-stage">
-          <ContextStrip language={language} playerCount={visiblePlayers.length} />
-          <PlayerStrip
-            language={language}
-            playersInView={visiblePlayers}
-            selectedPlayerId={selectedPlayer.id}
-            onNext={() => rotateSelectedPlayer(1)}
-            onPrevious={() => rotateSelectedPlayer(-1)}
-            onSelect={setSelectedPlayerId}
-          />
-          <Sidebar
-            activeSection={currentSection}
-            allowedSections={allowedSections}
-            language={language}
-            onSelect={selectAllowedSection}
-          />
+          {currentSection !== "overview" ? (
+            <>
+              <ContextStrip language={language} playerCount={visiblePlayers.length} />
+              <PlayerStrip
+                language={language}
+                playersInView={visiblePlayers}
+                selectedPlayerId={selectedPlayer.id}
+                onNext={() => rotateSelectedPlayer(1)}
+                onPrevious={() => rotateSelectedPlayer(-1)}
+                onSelect={setSelectedPlayerId}
+              />
+            </>
+          ) : null}
           {currentSection === "overview" && (
             <OverviewPanel
               currentTime={currentTime}
@@ -170,7 +171,10 @@ export default function AmsDashboard({
               loadSummary={loadSummary}
               sourceData={sourceData}
               selectedPlayer={selectedPlayer}
-              onSelectSection={setActiveSection}
+              visiblePlayers={visiblePlayers}
+              allowedSections={allowedSections}
+              onSelectPlayer={setSelectedPlayerId}
+              onSelectSection={selectAllowedSection}
             />
           )}
           {currentSection === "load" && <LoadPanel copy={panelCopy[language]} language={language} loadSummary={loadSummary} />}
@@ -207,17 +211,7 @@ export default function AmsDashboard({
               role={authUser.role}
             />
           )}
-          {currentSection === "external" && <ExternalFactorsPanel language={language} />}
-          {currentSection === "athleteProfile" && (
-            <AthleteProfilePanel
-              language={language}
-              selectedPlayer={selectedPlayer}
-              visiblePlayers={visiblePlayers}
-              onSelectPlayer={setSelectedPlayerId}
-            />
-          )}
           {currentSection === "calendar" && <CalendarPanel language={language} />}
-          {currentSection === "resources" && <ResourcesPanel language={language} />}
           {currentSection === "settings" && (
             <SettingsPanel
               language={language}
@@ -236,9 +230,9 @@ export default function AmsDashboard({
 }
 
 function defaultSectionForRole(role: RealAmsAuthUser["role"]): AmsSection {
-  if (canAccessSection(role, "overview")) return "overview";
-  if (canAccessSection(role, "load")) return "load";
-  if (canAccessSection(role, "injury")) return "injury";
-  if (canAccessSection(role, "biography")) return "biography";
+  if (canAccessSection(role, "overview") && isMvpVisibleSection("overview")) return "overview";
+  if (canAccessSection(role, "load") && isMvpVisibleSection("load")) return "load";
+  if (canAccessSection(role, "injury") && isMvpVisibleSection("injury")) return "injury";
+  if (canAccessSection(role, "biography") && isMvpVisibleSection("biography")) return "biography";
   return "calendar";
 }

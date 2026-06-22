@@ -8,8 +8,21 @@ export function ValdDeviceCard({
 }: {
   device: ValdDeviceCardData;
   isActive: boolean;
-  onClick: () => void;
+  onClick?: () => void;
 }) {
+  if (!onClick) {
+    return (
+      <article className={isActive ? "testing-device-card is-active" : "testing-device-card"}>
+        {device.image ? <Image src={device.image} alt={`${device.title} logo`} width={124} height={84} /> : <span>{device.label}</span>}
+        <div>
+          <strong>{device.title}</strong>
+          <p>{device.copy}</p>
+          <small>{device.stat}</small>
+        </div>
+      </article>
+    );
+  }
+
   return (
     <button
       className={isActive ? "testing-device-card is-active" : "testing-device-card"}

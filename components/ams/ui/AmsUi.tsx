@@ -4,9 +4,13 @@ export type AmsLanguage = "en" | "es";
 
 export function localizedValue(value: string | number | undefined, language: AmsLanguage) {
   const text = String(value ?? "");
-  if (language === "en") return text;
+  if (language === "en") {
+    return text
+      .replaceAll("Pending API", "Not in demo dataset")
+      .replaceAll("Pending source merge", "Not in demo dataset");
+  }
   return text
-    .replaceAll("Pending API", "API pendiente")
+    .replaceAll("Pending API", "No incluido en demo")
     .replaceAll("Pending", "Pendiente")
     .replaceAll("Left Foot", "Pie izquierdo")
     .replaceAll("Right Foot", "Pie derecho")
@@ -19,7 +23,8 @@ export function localizedValue(value: string | number | undefined, language: Ams
     .replaceAll("Argentine", "Argentino")
     .replaceAll("Mexico", "México")
     .replaceAll("Spain", "España")
-    .replaceAll("Pending source", "Fuente pendiente");
+    .replaceAll("Pending source merge", "No incluido en demo")
+    .replaceAll("Pending source", "No incluido en demo");
 }
 
 export function QuickCard({ label, value, onClick }: { label: string; value: string; onClick: () => void }) {

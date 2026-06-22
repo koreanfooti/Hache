@@ -12,6 +12,7 @@ import {
   type AmsSourceDefinition,
 } from "@/lib/ams/source-registry";
 import { panelCopy } from "@/components/ams/config/copy";
+import { isMvpSourceKey } from "@/components/ams/config/mvp";
 import { PanelIntro, localizedValue, type AmsLanguage } from "@/components/ams/ui/AmsUi";
 import type {
   LoadSummary,
@@ -57,6 +58,7 @@ export function SettingsPanel({
   const [registrySearch, setRegistrySearch] = useState("");
   const [registrySortField, setRegistrySortField] = useState<RegistrySortField>("number");
   const [registrySortDirection, setRegistrySortDirection] = useState<RegistrySortDirection>("asc");
+  const mvpSources = amsSourceDefinitions.filter((source) => isMvpSourceKey(source.key));
   const registryRows = buildPlayerRegistryRows(rosterPlayers, loadSummary, sourceData, registrySortField, registrySortDirection)
     .filter((row) => registryPlayerMatches(row.player, registrySearch));
   const allVisibleRowsSelected = registryRows.length > 0 && registryRows.every((row) => visiblePlayerIds.includes(row.player.id));
@@ -110,7 +112,7 @@ export function SettingsPanel({
         copy={copy.settings.copy}
       />
       <section className="source-table">
-        {amsSourceDefinitions.map((source) => (
+        {mvpSources.map((source) => (
           <article className="source-row" key={source.path}>
             <div className="source-meta">
               <strong>{localizedAmsSourceLabel(source, language)}</strong>

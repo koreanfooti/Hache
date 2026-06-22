@@ -13,6 +13,7 @@ import {
   seasonStatsForPlayer,
 } from "@/lib/ams/roster";
 import type { SourceData } from "@/lib/ams/types";
+import { demoSafeValue } from "@/components/ams/config/mvp";
 import { localizedValue, type AmsLanguage } from "@/components/ams/ui/AmsUi";
 
 export function BiographyPanel({
@@ -67,9 +68,6 @@ export function BiographyPanel({
               : "Detailed player profiles, career context, contract notes, performance, and source status."}
           </p>
         </div>
-        <button className="source-open-button" type="button">
-          {language === "es" ? "Exportar perfil" : "Export profile"}
-        </button>
       </section>
 
       <section className="biography-layout">
@@ -151,12 +149,12 @@ export function BiographyPanel({
           </section>
 
           <section className="biography-detail-grid">
-            <BiographyDetail label={language === "es" ? "Fecha de nacimiento" : "Birth Date"} value={selectedExtra.birthDate} />
+            <BiographyDetail label={language === "es" ? "Fecha de nacimiento" : "Birth Date"} value={demoSafeValue(selectedExtra.birthDate, language)} />
             <BiographyDetail label={language === "es" ? "Nacionalidad" : "Nationality"} value={localizedValue(selectedPlayer.nationality, language)} />
-            <BiographyDetail label={language === "es" ? "Altura" : "Height"} value={localizedValue(selectedPlayer.height, language)} />
-            <BiographyDetail label={language === "es" ? "Peso" : "Weight"} value={localizedValue(selectedPlayer.weight, language)} />
-            <BiographyDetail label={language === "es" ? "Pie preferido" : "Preferred Foot"} value={localizedValue(selectedPlayer.foot, language)} />
-            <BiographyDetail label={language === "es" ? "Lugar de nacimiento" : "Birth Place"} value={selectedExtra.birthPlace} />
+            <BiographyDetail label={language === "es" ? "Altura" : "Height"} value={demoSafeValue(localizedValue(selectedPlayer.height, language), language)} />
+            <BiographyDetail label={language === "es" ? "Peso" : "Weight"} value={demoSafeValue(localizedValue(selectedPlayer.weight, language), language)} />
+            <BiographyDetail label={language === "es" ? "Pie preferido" : "Preferred Foot"} value={demoSafeValue(localizedValue(selectedPlayer.foot, language), language)} />
+            <BiographyDetail label={language === "es" ? "Lugar de nacimiento" : "Birth Place"} value={demoSafeValue(selectedExtra.birthPlace, language)} />
             <BiographyDetail label={language === "es" ? "Registrado como" : "Registered As"} value={selectedPlayer.amsId} />
             <BiographyDetail label={language === "es" ? "Fuente Liga MX" : "Liga MX Source"} value={statusLabel} />
           </section>
@@ -184,10 +182,10 @@ export function BiographyPanel({
             {language === "es"
               ? selectedStats.source === "clean-source"
                 ? "Estos números vienen del historial limpio de temporada."
-                : "La API pública de Liga MX no está conectada todavía; esta vista deja el espacio listo para fusionar datos oficiales cuando estén disponibles."
+                : "Este campo no está incluido en el dataset demo; la vista ya soporta fusionar esa fuente después."
               : selectedStats.source === "clean-source"
                 ? "These numbers come from the cleaned season-history source."
-                : "A public Liga MX API is not connected yet; this view is ready to merge official data once it is available."}
+                : "This field is not included in the demo dataset; the view is ready to merge that source later."}
           </p>
         </article>
 
@@ -196,15 +194,15 @@ export function BiographyPanel({
             <span>{language === "es" ? "Contrato" : "Contract"}</span>
             <strong>{language === "es" ? "Contexto deportivo" : "Sporting context"}</strong>
           </div>
-          <BiographyContractRow label={language === "es" ? "Club anterior" : "Previous Club"} value={selectedExtra.previousClub} />
-          <BiographyContractRow label={language === "es" ? "Llegada" : "Joined"} value={selectedExtra.joined} />
+          <BiographyContractRow label={language === "es" ? "Club anterior" : "Previous Club"} value={demoSafeValue(selectedExtra.previousClub, language)} />
+          <BiographyContractRow label={language === "es" ? "Llegada" : "Joined"} value={demoSafeValue(selectedExtra.joined, language)} />
           <BiographyContractRow
             label={language === "es" ? "Fin de contrato" : "Contract End"}
-            value={maskFinancialValue(role, "contractExpires", selectedExtra.contractExpires, restrictedFinancialValue)}
+            value={maskFinancialValue(role, "contractExpires", demoSafeValue(selectedExtra.contractExpires, language), restrictedFinancialValue)}
           />
           <BiographyContractRow
             label={language === "es" ? "Valor mercado" : "Market Value"}
-            value={maskFinancialValue(role, "marketValue", selectedExtra.marketValue, restrictedFinancialValue)}
+            value={maskFinancialValue(role, "marketValue", demoSafeValue(selectedExtra.marketValue, language), restrictedFinancialValue)}
           />
           {shouldMaskFinancialField(role, "contractProgress") ? (
             <BiographyContractRow label={language === "es" ? "Contrato completado" : "Contract elapsed"} value={restrictedFinancialValue} />
@@ -222,7 +220,7 @@ export function BiographyPanel({
         <div className="biography-stat-grid">
           <BiographyStat label={language === "es" ? "Goles" : "Goals"} value={String(selectedStats.goals)} />
           <BiographyStat label={language === "es" ? "Asistencias" : "Assists"} value={String(selectedStats.assists)} />
-          <BiographyStat label={language === "es" ? "Calificación" : "Rating"} value={selectedStats.rating} />
+          <BiographyStat label={language === "es" ? "Calificación" : "Rating"} value={demoSafeValue(selectedStats.rating, language)} />
           <BiographyStat label={language === "es" ? "Estado" : "Status"} value={statusLabel} />
         </div>
       </section>
@@ -248,8 +246,8 @@ export function BiographyPanel({
                 <tr key={player.id}>
                   <td>{player.name}</td>
                   <td>{localizedValue(player.position, language)}</td>
-                  <td>{localizedValue(player.age, language)}</td>
-                  <td>{localizedValue(player.height, language)}</td>
+                  <td>{demoSafeValue(localizedValue(player.age, language), language)}</td>
+                  <td>{demoSafeValue(localizedValue(player.height, language), language)}</td>
                   <td>{player.status === "synced" ? (language === "es" ? "Conectado" : "Connected") : (language === "es" ? "Pendiente" : "Pending")}</td>
                 </tr>
               ))}
@@ -264,7 +262,7 @@ export function BiographyPanel({
           <strong>
             {recentMatches.length
               ? language === "es" ? "Últimos partidos limpios" : "Latest clean matches"
-              : language === "es" ? "Pendiente de API oficial" : "Official API pending"}
+              : language === "es" ? "No incluido en demo" : "Not in demo dataset"}
           </strong>
         </div>
         {recentMatches.length ? (
@@ -295,8 +293,8 @@ export function BiographyPanel({
         ) : (
           <p>
             {language === "es"
-              ? "Aquí conectaremos minutos, alineaciones, goles, tarjetas y sustituciones cuando tengamos una fuente Liga MX confiable."
-              : "This panel will connect minutes, lineups, goals, cards, and substitutions once a reliable Liga MX source is available."}
+              ? "El dataset demo no incluye estos partidos para este jugador."
+              : "The demo dataset does not include match rows for this player."}
           </p>
         )}
       </section>

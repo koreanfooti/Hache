@@ -8,9 +8,8 @@ import type {
   YBalanceMetricRow,
 } from "@/lib/ams/types";
 
-export type TestingCategory = "vald" | "fms" | "yBalance" | "cod" | "yoyo";
-export type ValdDevice = "nordbord" | "forceframe" | "forcedecks";
-export type SelectedValdDevice = ValdDevice | "none";
+export type TestingCategory = "vald" | "fms" | "yBalance";
+export type ValdDevice = "nordbord";
 
 export type TestingBatteryCopy = {
   common: Record<string, string>;

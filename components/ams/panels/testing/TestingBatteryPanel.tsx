@@ -2,10 +2,8 @@ import { useState } from "react";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import { FmsTestingDashboard } from "@/components/ams/panels/testing/fms/FmsTestingDashboard";
 import { TestingCategoryCard } from "@/components/ams/panels/testing/TestingCategoryCard";
-import { TestingPlaceholderDashboard } from "@/components/ams/panels/testing/TestingPlaceholderDashboard";
 import { testingLabels } from "@/components/ams/panels/testing/testingLabels";
 import type {
-  SelectedValdDevice,
   TestingBatteryPanelProps,
   TestingCategory,
   TestingCategoryCardData,
@@ -25,7 +23,6 @@ export function TestingBatteryPanel({
 }: TestingBatteryPanelProps) {
   const labels = testingLabels(language);
   const [selectedCategory, setSelectedCategory] = useState<TestingCategory>("vald");
-  const [selectedValdDevice, setSelectedValdDevice] = useState<SelectedValdDevice>("nordbord");
   const flaggedFmsExercises = fmsExerciseScores.filter((row) => numberValue(row.pointScore) <= 1 || Boolean(row.asymmetryRaw)).length;
   const categories: TestingCategoryCardData[] = [
     {
@@ -51,22 +48,6 @@ export function TestingBatteryPanel({
       image: "/ams/assets/testing/ybt-logo.svg",
       stat: `${compactNumber(yBalance.length)} ${copy.common.tests}`,
       title: labels.yBalanceTitle,
-    },
-    {
-      copy: copy.development.codCopy ?? labels.codCopy,
-      eyebrow: labels.movement,
-      id: "cod",
-      label: "COD",
-      stat: copy.common.waitingForSource,
-      title: labels.codTitle,
-    },
-    {
-      copy: copy.development.yoyoCopy ?? labels.yoyoCopy,
-      eyebrow: labels.aerobic,
-      id: "yoyo",
-      label: "YY",
-      stat: copy.common.waitingForSource,
-      title: labels.yoyoTitle,
     },
   ];
 
@@ -96,8 +77,6 @@ export function TestingBatteryPanel({
           language={language}
           labels={labels}
           metrics={valdNordbordMetrics}
-          selectedValdDevice={selectedValdDevice}
-          setSelectedValdDevice={setSelectedValdDevice}
           tests={valdNordbordTests}
         />
       ) : null}
@@ -120,28 +99,6 @@ export function TestingBatteryPanel({
           language={language}
           metrics={yBalanceMetrics}
           rows={yBalance}
-        />
-      ) : null}
-
-      {selectedCategory === "cod" ? (
-        <TestingPlaceholderDashboard
-          copy={copy}
-          labels={labels}
-          title={labels.codDashboard}
-          subtitle={labels.movement}
-          body={copy.development.codCopy ?? labels.codCopy}
-          chips={["505", labels.braking, labels.acceleration, labels.roleDemand]}
-        />
-      ) : null}
-
-      {selectedCategory === "yoyo" ? (
-        <TestingPlaceholderDashboard
-          copy={copy}
-          labels={labels}
-          title={labels.yoyoDashboard}
-          subtitle={labels.aerobic}
-          body={copy.development.yoyoCopy ?? labels.yoyoCopy}
-          chips={[labels.capacity, labels.recovery, labels.distance, labels.thresholds]}
         />
       ) : null}
     </section>

@@ -3,83 +3,66 @@ import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 
 export const uiCopy = {
   en: {
-    assistantKicker: "Private Performance Assistant",
-    assistantPlaceholder: "Ask about a player, injury, session, test, or resource...",
-    assistantPrompt: "How can H help you?",
-    assistantStatus:
-      "RAG-ready placeholder. Connect a private vector database and LLM endpoint when the backend is ready.",
     appEyebrow: "Atlas FC High Performance",
     appTitle: "Athlete Monitoring System",
-    ask: "Ask",
     calendar: "Calendar",
     home: "Home",
     language: "Language",
-    openSettings: "Open settings",
+    openSettings: "Open data sources",
     playerCarousel: "Players currently in view",
     rtpPlanning: "RTP planning",
     showNextPlayer: "Show next player",
     showPreviousPlayer: "Show previous player",
     contextCopy:
-      "Integrated staff view for daily load, medical risk, development, recovery, biography, and off-field context.",
+      "Integrated staff view for daily load, medical risk, development, recovery, biography, and source coverage.",
     contextKicker: "First Team Monitoring",
-    exportCsv: "Export CSV",
     playersInView: "Players in view",
-    ragExampleLabel: "Example RAG",
-    ragExamplePrompt: "Try: Show {player}'s hamstring RTP risk this week.",
-    resources: "Resources",
     sections: {
+      overview: "Command Center",
       load: "Load Demand",
       injury: "Injury History",
       development: "Physical Development",
+      bodyComp: "Body Composition",
       recovery: "Recovery",
       biography: "Biography",
       external: "External Factors",
       athleteProfile: "Athlete Profile",
+      calendar: "Calendar",
+      settings: "Data Sources",
     },
   },
   es: {
-    assistantKicker: "Asistente privado de rendimiento",
-    assistantPlaceholder: "Pregunta sobre un jugador, lesión, sesión, prueba o recurso...",
-    assistantPrompt: "¿Cómo puede ayudarte H?",
-    assistantStatus:
-      "Marcador listo para RAG. Conecta una base vectorial privada y un endpoint LLM cuando el backend esté listo.",
     appEyebrow: "Atlas FC High Performance",
     appTitle: "Sistema de monitoreo de atletas",
-    ask: "Preguntar",
     calendar: "Calendario",
     home: "Inicio",
     language: "Idioma",
-    openSettings: "Abrir configuración",
+    openSettings: "Abrir fuentes de datos",
     playerCarousel: "Jugadores actualmente en vista",
     rtpPlanning: "Planificación RTP",
     showNextPlayer: "Mostrar siguiente jugador",
     showPreviousPlayer: "Mostrar jugador anterior",
     contextCopy:
-      "Vista integrada del staff para carga diaria, riesgo médico, desarrollo, recuperación, biografía y contexto externo.",
+      "Vista integrada del staff para carga diaria, riesgo médico, desarrollo, recuperación, biografía y cobertura de fuentes.",
     contextKicker: "Monitoreo del primer equipo",
-    exportCsv: "Exportar CSV",
     playersInView: "Jugadores en vista",
-    ragExampleLabel: "Ejemplo RAG",
-    ragExamplePrompt: "Prueba: muestra el riesgo RTP de isquios de {player} esta semana.",
-    resources: "Recursos",
     sections: {
+      overview: "Centro de mando",
       load: "Carga",
       injury: "Historial de lesiones",
       development: "Desarrollo físico",
+      bodyComp: "Composición corporal",
       recovery: "Recuperación",
       biography: "Biografía",
       external: "Factores externos",
       athleteProfile: "Perfil del atleta",
+      calendar: "Calendario",
+      settings: "Fuentes de datos",
     },
   },
 } satisfies Record<AmsLanguage, {
   appEyebrow: string;
   appTitle: string;
-  assistantKicker: string;
-  assistantPlaceholder: string;
-  assistantPrompt: string;
-  assistantStatus: string;
-  ask: string;
   calendar: string;
   home: string;
   language: string;
@@ -90,11 +73,7 @@ export const uiCopy = {
   showPreviousPlayer: string;
   contextCopy: string;
   contextKicker: string;
-  exportCsv: string;
   playersInView: string;
-  ragExampleLabel: string;
-  ragExamplePrompt: string;
-  resources: string;
   sections: Partial<Record<AmsSection, string>>;
 }>;
 
@@ -172,7 +151,7 @@ export const panelCopy = {
     development: {
       kicker: "Physical Development",
       title: "Testing Battery",
-      copy: "Next-native rendering for FMS, Y Balance, VALD/NordBord, and future ForceFrame panels.",
+      copy: "Next-native rendering for FMS, Y Balance, and VALD/NordBord testing views.",
       fmsAssessments: "FMS assessments",
       movementRecords: "Movement screen records",
       yBalanceTests: "Y Balance tests",
@@ -191,22 +170,11 @@ export const panelCopy = {
       anthropometric: "Anthropometric",
       anthropometricCopy: "Body composition, ISAK skinfolds, girths, and longitudinal growth markers by player and category.",
       battery: "Battery",
-      blocks: "Blocks",
       bodyComp: "Body Comp",
-      cmjCopy: "Jump height, impulse, landing, and asymmetry readiness tests.",
-      codCopy: "505, agility, and braking strategy inputs for movement profiling.",
-      developmentPlan: "Development Plan",
-      developmentPlanCopy: "Training objectives by player, phase, and staff owner.",
-      forcedecksCopy: "Jump, landing, balance, and force-time metrics for neuromuscular monitoring.",
-      forceframeCopy: "Isometric strength profiles across hip, groin, shoulder, and trunk tests.",
-      physicalBenchmarking: "Physical Benchmarking",
-      physicalBenchmarkingCopy: "Speed, aerobic power, jump, strength, and asymmetry benchmarks against role demands.",
-      positionProfile: "Position Profile",
       testing: "Testing",
-      testingCopy: "Sprint splits, COD, Yo-Yo, force plate, and gym testing inputs.",
+      testingCopy: "FMS, Y Balance, and VALD NordBord source-backed testing inputs.",
       valdTesting: "Testing Battery",
       valdTestingSub: "Strength, asymmetry, force, and readiness testing pipeline",
-      yoyoCopy: "Aerobic capacity and intermittent recovery testing records.",
     },
     bodyComp: {
       kicker: "ISAK / Body Composition",
@@ -289,9 +257,9 @@ export const panelCopy = {
       items: ["Folders", "PDF preview", "Links", "File metadata"],
     },
     settings: {
-      kicker: "Identity Map",
-      title: "Player Registry",
-      copy: "Source registry for API, CSV, WIMU/GPS, VALD, and manual data sync.",
+      kicker: "Data Sources",
+      title: "Source Coverage",
+      copy: "Presentation-ready registry of the active clean feeds powering the MVP.",
     },
   },
   es: {
@@ -367,7 +335,7 @@ export const panelCopy = {
     development: {
       kicker: "Desarrollo físico",
       title: "Batería de pruebas",
-      copy: "Renderizado nativo en Next para FMS, Y Balance, VALD/NordBord y futuros paneles ForceFrame.",
+      copy: "Renderizado nativo en Next para vistas de FMS, Y Balance y VALD/NordBord.",
       fmsAssessments: "Evaluaciones FMS",
       movementRecords: "Registros de pantalla de movimiento",
       yBalanceTests: "Pruebas Y Balance",
@@ -386,22 +354,11 @@ export const panelCopy = {
       anthropometric: "Antropométrico",
       anthropometricCopy: "Composición corporal, pliegues ISAK, perímetros y marcadores longitudinales por jugador y categoría.",
       battery: "Batería",
-      blocks: "Bloques",
       bodyComp: "Composición",
-      cmjCopy: "Altura de salto, impulso, aterrizaje y asimetría para disponibilidad neuromuscular.",
-      codCopy: "505, agilidad y estrategia de frenado para perfilar movimiento.",
-      developmentPlan: "Plan de desarrollo",
-      developmentPlanCopy: "Objetivos de entrenamiento por jugador, fase y responsable del staff.",
-      forcedecksCopy: "Saltos, aterrizajes, equilibrio y métricas fuerza-tiempo para monitoreo neuromuscular.",
-      forceframeCopy: "Perfiles isométricos de cadera, ingle, hombro y tronco.",
-      physicalBenchmarking: "Benchmark físico",
-      physicalBenchmarkingCopy: "Velocidad, potencia aeróbica, salto, fuerza y asimetría contra demandas por rol.",
-      positionProfile: "Perfil por posición",
       testing: "Pruebas",
-      testingCopy: "Splits de sprint, COD, Yo-Yo, plataforma de fuerza y gimnasio.",
+      testingCopy: "Entradas de prueba respaldadas por fuente para FMS, Y Balance y VALD NordBord.",
       valdTesting: "Batería de pruebas",
       valdTestingSub: "Pipeline de fuerza, asimetría, fuerza aplicada y disponibilidad",
-      yoyoCopy: "Capacidad aeróbica y recuperación intermitente.",
     },
     bodyComp: {
       kicker: "ISAK / Composición corporal",
@@ -484,9 +441,9 @@ export const panelCopy = {
       items: ["Carpetas", "Vista previa PDF", "Enlaces", "Metadatos de archivo"],
     },
     settings: {
-      kicker: "Mapa de identidad",
-      title: "Registro de jugadores",
-      copy: "Registro fuente para API, CSV, WIMU/GPS, VALD y sincronización manual de datos.",
+      kicker: "Fuentes de datos",
+      title: "Cobertura de fuentes",
+      copy: "Registro listo para demo de los feeds limpios activos que alimentan el MVP.",
     },
   },
 } as const;

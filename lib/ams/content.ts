@@ -39,7 +39,7 @@ export const navItems: { id: AmsSection; label: string; eyebrow: string }[] = [
   { id: "athleteProfile", label: "Athlete Profile", eyebrow: "Decision hub" },
   { id: "calendar", label: "Calendar", eyebrow: "Planning" },
   { id: "resources", label: "Resources", eyebrow: "Library" },
-  { id: "settings", label: "Settings", eyebrow: "Registry" },
+  { id: "settings", label: "Data Sources", eyebrow: "Registry" },
 ];
 
 export const players: Player[] = [
