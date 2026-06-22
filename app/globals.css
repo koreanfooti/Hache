@@ -8210,15 +8210,15 @@ body,
 
 .match-history-layout {
   display: grid;
-  grid-template-columns: minmax(250px, 0.32fr) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(320px, 0.34fr) minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
 }
 
 .match-history-list {
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: 18px;
+  padding: 20px;
 }
 
 .match-history-list .panel-heading {
@@ -8245,14 +8245,17 @@ body,
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+  width: 100%;
 }
 
 .match-list-controls label {
   display: grid;
   gap: 4px;
+  width: 100%;
 }
 
 .match-list-controls input,
+.match-list-controls select,
 .match-list-controls button {
   min-height: 34px;
   border: 1px solid rgb(215 180 106 / 24%);
@@ -8263,6 +8266,13 @@ body,
   font-size: 0.78rem;
   font-weight: 850;
   padding: 0 10px;
+  width: 100%;
+}
+
+.match-list-controls select {
+  min-height: 42px;
+  cursor: pointer;
+  line-height: 1.2;
 }
 
 .match-list-controls button {
@@ -8272,7 +8282,7 @@ body,
 
 .match-history-scroll {
   display: grid;
-  gap: 8px;
+  gap: 14px;
   max-height: 680px;
   overflow: auto;
   padding-right: 4px;
@@ -8280,13 +8290,15 @@ body,
 
 .match-history-scroll button {
   display: grid;
-  gap: 5px;
+  align-content: center;
+  gap: 8px;
+  min-height: 88px;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 8px;
   background: rgb(255 255 255 / 3%);
   color: #fff;
   cursor: pointer;
-  padding: 12px;
+  padding: 16px 14px;
   text-align: left;
 }
 
@@ -8300,11 +8312,12 @@ body,
 .match-history-scroll button small {
   color: rgb(255 255 255 / 42%);
   font-size: 0.72rem;
+  line-height: 1.2;
 }
 
 .match-history-scroll button strong {
   font-size: 0.92rem;
-  line-height: 1.18;
+  line-height: 1.25;
 }
 
 .match-history-no-results {

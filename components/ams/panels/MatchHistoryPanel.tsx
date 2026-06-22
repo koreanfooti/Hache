@@ -64,12 +64,10 @@ export function MatchHistoryPanel({
     () => buildMatchSummaries(sourceData.playerMatchHistory, loadSummary.rows),
     [sourceData.playerMatchHistory, loadSummary.rows],
   );
-  const [dateFilter, setDateFilter] = useState(DEFAULT_MATCH_DATE);
   const [selectedTeamView, setSelectedTeamView] = useState<TeamView>("atlas");
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
-  const visibleMatches = dateFilter ? matches.filter((match) => match.date === dateFilter) : matches;
+  const visibleMatches = matches;
   const selectedMatch = visibleMatches.find((match) => match.id === selectedMatchId)
-    ?? visibleMatches[0]
     ?? matches.find(isDefaultReferenceMatch)
     ?? matches[0];
   const atlasMatchPlayers = useMemo(
@@ -89,10 +87,9 @@ export function MatchHistoryPanel({
     : "Atlas";
   const activeFormation = formationForPlayers(pitchPlayers, referenceFormation(selectedMatch, selectedTeamView));
 
-  function updateDateFilter(value: string) {
-    setDateFilter(value);
-    const nextMatch = value ? matches.find((match) => match.date === value) : matches.find(isDefaultReferenceMatch) ?? matches[0];
-                setSelectedMatchId(nextMatch?.id ?? null);
+  function updateSelectedMatch(matchId: string) {
+    const nextMatch = matches.find((match) => match.id === matchId) ?? matches.find(isDefaultReferenceMatch) ?? matches[0];
+    setSelectedMatchId(nextMatch?.id ?? null);
     setSelectedTeamView("atlas");
   }
 
@@ -133,15 +130,17 @@ export function MatchHistoryPanel({
             <div className="match-list-controls">
               <label>
                 <span>{copy.dateFilter}</span>
-                <input
-                  type="date"
-                  value={dateFilter}
-                  onChange={(event) => updateDateFilter(event.target.value)}
-                />
+                <select
+                  value={selectedMatch?.id ?? ""}
+                  onChange={(event) => updateSelectedMatch(event.target.value)}
+                >
+                  {matches.map((match) => (
+                    <option key={match.id} value={match.id}>
+                      {matchDropdownLabel(match, language)}
+                    </option>
+                  ))}
+                </select>
               </label>
-              <button type="button" onClick={() => updateDateFilter("")}>
-                {copy.allDates}
-              </button>
             </div>
           </div>
           <div className="match-history-scroll">
@@ -150,7 +149,7 @@ export function MatchHistoryPanel({
                 className={match.id === selectedMatch.id ? "is-active" : ""}
                 key={match.id}
                 type="button"
-                onClick={() => setSelectedMatchId(match.id)}
+                onClick={() => updateSelectedMatch(match.id)}
               >
                 <span>{formatMatchDate(match.date, match.displayDate, language)}</span>
                 <strong>{match.homeTeam} {scoreValue(match.homeGoals)} - {scoreValue(match.awayGoals)} {match.awayTeam}</strong>
@@ -848,6 +847,11 @@ function formatMatchDate(value: string, fallback: string, language: AmsLanguage)
   }).format(parsed);
 }
 
+function matchDropdownLabel(match: MatchSummary, language: AmsLanguage) {
+  const opponent = opponentTeamForMatch(match);
+  return `${formatMatchDate(match.date, match.displayDate, language)} — ${opponent}`;
+}
+
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -856,8 +860,7 @@ function matchCopy(language: AmsLanguage) {
   if (language === "es") {
     return {
       description: "Historial de partidos estilo Google con marcador, lista de partidos y vista de cancha conectada a fuentes limpias del AMS.",
-      allDates: "Todas",
-      dateFilter: "Fecha",
+      dateFilter: "Partido",
       empty: "No hay historial de partidos cargado todavía.",
       fieldView: "Vista de cancha",
       hsr: "HSR",
@@ -883,8 +886,7 @@ function matchCopy(language: AmsLanguage) {
 
   return {
     description: "Google-style match history with scoreline, match list, and pitch view connected to clean AMS sources.",
-    allDates: "All",
-    dateFilter: "Date",
+    dateFilter: "Match date",
     empty: "No match history is loaded yet.",
     fieldView: "Field view",
     hsr: "HSR",
