@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
+import { players as atlasRoster } from "@/lib/ams/content";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import { atlasFirstTeamFixtures } from "@/lib/ams/atlasFixtures";
 import type { CleanGpsRow, LoadSummary, PlayerMatchHistoryRow, SourceData } from "@/lib/ams/types";
@@ -31,6 +33,7 @@ type MatchPlayer = {
   id: string;
   name: string;
   number: string;
+  photo?: string;
   position: string;
   minutes: number;
   totalDistanceKm: number;
@@ -42,6 +45,7 @@ type MatchPlayer = {
 };
 
 const DEFAULT_MATCH_DATE = "2026-05-09";
+type TeamView = "atlas" | "opponent";
 
 export function MatchHistoryPanel({
   language,
@@ -58,24 +62,35 @@ export function MatchHistoryPanel({
     [sourceData.playerMatchHistory, loadSummary.rows],
   );
   const [dateFilter, setDateFilter] = useState(DEFAULT_MATCH_DATE);
+  const [selectedTeamView, setSelectedTeamView] = useState<TeamView>("atlas");
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const visibleMatches = dateFilter ? matches.filter((match) => match.date === dateFilter) : matches;
   const selectedMatch = visibleMatches.find((match) => match.id === selectedMatchId)
     ?? visibleMatches[0]
     ?? matches.find(isDefaultReferenceMatch)
     ?? matches[0];
-  const matchPlayers = useMemo(
+  const atlasMatchPlayers = useMemo(
     () => selectedMatch ? buildMatchPlayers(selectedMatch) : [],
     [selectedMatch],
   );
-  const pitchPlayers = matchPlayers.slice(0, 11);
-  const reservePlayers = matchPlayers.slice(11);
-  const totals = summarizeMatchPlayers(matchPlayers);
+  const opponentMatchPlayers = useMemo(
+    () => selectedMatch ? buildOpponentPlayers(selectedMatch) : [],
+    [selectedMatch],
+  );
+  const visibleTeamPlayers = selectedTeamView === "opponent" ? opponentMatchPlayers : atlasMatchPlayers;
+  const pitchPlayers = visibleTeamPlayers.slice(0, 11);
+  const reservePlayers = visibleTeamPlayers.slice(11);
+  const totals = summarizeMatchPlayers(atlasMatchPlayers);
+  const activeTeamName = selectedMatch
+    ? selectedTeamView === "opponent" ? opponentTeamForMatch(selectedMatch) : "Atlas"
+    : "Atlas";
+  const activeFormation = formationForPlayers(pitchPlayers, selectedTeamView === "opponent" ? referenceFormation(selectedMatch) : undefined);
 
   function updateDateFilter(value: string) {
     setDateFilter(value);
     const nextMatch = value ? matches.find((match) => match.date === value) : matches.find(isDefaultReferenceMatch) ?? matches[0];
-    setSelectedMatchId(nextMatch?.id ?? null);
+                setSelectedMatchId(nextMatch?.id ?? null);
+    setSelectedTeamView("atlas");
   }
 
   if (!selectedMatch) {
@@ -178,9 +193,27 @@ export function MatchHistoryPanel({
             <div className="match-field-heading">
               <div>
                 <span>{copy.fieldView}</span>
-                <strong>Atlas</strong>
+                <strong>{activeTeamName}</strong>
               </div>
-              <small>{copy.photoNote}</small>
+              <div className="match-field-actions">
+                <div className="match-team-toggle" aria-label={copy.teamToggle}>
+                  <button
+                    className={selectedTeamView === "atlas" ? "is-active" : ""}
+                    type="button"
+                    onClick={() => setSelectedTeamView("atlas")}
+                  >
+                    Atlas
+                  </button>
+                  <button
+                    className={selectedTeamView === "opponent" ? "is-active" : ""}
+                    type="button"
+                    onClick={() => setSelectedTeamView("opponent")}
+                  >
+                    {opponentTeamForMatch(selectedMatch)}
+                  </button>
+                </div>
+                <span className="match-formation-badge">{copy.formation} {activeFormation}</span>
+              </div>
             </div>
             <div className="match-field-layout">
               <div className="match-pitch" aria-label={copy.fieldView}>
@@ -195,8 +228,10 @@ export function MatchHistoryPanel({
                     style={{ "--x": `${player.x}%`, "--y": `${player.y}%` } as React.CSSProperties}
                     title={`${player.name} · ${compactNumber(player.totalDistanceKm, 1)} km`}
                   >
-                    <span>{player.number || initials(player.name)}</span>
-                    <strong>{shortName(player.name)}</strong>
+                    <span className={player.photo ? "has-photo" : ""}>
+                      {player.photo ? <Image alt="" src={player.photo} width={42} height={42} /> : <b>{player.number || initials(player.name)}</b>}
+                    </span>
+                    <strong>{playerLabel(player)}</strong>
                   </article>
                 ))}
               </div>
@@ -248,7 +283,7 @@ function PlayerLoadRow({ player, compact = false }: { player: MatchPlayer; compa
     <article className="match-player-load-row">
       <b>{player.number || initials(player.name)}</b>
       <div>
-        <strong>{player.name}</strong>
+        <strong>{playerNameWithNumber(player)}</strong>
         <small>{player.position || "-"}{compact ? "" : ` · ${compactNumber(player.minutes, 0)} min`}</small>
       </div>
       <span>{compactNumber(player.totalDistanceKm, 1)} km</span>
@@ -326,10 +361,11 @@ function buildMatchPlayers(match: MatchSummary) {
     const id = String(row.amsId || normalizeText(name));
     const current = byPlayer.get(id);
     const minutes = numberValue(row.minutes);
-    const player: MatchPlayer = current ?? {
+      const player: MatchPlayer = current ?? {
       id,
       name,
       number: String(row.wimuShirtNumber ?? row.shirtNumber ?? "").trim(),
+      photo: atlasPhotoFor(name, id),
       position: positionLabel(row),
       minutes: 0,
       totalDistanceKm: 0,
@@ -351,7 +387,29 @@ function buildMatchPlayers(match: MatchSummary) {
   }
 
   const players = Array.from(byPlayer.values()).sort((a, b) => b.minutes - a.minutes || b.totalDistanceKm - a.totalDistanceKm);
-  return assignPitchPositions(players);
+  return assignPitchPositions(ensureAtlasGoalkeeper(players));
+}
+
+function buildOpponentPlayers(match: MatchSummary) {
+  if (isDefaultReferenceMatch(match)) {
+    return assignPitchPositions(referenceCruzAzulPlayers());
+  }
+
+  return assignPitchPositions([
+    {
+      id: `${match.id}-opponent-placeholder`,
+      name: opponentTeamForMatch(match),
+      number: "",
+      position: "Opponent",
+      minutes: 90,
+      totalDistanceKm: 0,
+      hsrMeters: 0,
+      sprintMeters: 0,
+      maxSpeed: 0,
+      x: 50,
+      y: 50,
+    },
+  ]);
 }
 
 function matchHistoryToGpsLike(row: PlayerMatchHistoryRow): CleanGpsRow {
@@ -396,6 +454,66 @@ function assignPitchPositions(players: MatchPlayer[]) {
   }
 
   return ordered;
+}
+
+function ensureAtlasGoalkeeper(players: MatchPlayer[]) {
+  if (players.some((player) => positionBucket(player.position) === "gk")) return players;
+  const goalkeeper = atlasRoster.find((player) => player.id === "camilo-vargas");
+  if (!goalkeeper) return players;
+
+  return [
+    {
+      id: goalkeeper.amsId,
+      name: goalkeeper.name,
+      number: String(goalkeeper.number || "12"),
+      photo: goalkeeper.photo,
+      position: "Goalkeeper",
+      minutes: 90,
+      totalDistanceKm: 0,
+      hsrMeters: 0,
+      sprintMeters: 0,
+      maxSpeed: 0,
+      x: 50,
+      y: 87,
+    },
+    ...players,
+  ];
+}
+
+function referenceCruzAzulPlayers(): MatchPlayer[] {
+  return [
+    opponentPlayer("23", "Kevin Mier", "Goalkeeper"),
+    opponentPlayer("22", "Jorge Rodarte", "Defender"),
+    opponentPlayer("4", "Willer Ditta", "Defender"),
+    opponentPlayer("17", "Andrés García", "Defender"),
+    opponentPlayer("33", "Gonzalo Piovi", "Defender"),
+    opponentPlayer("3", "Omar Campos", "Defender"),
+    opponentPlayer("20", "José Paradela", "Midfielder"),
+    opponentPlayer("8", "Agustín Palavecino", "Midfielder"),
+    opponentPlayer("19", "Carlos Rodríguez", "Midfielder"),
+    opponentPlayer("29", "Carlos Rotondi", "Midfielder"),
+    opponentPlayer("11", "Christian Ebere", "Forward"),
+    opponentPlayer("", "Felix Meyer", "Substitute"),
+    opponentPlayer("", "Hugo Dubois", "Substitute"),
+    opponentPlayer("", "Elias Nilsen", "Substitute"),
+    opponentPlayer("", "Mateo García", "Substitute"),
+  ];
+}
+
+function opponentPlayer(number: string, name: string, position: string): MatchPlayer {
+  return {
+    id: `cruz-azul-${normalizeText(number || name)}`,
+    name,
+    number,
+    position,
+    minutes: position === "Substitute" ? 0 : 90,
+    totalDistanceKm: 0,
+    hsrMeters: 0,
+    sprintMeters: 0,
+    maxSpeed: 0,
+    x: 50,
+    y: 50,
+  };
 }
 
 function spreadX(total: number, index: number) {
@@ -459,6 +577,36 @@ function positionBucket(position: string) {
   return "other";
 }
 
+function formationForPlayers(players: MatchPlayer[], fallback?: string) {
+  if (fallback) return fallback;
+  const active = players.slice(0, 11);
+  const defenders = active.filter((player) => positionBucket(player.position) === "def").length;
+  const midfielders = active.filter((player) => positionBucket(player.position) === "mid").length;
+  const forwards = active.filter((player) => positionBucket(player.position) === "fwd").length;
+  if (!defenders && !midfielders && !forwards) return "-";
+  return [defenders, midfielders, forwards].filter((count) => count > 0).join("-");
+}
+
+function referenceFormation(match: MatchSummary | undefined) {
+  return match && isDefaultReferenceMatch(match) ? "5-4-1" : undefined;
+}
+
+function opponentTeamForMatch(match: MatchSummary) {
+  return normalizeText(match.homeTeam) === "atlas" ? match.awayTeam : match.homeTeam;
+}
+
+function atlasPhotoFor(playerName: string, amsId: string) {
+  const normalizedName = normalizeText(playerName);
+  const rosterPlayer = atlasRoster.find((player) => {
+    if (player.amsId === amsId) return true;
+    const rosterName = normalizeText(player.name);
+    return normalizedName === rosterName
+      || normalizedName.includes(rosterName)
+      || rosterName.split(" ").every((part) => normalizedName.includes(part));
+  });
+  return rosterPlayer?.photo;
+}
+
 function dateNumber(value: string | undefined) {
   const parsed = value ? new Date(`${value}T12:00:00Z`) : new Date(0);
   return Number.isNaN(parsed.getTime()) ? 0 : Math.floor(parsed.getTime() / 86400000);
@@ -473,10 +621,17 @@ function normalizeText(value: string) {
     .trim();
 }
 
-function shortName(name: string) {
+function playerLabel(player: MatchPlayer) {
+  return `${lastName(player.name)}${player.number ? ` #${player.number}` : ""}`;
+}
+
+function playerNameWithNumber(player: MatchPlayer) {
+  return `${player.name}${player.number ? ` #${player.number}` : ""}`;
+}
+
+function lastName(name: string) {
   const parts = name.split(/\s+/).filter(Boolean);
-  if (parts.length <= 1) return name;
-  return `${parts[0][0]}. ${parts[parts.length - 1]}`;
+  return parts.at(-1) ?? name;
 }
 
 function initials(value: string) {
@@ -522,6 +677,7 @@ function matchCopy(language: AmsLanguage) {
       matches: "partidos",
       maxSpeed: "Velocidad máx.",
       noDateMatches: "No hay partidos en esta fecha.",
+      formation: "Formación",
       onField: "En cancha",
       photoNote: "Fotos omitidas por ahora; usando números e iniciales.",
       source: "Fuente",
@@ -529,6 +685,7 @@ function matchCopy(language: AmsLanguage) {
       sourceStatus: "Google-style cache",
       sprint: "Sprint",
       substitutes: "Banca / menor carga",
+      teamToggle: "Cambiar equipo en cancha",
       title: "Historial de partidos",
       totalDistance: "Distancia total",
       venuePending: "Sede pendiente",
@@ -547,6 +704,7 @@ function matchCopy(language: AmsLanguage) {
     matches: "matches",
     maxSpeed: "Max speed",
     noDateMatches: "No matches on this date.",
+    formation: "Formation",
     onField: "On field",
     photoNote: "Photos ignored for now; using numbers and initials.",
     source: "Source",
@@ -554,6 +712,7 @@ function matchCopy(language: AmsLanguage) {
     sourceStatus: "Google-style cache",
     sprint: "Sprint",
     substitutes: "Bench / lower load",
+    teamToggle: "Switch field team",
     title: "Match History",
     totalDistance: "Total distance",
     venuePending: "Venue pending",
