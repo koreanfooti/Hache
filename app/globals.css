@@ -830,6 +830,79 @@ button {
   opacity: 0.62;
 }
 
+.recovery-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.recovery-intro > div {
+  min-width: 0;
+}
+
+.recovery-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 16px;
+}
+
+.recovery-summary-grid .recovery-table-card:first-child {
+  grid-row: span 2;
+}
+
+.recovery-table-card {
+  overflow: hidden;
+  border: 1px solid rgb(215 180 106 / 28%);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 16% 12%, rgb(226 29 50 / 20%), transparent 34%),
+    linear-gradient(145deg, rgb(20 8 12 / 96%), rgb(8 5 7 / 92%));
+  box-shadow: var(--ams-shadow);
+  padding: 18px;
+}
+
+.recovery-table-wrap {
+  overflow: auto;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+}
+
+.recovery-table {
+  width: 100%;
+  min-width: 540px;
+  border-collapse: collapse;
+}
+
+.recovery-table th,
+.recovery-table td {
+  border-bottom: 1px solid rgb(255 255 255 / 9%);
+  padding: 11px 12px;
+  text-align: left;
+}
+
+.recovery-table th {
+  color: var(--ams-gold);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.recovery-table td {
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 760;
+}
+
+.recovery-table td:not(:first-child) {
+  color: var(--ams-muted);
+}
+
+.recovery-table strong {
+  color: #fff;
+}
+
 .raw-source-view {
   overflow: hidden;
   padding: 18px;
@@ -3760,8 +3833,13 @@ button {
   }
 
   .biography-deep-grid,
-  .biography-stat-grid {
+  .biography-stat-grid,
+  .recovery-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .recovery-summary-grid .recovery-table-card:first-child {
+    grid-row: auto;
   }
 
   .athlete-profile-hero {
@@ -3833,6 +3911,7 @@ button {
 
   .athlete-profile-selector,
   .biography-hero,
+  .recovery-intro,
   .injury-history-hero,
   .body-composition-hero,
   .body-composition-actions,
