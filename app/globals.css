@@ -7005,68 +7005,130 @@ body,
 
 .dashboard-assistant-card {
   position: relative;
+  display: grid;
+  min-height: 360px;
+  place-items: center;
+  gap: 26px;
   overflow: hidden;
-  padding: clamp(28px, 4vw, 54px);
-  border-color: rgb(215 29 44 / 34%);
-  background:
-    radial-gradient(circle at 82% 8%, rgb(219 20 39 / 28%), transparent 34%),
-    linear-gradient(135deg, rgb(77 8 16 / 45%), rgb(12 9 10 / 88%) 58%),
-    rgb(15 11 12 / 90%);
+  padding: 34px;
+  border-color: rgb(211 31 47 / 32%);
+  background: linear-gradient(135deg, rgb(18 5 9 / 96%), rgb(106 10 20 / 44%));
+  box-shadow: var(--ams-shadow);
 }
 
-.dashboard-assistant-card time {
+.dashboard-assistant-clock {
   position: absolute;
-  top: 22px;
-  right: 22px;
-  border: 1px solid rgb(215 180 106 / 20%);
-  border-radius: 7px;
-  background: rgb(0 0 0 / 18%);
-  color: rgb(255 255 255 / 48%);
+  top: 18px;
+  right: 18px;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  color: #fff;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  text-align: right;
+  text-transform: capitalize;
+}
+
+.dashboard-assistant-clock span,
+.dashboard-assistant-clock strong {
+  border: 1px solid rgb(215 180 106 / 28%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 28%);
   padding: 8px 12px;
+}
+
+.dashboard-assistant-clock span {
+  color: #fff;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.dashboard-assistant-clock small {
+  color: var(--ams-gold);
+  font-size: 0.66rem;
+  font-weight: 950;
+}
+
+.dashboard-assistant-clock strong {
+  color: rgb(255 255 255 / 54%);
+  font-size: 0.72rem;
 }
 
 .dashboard-assistant-shell {
   display: grid;
-  gap: 14px;
-  width: min(880px, 100%);
-  margin: 0 auto;
+  justify-items: center;
+  gap: 12px;
+  width: min(860px, 100%);
+  margin: 0;
+  border: 1px solid rgb(215 180 106 / 22%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 3.5%);
+  padding: 26px;
   text-align: center;
 }
 
 .dashboard-assistant-shell h2 {
-  margin: 4px 0 2px;
+  margin: 0;
   color: #fff;
-  font-size: clamp(2.45rem, 6vw, 4.7rem);
-  letter-spacing: -0.06em;
-  line-height: 0.95;
+  font-size: clamp(1.7rem, 3.5vw, 3.2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.dashboard-assistant-shell h2::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 0.9em;
+  margin-left: 8px;
+  background: #fff;
+  vertical-align: -0.08em;
+  animation: dashboardCaretBlink 900ms steps(1) infinite;
+}
+
+@keyframes dashboardCaretBlink {
+  0%,
+  48% {
+    opacity: 1;
+  }
+
+  49%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .dashboard-assistant-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(128px, 180px);
-  gap: 12px;
-  margin-top: 6px;
+  grid-template-columns: minmax(220px, 620px) auto;
+  gap: 10px;
+  width: min(780px, 100%);
 }
 
 .dashboard-assistant-form input,
 .dashboard-assistant-form button {
-  min-height: 58px;
+  min-height: 48px;
   border-radius: 8px;
   font: inherit;
   font-weight: 900;
 }
 
 .dashboard-assistant-form input {
-  border: 1px solid rgb(215 180 106 / 24%);
-  background: rgb(7 5 6 / 72%);
+  border: 1px solid rgb(215 180 106 / 32%);
+  background: rgb(0 0 0 / 22%);
+  caret-color: var(--ams-gold);
   color: #fff;
-  padding: 0 18px;
+  font-size: 0.96rem;
+  padding: 0 14px;
 }
 
 .dashboard-assistant-form input::placeholder {
-  color: rgb(255 255 255 / 34%);
+  color: rgb(255 255 255 / 38%);
 }
 
 .dashboard-assistant-form button {
@@ -7074,36 +7136,41 @@ body,
   background: linear-gradient(135deg, #ff2d3f, #ad0d19);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 16px 28px rgb(172 8 22 / 24%);
+  padding: 0 24px;
 }
 
 .dashboard-assistant-shell p {
+  max-width: 720px;
   margin: 0;
-  color: rgb(255 255 255 / 48%);
-  font-size: 0.9rem;
+  color: rgb(255 255 255 / 52%);
+  font-size: 0.82rem;
   line-height: 1.45;
 }
 
 .dashboard-assistant-example {
   display: grid;
-  gap: 10px;
-  margin-top: 8px;
-  border: 1px solid rgb(215 180 106 / 20%);
-  border-radius: 10px;
-  background: rgb(31 12 11 / 52%);
-  padding: 18px;
+  gap: 8px;
+  width: min(780px, 100%);
+  margin-top: 2px;
+  border: 1px solid rgb(215 180 106 / 18%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 22%);
+  padding: 14px;
   text-align: left;
 }
 
 .dashboard-assistant-example strong {
   display: block;
-  border: 1px solid rgb(215 180 106 / 18%);
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgb(215 180 106 / 26%);
   border-radius: 8px;
-  background: rgb(255 255 255 / 3%);
+  background: rgb(215 180 106 / 8%);
   color: #fff;
-  font-size: 1rem;
-  line-height: 1.35;
-  padding: 14px 16px;
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1.2;
+  padding: 10px 12px;
 }
 
 .dashboard-kpi-grid {
@@ -7347,9 +7414,9 @@ body,
     padding: 26px 18px;
   }
 
-  .dashboard-assistant-card time {
+  .dashboard-assistant-clock {
     position: static;
-    justify-self: start;
+    justify-self: stretch;
     margin-bottom: 4px;
   }
 
@@ -7671,68 +7738,118 @@ body,
 
 .ams-app .dashboard-assistant-card {
   position: relative;
+  display: grid !important;
+  min-height: 360px;
+  place-items: center;
+  gap: 26px;
   overflow: hidden;
-  padding: clamp(28px, 4vw, 54px);
-  border-color: rgb(215 29 44 / 34%) !important;
-  background:
-    radial-gradient(circle at 82% 8%, rgb(219 20 39 / 28%), transparent 34%),
-    linear-gradient(135deg, rgb(77 8 16 / 45%), rgb(12 9 10 / 88%) 58%),
-    rgb(15 11 12 / 90%) !important;
+  padding: 34px;
+  border-color: rgb(211 31 47 / 32%) !important;
+  background: linear-gradient(135deg, rgb(18 5 9 / 96%), rgb(106 10 20 / 44%)) !important;
+  box-shadow: var(--ams-shadow) !important;
 }
 
-.ams-app .dashboard-assistant-card time {
+.ams-app .dashboard-assistant-clock {
   position: absolute;
-  top: 22px;
-  right: 22px;
-  border: 1px solid rgb(215 180 106 / 20%);
-  border-radius: 7px;
-  background: rgb(0 0 0 / 18%);
-  color: rgb(255 255 255 / 48%);
+  top: 18px;
+  right: 18px;
+  left: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  color: #fff;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  text-align: right;
+  text-transform: capitalize;
+}
+
+.ams-app .dashboard-assistant-clock span,
+.ams-app .dashboard-assistant-clock strong {
+  border: 1px solid rgb(215 180 106 / 28%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 28%);
   padding: 8px 12px;
+}
+
+.ams-app .dashboard-assistant-clock span {
+  color: #fff;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.ams-app .dashboard-assistant-clock small {
+  color: var(--ams-gold);
+  font-size: 0.66rem;
+  font-weight: 950;
+}
+
+.ams-app .dashboard-assistant-clock strong {
+  color: rgb(255 255 255 / 54%);
+  font-size: 0.72rem;
 }
 
 .ams-app .dashboard-assistant-shell {
   display: grid !important;
-  gap: 14px;
-  width: min(880px, 100%);
-  margin: 0 auto;
+  justify-items: center;
+  gap: 12px;
+  width: min(860px, 100%);
+  margin: 0;
+  border: 1px solid rgb(215 180 106 / 22%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 3.5%);
+  padding: 26px;
   text-align: center;
 }
 
 .ams-app .dashboard-assistant-shell h2 {
-  margin: 4px 0 2px;
+  margin: 0;
   color: #fff;
-  font-size: clamp(2.45rem, 6vw, 4.7rem);
-  letter-spacing: -0.06em;
-  line-height: 0.95;
+  font-size: clamp(1.7rem, 3.5vw, 3.2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.ams-app .dashboard-assistant-shell h2::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 0.9em;
+  margin-left: 8px;
+  background: #fff;
+  vertical-align: -0.08em;
+  animation: dashboardCaretBlink 900ms steps(1) infinite;
 }
 
 .ams-app .dashboard-assistant-form {
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(128px, 180px);
-  gap: 12px;
-  margin-top: 6px;
+  grid-template-columns: minmax(220px, 620px) auto;
+  gap: 10px;
+  width: min(780px, 100%);
 }
 
 .ams-app .dashboard-assistant-form input,
 .ams-app .dashboard-assistant-form button {
-  min-height: 58px;
+  min-height: 48px;
   border-radius: 8px;
   font: inherit;
   font-weight: 900;
 }
 
 .ams-app .dashboard-assistant-form input {
-  border: 1px solid rgb(215 180 106 / 24%);
-  background: rgb(7 5 6 / 72%);
+  border: 1px solid rgb(215 180 106 / 32%);
+  background: rgb(0 0 0 / 22%);
+  caret-color: var(--ams-gold);
   color: #fff;
-  padding: 0 18px;
+  font-size: 0.96rem;
+  padding: 0 14px;
 }
 
 .ams-app .dashboard-assistant-form input::placeholder {
-  color: rgb(255 255 255 / 34%);
+  color: rgb(255 255 255 / 38%);
 }
 
 .ams-app .dashboard-assistant-form button {
@@ -7740,36 +7857,41 @@ body,
   background: linear-gradient(135deg, #ff2d3f, #ad0d19);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 16px 28px rgb(172 8 22 / 24%);
+  padding: 0 24px;
 }
 
 .ams-app .dashboard-assistant-shell p {
+  max-width: 720px;
   margin: 0;
-  color: rgb(255 255 255 / 48%);
-  font-size: 0.9rem;
+  color: rgb(255 255 255 / 52%);
+  font-size: 0.82rem;
   line-height: 1.45;
 }
 
 .ams-app .dashboard-assistant-example {
   display: grid !important;
-  gap: 10px;
-  margin-top: 8px;
-  border: 1px solid rgb(215 180 106 / 20%);
-  border-radius: 10px;
-  background: rgb(31 12 11 / 52%);
-  padding: 18px;
+  gap: 8px;
+  width: min(780px, 100%);
+  margin-top: 2px;
+  border: 1px solid rgb(215 180 106 / 18%);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 22%);
+  padding: 14px;
   text-align: left;
 }
 
 .ams-app .dashboard-assistant-example strong {
   display: block;
-  border: 1px solid rgb(215 180 106 / 18%);
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgb(215 180 106 / 26%);
   border-radius: 8px;
-  background: rgb(255 255 255 / 3%);
+  background: rgb(215 180 106 / 8%);
   color: #fff;
-  font-size: 1rem;
-  line-height: 1.35;
-  padding: 14px 16px;
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1.2;
+  padding: 10px 12px;
 }
 
 .ams-app .dashboard-kpi-grid {
@@ -7979,9 +8101,9 @@ body,
     padding: 26px 18px;
   }
 
-  .ams-app .dashboard-assistant-card time {
+  .ams-app .dashboard-assistant-clock {
     position: static;
-    justify-self: start;
+    justify-self: stretch;
     margin-bottom: 4px;
   }
 

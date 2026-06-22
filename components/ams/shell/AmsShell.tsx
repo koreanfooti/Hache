@@ -261,7 +261,7 @@ export function OverviewPanel({
   const copy = uiCopy[language];
   const sectionLabels: Partial<Record<AmsSection, string>> = copy.sections;
   const dashboardCopy = dashboardLabels(language);
-  const dateText = dashboardDateLabel(currentTime, language);
+  const clock = dashboardClockLabel(currentTime, language);
   const overviewCopy = overviewLabels(language);
   const playerRows = playerLoadRows(selectedPlayer, loadSummary.rows);
   const sessionRows = (playerRows.length ? playerRows : loadSummary.rows)
@@ -344,7 +344,12 @@ export function OverviewPanel({
       </section>
 
       <section className="dashboard-assistant-card" aria-labelledby="ask-h-heading">
-        <time>{dateText}</time>
+        <div className="dashboard-assistant-clock" aria-label={dashboardCopy.guadalajaraTime}>
+          <span>
+            {clock.time} <small>{clock.period}</small>
+          </span>
+          <strong>{clock.date}</strong>
+        </div>
         <div className="dashboard-assistant-shell">
           <span>{dashboardCopy.assistantKicker}</span>
           <h2 id="ask-h-heading">{dashboardCopy.assistantTitle}</h2>
@@ -484,6 +489,7 @@ function dashboardLabels(language: AmsLanguage) {
       connectedSources: "Fuentes conectadas",
       date: "Fecha",
       distance: "Distancia (km)",
+      guadalajaraTime: "Hora de Guadalajara",
       highSpeed: "Alta velocidad",
       lastSix: "Ultimas 6 semanas",
       latestRows: "Ultimas filas GPS",
@@ -510,6 +516,7 @@ function dashboardLabels(language: AmsLanguage) {
     connectedSources: "Connected data sources",
     date: "Date",
     distance: "Distance (km)",
+    guadalajaraTime: "Guadalajara time",
     highSpeed: "High speed",
     lastSix: "Last 6 weeks",
     latestRows: "Latest GPS rows",
@@ -593,14 +600,43 @@ function formatShortDate(value: string | undefined, language: AmsLanguage) {
   }).format(parsed);
 }
 
-function dashboardDateLabel(value: Date | null, language: AmsLanguage) {
-  if (!value) return language === "es" ? "Hoy" : "Today";
-  return new Intl.DateTimeFormat(language === "es" ? "es-MX" : "en-US", {
-    day: "2-digit",
-    month: "long",
+function dashboardClockLabel(value: Date | null, language: AmsLanguage) {
+  if (!value) {
+    return {
+      date: language === "es" ? "Guadalajara" : "Guadalajara",
+      period: "",
+      time: "--:--:--",
+    };
+  }
+
+  const locale = language === "es" ? "es-MX" : "en-GB";
+  const weekday = new Intl.DateTimeFormat(locale, {
     timeZone: "America/Mexico_City",
     weekday: "long",
   }).format(value);
+  const date = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "long",
+    timeZone: "America/Mexico_City",
+  }).format(value);
+  const timeParts = new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    hour12: true,
+    minute: "2-digit",
+    second: "2-digit",
+    timeZone: "America/Mexico_City",
+  }).formatToParts(value);
+  const time = ["hour", "minute", "second"]
+    .map((type) => timeParts.find((part) => part.type === type)?.value)
+    .filter(Boolean)
+    .join(":");
+  const period = timeParts.find((part) => part.type === "dayPeriod")?.value ?? "";
+
+  return {
+    date: `${weekday} · ${date}`,
+    period,
+    time,
+  };
 }
 
 function overviewLabels(language: AmsLanguage) {
