@@ -1,6 +1,9 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import { metricDefinitions } from "@/lib/ams/content";
-import { compactNumber } from "@/lib/ams/data";
-import type { LoadSummary } from "@/lib/ams/types";
+import { compactNumber, numberValue } from "@/lib/ams/data";
+import type { CleanGpsRow, LoadSummary } from "@/lib/ams/types";
 import type { DataPanelCopy } from "@/components/ams/panels/panelTypes";
 import { LoadVisualDashboard } from "@/components/ams/panels/load/LoadVisuals";
 import {
@@ -9,6 +12,23 @@ import {
   localizedValue,
   type AmsLanguage,
 } from "@/components/ams/ui/AmsUi";
+
+type LoadFilterPayload = {
+  filters?: {
+    allTeamsValue: string;
+    dateFrom: string;
+    dateTo: string;
+    defaultTeam: string;
+    selectedTeam: string;
+    teams: string[];
+    totalRows: number;
+  };
+  rows?: CleanGpsRow[];
+  summary?: LoadSummary;
+};
+
+const ALL_TEAMS = "__all__";
+const DEFAULT_TEAM = "Atlas Primer Equipo";
 
 export function LoadPanel({
   copy,
@@ -19,6 +39,70 @@ export function LoadPanel({
   language: AmsLanguage;
   loadSummary: LoadSummary;
 }) {
+  const controls = loadControlCopy(language);
+  const [selectedTeam, setSelectedTeam] = useState(DEFAULT_TEAM);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [teams, setTeams] = useState<string[]>(() => uniqueTeams(loadSummary.rows));
+  const [filteredSummary, setFilteredSummary] = useState<LoadSummary>(loadSummary);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filterError, setFilterError] = useState<string | null>(null);
+  const visibleSummary = filteredSummary.rows.length || isFiltering ? filteredSummary : loadSummary;
+  const visibleTeams = teams.length ? teams : uniqueTeams(loadSummary.rows);
+  const selectedTeamLabel = selectedTeam === ALL_TEAMS ? controls.allTeams : selectedTeam;
+  const filterStatus = filterError
+    ? filterError
+    : isFiltering
+      ? controls.loading
+      : `${compactNumber(visibleSummary.rows.length)} ${controls.records} · ${selectedTeamLabel}`;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+    params.set("team", selectedTeam);
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
+
+    Promise.resolve()
+      .then(() => {
+        if (controller.signal.aborted) return null;
+        setIsFiltering(true);
+        setFilterError(null);
+        return fetch(`/api/ams/load?${params.toString()}`, { cache: "no-store", signal: controller.signal });
+      })
+      .then(async (response) => {
+        if (!response) return;
+        const payload = (await response.json()) as LoadFilterPayload;
+        if (!response.ok) throw new Error("Unable to load filtered GPS data.");
+        if (payload.filters?.teams?.length) setTeams(payload.filters.teams);
+        if (!dateFrom && payload.filters?.dateFrom) setDateFrom(payload.filters.dateFrom);
+        if (!dateTo && payload.filters?.dateTo) setDateTo(payload.filters.dateTo);
+        if (payload.summary) setFilteredSummary(payload.summary);
+        else if (payload.rows) setFilteredSummary(summarizeRows(payload.rows, controls.loadedFiltered));
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setFilteredSummary(loadSummary);
+        setFilterError(error instanceof Error ? error.message : controls.error);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsFiltering(false);
+      });
+
+    return () => controller.abort();
+  }, [controls.error, controls.loadedFiltered, dateFrom, dateTo, loadSummary, selectedTeam]);
+
+  const dateRangeText = useMemo(() => {
+    if (!dateFrom && !dateTo) return controls.latestWindow;
+    return `${dateFrom || controls.openStart} → ${dateTo || controls.openEnd}`;
+  }, [controls.latestWindow, controls.openEnd, controls.openStart, dateFrom, dateTo]);
+
+  function handleTeamChange(team: string) {
+    setSelectedTeam(team);
+    setDateFrom("");
+    setDateTo("");
+  }
+
   return (
     <div className="panel-stack">
       <PanelIntro
@@ -26,13 +110,42 @@ export function LoadPanel({
         title={copy.load.title}
         copy={copy.load.copy}
       />
-      <section className="metric-grid">
-        <MetricCard label={copy.load.totalDistance} value={`${compactNumber(loadSummary.totalDistance)} m`} detail={`${compactNumber(loadSummary.sessions)} ${copy.common.sessions}`} />
-        <MetricCard label={copy.load.highIntensity} value={`${compactNumber(loadSummary.highIntensity)} m`} detail={copy.load.absoluteRelativeExposure} />
-        <MetricCard label={copy.load.maxSpeed} value={`${compactNumber(loadSummary.maxSpeed, 1)} km/h`} detail={copy.load.peakRecordedValue} />
-        <MetricCard label={copy.load.dataStatus} value={localizedLoadStatus(loadSummary.status, language)} detail={copy.load.servedFromPublicData} />
+      <section className="load-filter-panel" aria-label={controls.filterLabel}>
+        <div className="load-filter-heading">
+          <div>
+            <span>{controls.slicers}</span>
+            <strong>{filterStatus}</strong>
+          </div>
+          <small>{dateRangeText}</small>
+        </div>
+        <div className="load-filter-grid">
+          <label>
+            <span>{controls.team}</span>
+            <select value={selectedTeam} onChange={(event) => handleTeamChange(event.target.value)}>
+              <option value={ALL_TEAMS}>{controls.allTeams}</option>
+              {visibleTeams.map((team) => <option key={team} value={team}>{team}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>{controls.from}</span>
+            <input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+          </label>
+          <label>
+            <span>{controls.to}</span>
+            <input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+          </label>
+          <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+            {controls.latest90}
+          </button>
+        </div>
       </section>
-      <LoadVisualDashboard language={language} rows={loadSummary.rows} />
+      <section className="metric-grid">
+        <MetricCard label={copy.load.totalDistance} value={`${compactNumber(visibleSummary.totalDistance)} m`} detail={`${compactNumber(visibleSummary.sessions)} ${copy.common.sessions}`} />
+        <MetricCard label={copy.load.highIntensity} value={`${compactNumber(visibleSummary.highIntensity)} m`} detail={copy.load.absoluteRelativeExposure} />
+        <MetricCard label={copy.load.maxSpeed} value={`${compactNumber(visibleSummary.maxSpeed, 1)} km/h`} detail={copy.load.peakRecordedValue} />
+        <MetricCard label={copy.load.dataStatus} value={localizedLoadStatus(visibleSummary.status, language)} detail={copy.load.servedFromPublicData} />
+      </section>
+      <LoadVisualDashboard language={language} rows={visibleSummary.rows} />
       <section className="definition-grid">
         {metricDefinitions.map(([label, description, unit]) => {
           const metric = localizedMetricDefinition(label, description, unit, language);
@@ -50,11 +163,65 @@ export function LoadPanel({
   );
 }
 
+function summarizeRows(rows: CleanGpsRow[], status: string): LoadSummary {
+  return {
+    highIntensity: rows.reduce((total, row) => total + numberValue(row.hsrAbsDistance ?? row.highIntensityDistance ?? row.high_intensity_m), 0),
+    maxSpeed: rows.reduce((max, row) => Math.max(max, numberValue(row.maxSpeedKmh ?? row.max_speed_kmh ?? row.maxSpeed)), 0),
+    rows,
+    sessions: rows.length,
+    status,
+    totalDistance: rows.reduce((total, row) => total + numberValue(row.totalDistance ?? row.total_distance_m), 0),
+  };
+}
+
+function uniqueTeams(rows: CleanGpsRow[]) {
+  return [...new Set(rows.map((row) => row.team).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b));
+}
+
+function loadControlCopy(language: AmsLanguage) {
+  if (language === "es") {
+    return {
+      allTeams: "Todos los equipos",
+      error: "No se pudo cargar la carga filtrada.",
+      filterLabel: "Filtros de demanda de carga",
+      from: "Desde",
+      latest90: "Últimos 90 días",
+      latestWindow: "Ventana más reciente disponible",
+      loadedFiltered: "Filas WIMU/GPS filtradas cargadas.",
+      loading: "Cargando filtros...",
+      openEnd: "fin abierto",
+      openStart: "inicio abierto",
+      records: "registros",
+      slicers: "Slicers de GPS",
+      team: "Equipo",
+      to: "Hasta",
+    };
+  }
+
+  return {
+    allTeams: "All teams",
+    error: "Unable to load filtered load data.",
+    filterLabel: "Load demand filters",
+    from: "From",
+    latest90: "Latest 90 days",
+    latestWindow: "Latest available window",
+    loadedFiltered: "Loaded filtered WIMU/GPS rows.",
+    loading: "Loading filters...",
+    openEnd: "open end",
+    openStart: "open start",
+    records: "records",
+    slicers: "GPS slicers",
+    team: "Team",
+    to: "To",
+  };
+}
+
 function localizedLoadStatus(status: string, language: AmsLanguage) {
   if (language === "en") return status;
   if (status.startsWith("Loaded")) {
     return status
       .replace("Loaded", "Cargados")
+      .replace("filtered WIMU/GPS daily records", "registros diarios WIMU/GPS filtrados")
       .replace("current-roster WIMU/GPS daily records", "registros diarios WIMU/GPS de plantilla actual")
       .replace("sample WIMU/GPS records", "registros de muestra WIMU/GPS")
       .replace("clean module records", "registros limpios de módulos");

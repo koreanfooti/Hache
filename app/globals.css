@@ -702,6 +702,94 @@ button {
   text-overflow: ellipsis;
 }
 
+.load-filter-panel {
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgb(215 180 106 / 16%);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgb(211 31 47 / 14%), transparent 44%),
+    rgb(255 255 255 / 3%);
+  padding: 20px;
+}
+
+.load-filter-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.load-filter-heading div {
+  display: grid;
+  gap: 5px;
+}
+
+.load-filter-heading span,
+.load-filter-grid span {
+  color: var(--ams-gold);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.load-filter-heading strong {
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.load-filter-heading small {
+  color: rgb(255 255 255 / 52%);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.load-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) minmax(150px, 0.8fr) minmax(150px, 0.8fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.load-filter-grid label {
+  display: grid;
+  gap: 7px;
+}
+
+.load-filter-grid select,
+.load-filter-grid input,
+.load-filter-grid button {
+  min-height: 42px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 11px;
+  background: rgb(0 0 0 / 28%);
+  color: #fff;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 850;
+  padding: 0 12px;
+}
+
+.load-filter-grid select,
+.load-filter-grid input {
+  width: 100%;
+}
+
+.load-filter-grid button {
+  border-color: rgb(215 180 106 / 34%);
+  background: rgb(215 180 106 / 10%);
+  color: #f6d58b;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.load-filter-grid button:hover {
+  border-color: rgb(211 31 47 / 70%);
+  background: rgb(211 31 47 / 24%);
+  color: #fff;
+}
+
 .load-visual-dashboard {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -8973,6 +9061,10 @@ body,
 }
 
 @media (max-width: 1180px) {
+  .load-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .load-visual-dashboard,
   .load-insight-list {
     grid-template-columns: 1fr;
@@ -8995,6 +9087,15 @@ body,
 }
 
 @media (max-width: 760px) {
+  .load-filter-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .load-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
   .load-chart-panel,
   .load-visual-empty {
     padding: 16px;
