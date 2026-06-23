@@ -856,7 +856,9 @@ button {
 }
 
 .load-metrics-list b {
+  min-width: 0;
   color: #fff;
+  font-size: 0.68rem;
   font-weight: 900;
 }
 
@@ -894,21 +896,32 @@ button {
 
 .load-metric-buttons {
   display: flex;
-  max-width: 560px;
-  flex-wrap: wrap;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.load-metric-buttons::-webkit-scrollbar {
+  display: none;
 }
 
 .load-metric-buttons button {
+  flex: 0 0 auto;
   border: 1px solid rgb(215 180 106 / 22%);
   border-radius: 999px;
   background: rgb(0 0 0 / 24%);
   color: rgb(255 255 255 / 64%);
   cursor: pointer;
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   font-weight: 900;
-  padding: 8px 11px;
+  padding: 7px 10px;
+  white-space: nowrap;
 }
 
 .load-metric-buttons button:hover,
@@ -924,6 +937,8 @@ button {
 
 .load-trend-header-actions {
   display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
   align-items: flex-start;
   justify-content: flex-end;
   gap: 10px;
@@ -1104,7 +1119,7 @@ button {
 
 .load-trend-scroll {
   overflow-x: auto;
-  padding: 6px 0 4px;
+  padding: 6px 0 12px;
   scrollbar-color: rgb(215 180 106 / 52%) rgb(255 255 255 / 8%);
 }
 
@@ -1329,7 +1344,11 @@ button {
 
 .load-chart-value {
   fill: #fff;
-  font-size: 10px;
+  font-size: var(--trend-value-size, 10px);
+}
+
+.load-chart-label {
+  font-size: var(--trend-label-size, 11px);
 }
 
 .load-donut-wrap {

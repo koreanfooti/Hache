@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import type { CleanGpsRow } from "@/lib/ams/types";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
@@ -51,8 +52,6 @@ const chartCopy = {
     selectAll: "Select all",
     clear: "Clear",
     trendDates: "Daily dates",
-    scrollLeft: "Scroll left",
-    scrollRight: "Scroll right",
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     visibleDays: "visible days",
@@ -91,8 +90,6 @@ const chartCopy = {
     selectAll: "Seleccionar todo",
     clear: "Limpiar",
     trendDates: "Fechas diarias",
-    scrollLeft: "Mover izquierda",
-    scrollRight: "Mover derecha",
     zoomIn: "Acercar",
     zoomOut: "Alejar",
     visibleDays: "días visibles",
@@ -271,7 +268,6 @@ function ChartHeading({ title, subtitle }: { title: string; subtitle: string }) 
 
 function TrendBarChart({ copy, metric, points }: { copy: typeof chartCopy.en; metric: LoadMetric; points: ChartPoint[] }) {
   const [zoom, setZoom] = useState(1);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const width = Math.max(780, points.length * 58 * zoom + 84);
   const height = 280;
   const padX = 42;
@@ -280,20 +276,24 @@ function TrendBarChart({ copy, metric, points }: { copy: typeof chartCopy.en; me
   const plotHeight = height - bottomPad - topPad;
   const maxValue = Math.max(1, ...points.map((point) => point.value));
   const slot = (width - padX * 2) / Math.max(1, points.length);
-  const barWidth = Math.max(8, Math.min(28, slot * 0.48));
+  const barWidth = Math.max(8, Math.min(54, slot * 0.48));
   const zoomLabel = `${Math.round(zoom * 100)}%`;
+  const chartStyle = {
+    "--trend-label-size": `${Math.min(12, 7.5 + zoom * 1.8)}px`,
+    "--trend-value-size": `${Math.min(16, 8.5 + zoom * 2.8)}px`,
+    maxWidth: "none",
+    width: `${width}px`,
+  } as CSSProperties;
 
   return (
     <>
-      <div className="load-chart-toolbar" aria-label="Load trend navigation">
-        <button type="button" onClick={() => scrollRef.current?.scrollBy({ left: -360, behavior: "smooth" })}>{copy.scrollLeft}</button>
+      <div className="load-chart-toolbar" aria-label="Load trend zoom">
         <button type="button" onClick={() => setZoom((value) => Math.max(0.65, Number((value - 0.2).toFixed(2))))}>{copy.zoomOut}</button>
         <span>{zoomLabel}</span>
-        <button type="button" onClick={() => setZoom((value) => Math.min(2.4, Number((value + 0.2).toFixed(2))))}>{copy.zoomIn}</button>
-        <button type="button" onClick={() => scrollRef.current?.scrollBy({ left: 360, behavior: "smooth" })}>{copy.scrollRight}</button>
+        <button type="button" onClick={() => setZoom((value) => Math.min(2.6, Number((value + 0.2).toFixed(2))))}>{copy.zoomIn}</button>
       </div>
-      <div className="load-trend-scroll" ref={scrollRef} tabIndex={0}>
-        <svg className="load-svg-chart" viewBox={`0 0 ${width} ${height}`} role="img">
+      <div className="load-trend-scroll" tabIndex={0}>
+        <svg className="load-svg-chart" style={chartStyle} viewBox={`0 0 ${width} ${height}`} role="img">
           <ChartGrid width={width} height={height} left={padX} right={20} top={topPad} bottom={bottomPad} />
           {points.map((point, index) => {
             const barHeight = (point.value / maxValue) * plotHeight;
@@ -302,7 +302,7 @@ function TrendBarChart({ copy, metric, points }: { copy: typeof chartCopy.en; me
             return (
               <g key={point.id}>
                 <rect className="load-trend-bar" x={center - barWidth / 2} y={y} width={barWidth} height={Math.max(2, barHeight)} rx="5" style={{ fill: metric.color }} />
-                {slot > 38 ? <text className="load-chart-value" x={center} y={Math.max(15, y - 8)}>{metricValueLabel(point.value, metric)}</text> : null}
+                {slot > 32 ? <text className="load-chart-value" x={center} y={Math.max(15, y - 8)}>{metricValueLabel(point.value, metric)}</text> : null}
                 <text className="load-chart-label" x={center} y={height - 30} transform={`rotate(-35 ${center} ${height - 30})`}>{point.label}</text>
               </g>
             );
