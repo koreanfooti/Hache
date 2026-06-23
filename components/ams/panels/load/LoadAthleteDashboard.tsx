@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import type { CleanGpsRow } from "@/lib/ams/types";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
@@ -33,6 +33,12 @@ const athleteCopy = {
     sprint: "Sprint distance bars and max-speed intensity line",
     neuro: "High-intensity acceleration / deceleration",
     noData: "No athlete rows available for the selected view.",
+    from: "From",
+    to: "To",
+    reset: "Reset dates",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    visibleDays: "visible days",
   },
   es: {
     title: "Carga longitudinal individual",
@@ -43,6 +49,12 @@ const athleteCopy = {
     sprint: "Barras sprint y línea de intensidad de velocidad máxima",
     neuro: "Aceleración / desaceleración de alta intensidad",
     noData: "No hay filas de atleta disponibles para la vista seleccionada.",
+    from: "Desde",
+    to: "Hasta",
+    reset: "Reiniciar fechas",
+    zoomIn: "Acercar",
+    zoomOut: "Alejar",
+    visibleDays: "días visibles",
   },
 };
 
@@ -50,6 +62,9 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
   const copy = athleteCopy[language];
   const athleteOptions = useMemo(() => athleteList(rows), [rows]);
   const [selectedAthleteId, setSelectedAthleteId] = useState(athleteOptions[0]?.id ?? "");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [zoom, setZoom] = useState(1);
   const activeAthleteId = athleteOptions.some((option) => option.id === selectedAthleteId)
     ? selectedAthleteId
     : athleteOptions[0]?.id ?? "";
@@ -58,6 +73,9 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
     [activeAthleteId, rows],
   );
   const days = useMemo(() => dailyAthleteRows(athleteRows), [athleteRows]);
+  const dateBounds = useMemo(() => dateWindowBounds(days), [days]);
+  const visibleDays = useMemo(() => filterDaysByDate(days, dateFrom, dateTo), [dateFrom, dateTo, days]);
+  const zoomLabel = `${Math.round(zoom * 100)}%`;
 
   if (!athleteOptions.length || !days.length) {
     return (
@@ -84,11 +102,32 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
           </select>
         </label>
       </header>
+      <div className="load-athlete-controls">
+        <label>
+          <span>{copy.from}</span>
+          <input max={dateBounds.max} min={dateBounds.min} type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+        </label>
+        <label>
+          <span>{copy.to}</span>
+          <input max={dateBounds.max} min={dateBounds.min} type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+        </label>
+        <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+          {copy.reset}
+        </button>
+        <div className="load-athlete-zoom" aria-label={copy.title}>
+          <button type="button" onClick={() => setZoom((value) => Math.max(0.65, Number((value - 0.2).toFixed(2))))}>{copy.zoomOut}</button>
+          <span>{zoomLabel}</span>
+          <button type="button" onClick={() => setZoom((value) => Math.min(2.6, Number((value + 0.2).toFixed(2))))}>{copy.zoomIn}</button>
+        </div>
+        <small>{visibleDays.length} {copy.visibleDays}</small>
+      </div>
+      {visibleDays.length ? (
       <div className="load-athlete-chart-stack">
         <RelativeBarBand
           barClassName="load-athlete-distance-bar"
           color="#d31f2f"
-          days={days}
+          days={visibleDays}
+          zoom={zoom}
           lineColor="#d7b46a"
           title={copy.totalDistance}
           valueKey="totalDistance"
@@ -96,7 +135,8 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
         <ComboBand
           barClassName="load-athlete-hsr-bar"
           barKey="hsrAbs"
-          days={days}
+          days={visibleDays}
+          zoom={zoom}
           lineColor="#2f6dff"
           lineKey="hsrRel"
           title={copy.hsr}
@@ -104,14 +144,18 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
         <ComboBand
           barClassName="load-athlete-sprint-bar"
           barKey="sprintDistance"
-          days={days}
+          days={visibleDays}
+          zoom={zoom}
           lineColor="#8d6dff"
           lineKey="maxSpeed"
           speedTone
           title={copy.sprint}
         />
-        <ClusterBand days={days} title={copy.neuro} />
+        <ClusterBand days={visibleDays} title={copy.neuro} zoom={zoom} />
       </div>
+      ) : (
+        <strong className="load-athlete-empty">{copy.noData}</strong>
+      )}
     </section>
   );
 }
@@ -123,6 +167,7 @@ function RelativeBarBand({
   lineColor,
   title,
   valueKey,
+  zoom,
 }: {
   barClassName: string;
   color: string;
@@ -130,28 +175,32 @@ function RelativeBarBand({
   lineColor: string;
   title: string;
   valueKey: keyof Pick<AthleteDay, "totalDistance">;
+  zoom: number;
 }) {
   const maxValue = Math.max(1, ...days.map((day) => day[valueKey]));
   const points = days.map((day) => ({ ...day, percent: percentage(day[valueKey], maxValue) }));
+  const width = chartWidth(days.length, zoom);
+  const style = athleteChartStyle(width, zoom);
+  const barWidth = 16 * barScale(zoom);
 
   return (
     <LongitudinalBand title={title}>
-      <svg className="load-athlete-svg" viewBox={`0 0 ${chartWidth(days.length)} 170`} role="img">
-        <BandGrid width={chartWidth(days.length)} />
+      <svg className="load-athlete-svg" style={style} viewBox={`0 0 ${width} 170`} role="img">
+        <BandGrid width={width} />
         {points.map((day, index) => {
-          const x = pointX(index);
+          const x = pointX(index, zoom);
           const barHeight = Math.max(3, (day[valueKey] / maxValue) * 92);
           const y = 118 - barHeight;
           return (
             <g key={day.date}>
-              <rect className={barClassName} x={x - 8} y={y} width="16" height={barHeight} rx="4" fill={color} />
+              <rect className={barClassName} x={x - barWidth / 2} y={y} width={barWidth} height={barHeight} rx="4" fill={color} />
               <text className="load-athlete-value" x={x} y={Math.max(15, y - 8)}>{compactNumber(day[valueKey])}</text>
               <text className="load-athlete-percent" x={x} y={Math.max(31, y + 14)}>{day.percent}%</text>
               <AxisLabels day={day} x={x} />
             </g>
           );
         })}
-        <polyline className="load-athlete-line" fill="none" points={points.map((day, index) => `${pointX(index)},${118 - (day.percent / 100) * 92}`).join(" ")} stroke={lineColor} />
+        <polyline className="load-athlete-line" fill="none" points={points.map((day, index) => `${pointX(index, zoom)},${118 - (day.percent / 100) * 92}`).join(" ")} stroke={lineColor} />
       </svg>
     </LongitudinalBand>
   );
@@ -165,6 +214,7 @@ function ComboBand({
   lineKey,
   speedTone = false,
   title,
+  zoom,
 }: {
   barClassName: string;
   barKey: keyof Pick<AthleteDay, "hsrAbs" | "sprintDistance">;
@@ -173,22 +223,26 @@ function ComboBand({
   lineKey: keyof Pick<AthleteDay, "hsrRel" | "maxSpeed">;
   speedTone?: boolean;
   title: string;
+  zoom: number;
 }) {
   const maxBar = Math.max(1, ...days.map((day) => day[barKey]));
   const maxLine = Math.max(1, ...days.map((day) => day[lineKey]));
+  const width = chartWidth(days.length, zoom);
+  const style = athleteChartStyle(width, zoom);
+  const barWidth = 22 * barScale(zoom);
 
   return (
     <LongitudinalBand title={title}>
-      <svg className="load-athlete-svg" viewBox={`0 0 ${chartWidth(days.length)} 170`} role="img">
-        <BandGrid width={chartWidth(days.length)} />
+      <svg className="load-athlete-svg" style={style} viewBox={`0 0 ${width} 170`} role="img">
+        <BandGrid width={width} />
         {days.map((day, index) => {
-          const x = pointX(index);
+          const x = pointX(index, zoom);
           const barHeight = Math.max(2, (day[barKey] / maxBar) * 86);
           const y = 118 - barHeight;
           const linePercent = percentage(day[lineKey], maxLine);
           return (
             <g key={day.date}>
-              <rect className={barClassName} x={x - 11} y={y} width="22" height={barHeight} rx="3" />
+              <rect className={barClassName} x={x - barWidth / 2} y={y} width={barWidth} height={barHeight} rx="3" />
               <text className="load-athlete-value" x={x} y={Math.max(14, y - 8)}>{compactNumber(day[barKey])}</text>
               <text className={`load-athlete-percent ${speedTone ? speedToneClass(linePercent) : ""}`} x={x} y={Math.max(28, 118 - (linePercent / 100) * 86 - 8)}>
                 {linePercent}%
@@ -197,30 +251,33 @@ function ComboBand({
             </g>
           );
         })}
-        <polyline className="load-athlete-line" fill="none" points={days.map((day, index) => `${pointX(index)},${118 - (percentage(day[lineKey], maxLine) / 100) * 86}`).join(" ")} stroke={lineColor} />
+        <polyline className="load-athlete-line" fill="none" points={days.map((day, index) => `${pointX(index, zoom)},${118 - (percentage(day[lineKey], maxLine) / 100) * 86}`).join(" ")} stroke={lineColor} />
         {days.map((day, index) => (
-          <circle key={`${day.date}-line`} className="load-athlete-line-dot" cx={pointX(index)} cy={118 - (percentage(day[lineKey], maxLine) / 100) * 86} r="4" />
+          <circle key={`${day.date}-line`} className="load-athlete-line-dot" cx={pointX(index, zoom)} cy={118 - (percentage(day[lineKey], maxLine) / 100) * 86} r="4" />
         ))}
       </svg>
     </LongitudinalBand>
   );
 }
 
-function ClusterBand({ days, title }: { days: AthleteDay[]; title: string }) {
+function ClusterBand({ days, title, zoom }: { days: AthleteDay[]; title: string; zoom: number }) {
   const maxValue = Math.max(1, ...days.flatMap((day) => [day.accel, day.decel]));
+  const width = chartWidth(days.length, zoom);
+  const style = athleteChartStyle(width, zoom);
+  const clusterWidth = 13 * barScale(zoom);
 
   return (
     <LongitudinalBand title={title}>
-      <svg className="load-athlete-svg" viewBox={`0 0 ${chartWidth(days.length)} 170`} role="img">
-        <BandGrid width={chartWidth(days.length)} />
+      <svg className="load-athlete-svg" style={style} viewBox={`0 0 ${width} 170`} role="img">
+        <BandGrid width={width} />
         {days.map((day, index) => {
-          const x = pointX(index);
+          const x = pointX(index, zoom);
           const accelHeight = Math.max(2, (day.accel / maxValue) * 88);
           const decelHeight = Math.max(2, (day.decel / maxValue) * 88);
           return (
             <g key={day.date}>
-              <rect className="load-athlete-accel-bar" x={x - 15} y={118 - accelHeight} width="13" height={accelHeight} rx="3" />
-              <rect className="load-athlete-decel-bar" x={x + 2} y={118 - decelHeight} width="13" height={decelHeight} rx="3" />
+              <rect className="load-athlete-accel-bar" x={x - clusterWidth - 2} y={118 - accelHeight} width={clusterWidth} height={accelHeight} rx="3" />
+              <rect className="load-athlete-decel-bar" x={x + 2} y={118 - decelHeight} width={clusterWidth} height={decelHeight} rx="3" />
               <text className="load-athlete-cluster-label" x={x - 8} y={Math.max(16, 118 - accelHeight + 16)}>{compactNumber(day.accel)}</text>
               <text className="load-athlete-cluster-label" x={x + 9} y={Math.max(16, 118 - decelHeight + 16)}>{compactNumber(day.decel)}</text>
               <AxisLabels day={day} x={x} />
@@ -332,12 +389,35 @@ function shortDate(date: string) {
   return [month, day].filter(Boolean).join("/") || date;
 }
 
-function chartWidth(count: number) {
-  return Math.max(980, count * 54 + 72);
+function dateWindowBounds(days: AthleteDay[]) {
+  const dates = days.map((day) => day.date).filter(Boolean);
+  return { min: dates[0] ?? "", max: dates[dates.length - 1] ?? "" };
 }
 
-function pointX(index: number) {
-  return 42 + index * 54;
+function filterDaysByDate(days: AthleteDay[], from: string, to: string) {
+  return days.filter((day) => (!from || day.date >= from) && (!to || day.date <= to));
+}
+
+function chartWidth(count: number, zoom: number) {
+  return Math.max(980, count * 54 * zoom + 72);
+}
+
+function pointX(index: number, zoom: number) {
+  return 42 + index * 54 * zoom;
+}
+
+function barScale(zoom: number) {
+  return Math.max(0.72, Math.min(2.05, zoom));
+}
+
+function athleteChartStyle(width: number, zoom: number) {
+  return {
+    "--load-athlete-axis-size": `${Math.min(11.5, 7.4 + zoom * 1.3)}px`,
+    "--load-athlete-label-size": `${Math.min(15, 8.2 + zoom * 2.2)}px`,
+    "--load-athlete-percent-size": `${Math.min(13.5, 7.5 + zoom * 1.9)}px`,
+    maxWidth: "none",
+    width: `${width}px`,
+  } as CSSProperties;
 }
 
 function percentage(value: number, maxValue: number) {

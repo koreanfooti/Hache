@@ -1206,9 +1206,95 @@ button {
   padding: 0 12px;
 }
 
+.load-athlete-controls {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 1px solid rgb(215 180 106 / 15%);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgb(215 180 106 / 9%), transparent 48%),
+    rgb(0 0 0 / 18%);
+  padding: 12px;
+}
+
+.load-athlete-controls label {
+  display: grid;
+  min-width: 150px;
+  gap: 6px;
+}
+
+.load-athlete-controls label span {
+  color: var(--ams-gold);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.load-athlete-controls input,
+.load-athlete-controls button,
+.load-athlete-zoom span {
+  min-height: 38px;
+  border: 1px solid rgb(215 180 106 / 24%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 28%);
+  color: rgb(255 255 255 / 72%);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 950;
+  padding: 0 12px;
+}
+
+.load-athlete-controls input {
+  border-radius: 10px;
+  color-scheme: dark;
+}
+
+.load-athlete-controls button {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.load-athlete-controls button:hover {
+  border-color: rgb(211 31 47 / 64%);
+  background: rgb(211 31 47 / 22%);
+  color: #fff;
+}
+
+.load-athlete-zoom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.load-athlete-zoom span {
+  display: grid;
+  min-width: 58px;
+  place-items: center;
+}
+
+.load-athlete-controls small {
+  color: rgb(255 255 255 / 50%);
+  font-size: 0.76rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
 .load-athlete-chart-stack {
   display: grid;
   gap: 12px;
+}
+
+.load-athlete-empty {
+  display: block;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 14px;
+  background: rgb(0 0 0 / 18%);
+  color: var(--ams-muted);
+  padding: 20px;
 }
 
 .load-athlete-band {
@@ -1230,6 +1316,7 @@ button {
 
 .load-athlete-scroll {
   overflow-x: auto;
+  padding-bottom: 8px;
   scrollbar-color: rgb(215 180 106 / 52%) rgb(255 255 255 / 8%);
 }
 
@@ -1283,14 +1370,14 @@ button {
 .load-athlete-axis-date,
 .load-athlete-axis-session {
   fill: #fff;
-  font-size: 10px;
+  font-size: var(--load-athlete-label-size, 10px);
   font-weight: 900;
   text-anchor: middle;
 }
 
 .load-athlete-percent {
   fill: #fff;
-  font-size: 9px;
+  font-size: var(--load-athlete-percent-size, 9px);
 }
 
 .load-athlete-percent.is-green {
@@ -1307,13 +1394,13 @@ button {
 
 .load-athlete-cluster-label {
   fill: rgb(255 255 255 / 82%);
-  font-size: 8px;
+  font-size: var(--load-athlete-percent-size, 8px);
 }
 
 .load-athlete-axis-date,
 .load-athlete-axis-session {
   fill: rgb(255 255 255 / 62%);
-  font-size: 9px;
+  font-size: var(--load-athlete-axis-size, 9px);
 }
 
 .load-svg-chart {
