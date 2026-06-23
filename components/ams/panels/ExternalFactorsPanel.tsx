@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { panelCopy } from "@/components/ams/config/copy";
 import { MetricCard, PanelIntro, type AmsLanguage } from "@/components/ams/ui/AmsUi";
+import { DateSlicerField } from "@/components/ams/ui/DateSlicerField";
 
 type AtlasTravelContext = {
   isHome: boolean;
@@ -163,26 +164,28 @@ export function ExternalFactorsPanel({ language }: { language: AmsLanguage }) {
           </p>
         </div>
         <div className="environment-date-controls">
-          <label>
-            <span>{language === "es" ? "Desde" : "From"}</span>
-            <input
-              type="date"
-              min={firstFixtureDate}
-              max={environmentEndDate || lastFixtureDate}
-              value={environmentStartDate}
-              onChange={(event) => setEnvironmentStartDate(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>{language === "es" ? "Hasta" : "To"}</span>
-            <input
-              type="date"
-              min={environmentStartDate || firstFixtureDate}
-              max={lastFixtureDate}
-              value={environmentEndDate}
-              onChange={(event) => setEnvironmentEndDate(event.target.value)}
-            />
-          </label>
+          <DateSlicerField
+            emptyLabel={language === "es" ? "Sin fecha seleccionada" : "No date selected"}
+            label={language === "es" ? "Desde" : "From"}
+            language={language}
+            max={environmentEndDate || lastFixtureDate}
+            min={firstFixtureDate}
+            tooltipDetail={language === "es" ? "Filtra viajes, sedes y carga ambiental." : "Filters travel, venues, and environment load."}
+            tooltipTitle={language === "es" ? "Inicio del viaje" : "Travel window start"}
+            value={environmentStartDate}
+            onChange={setEnvironmentStartDate}
+          />
+          <DateSlicerField
+            emptyLabel={language === "es" ? "Sin fecha seleccionada" : "No date selected"}
+            label={language === "es" ? "Hasta" : "To"}
+            language={language}
+            max={lastFixtureDate}
+            min={environmentStartDate || firstFixtureDate}
+            tooltipDetail={language === "es" ? "Controla qué partidos aparecen abajo." : "Controls which matches appear below."}
+            tooltipTitle={language === "es" ? "Fin del viaje" : "Travel window end"}
+            value={environmentEndDate}
+            onChange={setEnvironmentEndDate}
+          />
           <button
             type="button"
             onClick={() => {

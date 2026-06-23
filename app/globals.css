@@ -8764,6 +8764,106 @@ body,
   cursor: pointer;
 }
 
+.ams-date-slicer-field {
+  position: relative;
+}
+
+.ams-date-slicer-field input[type="date"] {
+  color-scheme: dark;
+}
+
+.ams-date-slicer-field input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(86%) sepia(26%) saturate(614%) hue-rotate(358deg) brightness(92%) contrast(89%);
+  opacity: 0.88;
+}
+
+.ams-date-slicer-field .ams-date-slicer-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 45;
+  display: grid;
+  min-width: 230px;
+  max-width: min(320px, 82vw);
+  gap: 7px;
+  border: 1px solid rgb(215 180 106 / 38%);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 14% 0%, rgb(211 31 47 / 32%), transparent 38%),
+    linear-gradient(145deg, rgb(18 8 10 / 97%), rgb(43 10 16 / 96%));
+  box-shadow:
+    0 18px 46px rgb(0 0 0 / 58%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+  opacity: 0;
+  padding: 12px 13px;
+  pointer-events: none;
+  transform: translateY(-4px) scale(0.98);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.ams-date-slicer-field .ams-date-slicer-tooltip::before {
+  position: absolute;
+  top: -6px;
+  left: 18px;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid rgb(215 180 106 / 38%);
+  border-left: 1px solid rgb(215 180 106 / 38%);
+  background: rgb(30 9 13);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.ams-date-slicer-field:hover .ams-date-slicer-tooltip,
+.ams-date-slicer-field:focus-within .ams-date-slicer-tooltip {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ams-date-slicer-field .ams-date-slicer-tooltip strong {
+  color: var(--ams-gold);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.ams-date-slicer-field .ams-date-slicer-tooltip em {
+  width: fit-content;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 6%);
+  color: #fff;
+  font-size: 0.92rem;
+  font-style: normal;
+  font-weight: 950;
+  line-height: 1.1;
+  padding: 7px 10px;
+}
+
+.ams-date-slicer-field .ams-date-slicer-tooltip small {
+  color: rgb(255 255 255 / 60%);
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.match-date-slicer-field .ams-date-slicer-tooltip {
+  right: 0;
+  left: auto;
+}
+
+.match-date-slicer-field .ams-date-slicer-tooltip::before {
+  right: 22px;
+  left: auto;
+}
+
 .match-history-scroll {
   display: grid;
   gap: 14px;

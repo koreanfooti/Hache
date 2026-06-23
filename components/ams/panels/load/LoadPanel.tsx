@@ -12,6 +12,7 @@ import {
   localizedValue,
   type AmsLanguage,
 } from "@/components/ams/ui/AmsUi";
+import { DateSlicerField } from "@/components/ams/ui/DateSlicerField";
 
 type LoadFilterPayload = {
   filters?: {
@@ -126,14 +127,24 @@ export function LoadPanel({
               {visibleTeams.map((team) => <option key={team} value={team}>{team}</option>)}
             </select>
           </label>
-          <label>
-            <span>{controls.from}</span>
-            <input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
-          </label>
-          <label>
-            <span>{controls.to}</span>
-            <input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
-          </label>
+          <DateSlicerField
+            emptyLabel={controls.noDateSelected}
+            label={controls.from}
+            language={language}
+            tooltipDetail={dateRangeText}
+            tooltipTitle={controls.startWindow}
+            value={dateFrom}
+            onChange={setDateFrom}
+          />
+          <DateSlicerField
+            emptyLabel={controls.noDateSelected}
+            label={controls.to}
+            language={language}
+            tooltipDetail={dateRangeText}
+            tooltipTitle={controls.endWindow}
+            value={dateTo}
+            onChange={setDateTo}
+          />
           <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); }}>
             {controls.latest90}
           </button>
@@ -189,11 +200,14 @@ function loadControlCopy(language: AmsLanguage) {
       latestWindow: "Ventana más reciente disponible",
       loadedFiltered: "Filas WIMU/GPS filtradas cargadas.",
       loading: "Cargando filtros...",
+      noDateSelected: "Sin fecha seleccionada",
       openEnd: "fin abierto",
       openStart: "inicio abierto",
       records: "registros",
       slicers: "Slicers de GPS",
+      startWindow: "Inicio de ventana",
       team: "Equipo",
+      endWindow: "Fin de ventana",
       to: "Hasta",
     };
   }
@@ -207,11 +221,14 @@ function loadControlCopy(language: AmsLanguage) {
     latestWindow: "Latest available window",
     loadedFiltered: "Loaded filtered WIMU/GPS rows.",
     loading: "Loading filters...",
+    noDateSelected: "No date selected",
     openEnd: "open end",
     openStart: "open start",
     records: "records",
     slicers: "GPS slicers",
+    startWindow: "Window start",
     team: "Team",
+    endWindow: "Window end",
     to: "To",
   };
 }

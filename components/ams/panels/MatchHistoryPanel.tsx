@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
+import { dateDisplay } from "@/components/ams/ui/DateSlicerField";
 import { players as atlasRoster } from "@/lib/ams/content";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import { atlasFirstTeamFixtures } from "@/lib/ams/atlasFixtures";
@@ -129,7 +130,7 @@ export function MatchHistoryPanel({
               <strong>{visibleMatches.length} / {matches.length} {copy.matches}</strong>
             </div>
             <div className="match-list-controls">
-              <label>
+              <label className="ams-date-slicer-field match-date-slicer-field">
                 <span>{copy.dateFilter}</span>
                 <select
                   value={selectedMatch?.id ?? ""}
@@ -141,6 +142,11 @@ export function MatchHistoryPanel({
                     </option>
                   ))}
                 </select>
+                <span className="ams-date-slicer-tooltip" aria-hidden="true">
+                  <strong>{copy.dateFilter}</strong>
+                  <em>{dateDisplay(selectedMatch.date, selectedMatch.displayDate, language)} — {opponentTeamForMatch(selectedMatch)}</em>
+                  <small>{selectedMatch.competition} · {selectedMatch.round}</small>
+                </span>
               </label>
             </div>
           </div>

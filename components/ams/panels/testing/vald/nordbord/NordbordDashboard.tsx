@@ -8,6 +8,7 @@ import { NordbordFilterDrawer } from "@/components/ams/panels/testing/vald/nordb
 import { NordbordKpi } from "@/components/ams/panels/testing/vald/nordbord/NordbordKpi";
 import { NordbordPlayerPanel } from "@/components/ams/panels/testing/vald/nordbord/NordbordPlayerPanel";
 import { nordbordLabels } from "@/components/ams/panels/testing/vald/nordbord/nordbordLabels";
+import { DateSlicerField } from "@/components/ams/ui/DateSlicerField";
 import type { NordbordDashboardProps } from "@/components/ams/panels/testing/vald/nordbord/nordbordTypes";
 import {
   average,
@@ -104,14 +105,28 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
     <article className="nordbord-powerbi-dashboard">
       <header className="nordbord-report-header">
         <div className="nordbord-date-slicer" aria-label={labels.dateSlicer}>
-          <label>
-            <span>{labels.from}</span>
-            <input value={fromDate} min={allDates[0] ?? undefined} max={toDate || allDates.at(-1) || undefined} type="date" onChange={(event) => setFromDate(event.target.value)} />
-          </label>
-          <label>
-            <span>{labels.to}</span>
-            <input value={toDate} min={fromDate || allDates[0] || undefined} max={allDates.at(-1) || undefined} type="date" onChange={(event) => setToDate(event.target.value)} />
-          </label>
+          <DateSlicerField
+            emptyLabel={copy.common.noDate}
+            label={labels.from}
+            language={language}
+            max={toDate || allDates.at(-1) || undefined}
+            min={allDates[0] ?? undefined}
+            tooltipDetail={language === "es" ? "Inicio del rango NordBord visible." : "Start of the visible NordBord range."}
+            tooltipTitle={labels.dateSlicer}
+            value={fromDate}
+            onChange={setFromDate}
+          />
+          <DateSlicerField
+            emptyLabel={copy.common.noDate}
+            label={labels.to}
+            language={language}
+            max={allDates.at(-1) || undefined}
+            min={fromDate || allDates[0] || undefined}
+            tooltipDetail={language === "es" ? "Fin del rango NordBord visible." : "End of the visible NordBord range."}
+            tooltipTitle={labels.dateSlicer}
+            value={toDate}
+            onChange={setToDate}
+          />
           <label>
             <span>{labels.category}</span>
             <select value={selectedTestType} onChange={(event) => setSelectedTestType(event.target.value)}>

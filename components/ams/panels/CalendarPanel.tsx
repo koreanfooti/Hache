@@ -208,10 +208,10 @@ export function CalendarPanel({ language }: { language: Language }) {
               </div>
             </div>
             <form className="calendar-event-form" onSubmit={saveEvent}>
-              <CalendarTextInput label={copy.eventTitle} value={form.title} placeholder="Atlas U21 vs Rival" onChange={(value) => updateForm("title", value)} />
-              <CalendarTextInput label={copy.startDate} type="date" value={form.startDate} onChange={(value) => updateForm("startDate", value)} />
+              <CalendarTextInput label={copy.eventTitle} language={language} value={form.title} placeholder="Atlas U21 vs Rival" onChange={(value) => updateForm("title", value)} />
+              <CalendarTextInput label={copy.startDate} language={language} type="date" value={form.startDate} onChange={(value) => updateForm("startDate", value)} />
               <CalendarTextInput label={copy.startTime} type="time" value={form.startTime} onChange={(value) => updateForm("startTime", value)} />
-              <CalendarTextInput label={copy.endDate} type="date" value={form.endDate} onChange={(value) => updateForm("endDate", value)} />
+              <CalendarTextInput label={copy.endDate} language={language} type="date" value={form.endDate} onChange={(value) => updateForm("endDate", value)} />
               <CalendarTextInput label={copy.endTime} type="time" value={form.endTime} onChange={(value) => updateForm("endTime", value)} />
               <label>
                 <span>{copy.category}</span>

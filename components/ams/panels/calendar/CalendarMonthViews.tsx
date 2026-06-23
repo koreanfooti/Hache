@@ -1,5 +1,6 @@
 import { type ChangeEvent } from "react";
 import { CalendarEventChip } from "@/components/ams/panels/calendar/CalendarEventChip";
+import { DateSlicerField } from "@/components/ams/ui/DateSlicerField";
 import type { CalendarEvent, Language } from "@/components/ams/panels/calendar/calendarTypes";
 import {
   calendarDate,
@@ -11,17 +12,33 @@ import {
 
 export function CalendarTextInput({
   label,
+  language = "en",
   onChange,
   placeholder,
   type = "text",
   value,
 }: {
   label: string;
+  language?: Language;
   onChange: (value: string) => void;
   placeholder?: string;
   type?: string;
   value: string;
 }) {
+  if (type === "date") {
+    return (
+      <DateSlicerField
+        emptyLabel={language === "es" ? "Sin fecha seleccionada" : "No date selected"}
+        label={label}
+        language={language}
+        tooltipDetail={language === "es" ? "Fecha editable del evento del calendario." : "Editable calendar event date."}
+        tooltipTitle={language === "es" ? "Fecha del evento" : "Event date"}
+        value={value}
+        onChange={onChange}
+      />
+    );
+  }
+
   return (
     <label>
       <span>{label}</span>
