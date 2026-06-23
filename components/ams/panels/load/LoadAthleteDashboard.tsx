@@ -19,6 +19,7 @@ type AthleteDay = {
   hsrRel: number;
   maxSpeed: number;
   session: string;
+  sessionName: string;
   sprintDistance: number;
   totalDistance: number;
 };
@@ -122,37 +123,37 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
         <small>{visibleDays.length} {copy.visibleDays}</small>
       </div>
       {visibleDays.length ? (
-      <div className="load-athlete-chart-stack">
-        <RelativeBarBand
-          barClassName="load-athlete-distance-bar"
-          color="#d31f2f"
-          days={visibleDays}
-          zoom={zoom}
-          lineColor="#d7b46a"
-          title={copy.totalDistance}
-          valueKey="totalDistance"
-        />
-        <ComboBand
-          barClassName="load-athlete-hsr-bar"
-          barKey="hsrAbs"
-          days={visibleDays}
-          zoom={zoom}
-          lineColor="#2f6dff"
-          lineKey="hsrRel"
-          title={copy.hsr}
-        />
-        <ComboBand
-          barClassName="load-athlete-sprint-bar"
-          barKey="sprintDistance"
-          days={visibleDays}
-          zoom={zoom}
-          lineColor="#8d6dff"
-          lineKey="maxSpeed"
-          speedTone
-          title={copy.sprint}
-        />
-        <ClusterBand days={visibleDays} title={copy.neuro} zoom={zoom} />
-      </div>
+        <div className="load-athlete-chart-stack">
+          <RelativeBarBand
+            barClassName="load-athlete-distance-bar"
+            color="#d31f2f"
+            days={visibleDays}
+            zoom={zoom}
+            lineColor="#d7b46a"
+            title={copy.totalDistance}
+            valueKey="totalDistance"
+          />
+          <ComboBand
+            barClassName="load-athlete-hsr-bar"
+            barKey="hsrAbs"
+            days={visibleDays}
+            zoom={zoom}
+            lineColor="#2f6dff"
+            lineKey="hsrRel"
+            title={copy.hsr}
+          />
+          <ComboBand
+            barClassName="load-athlete-sprint-bar"
+            barKey="sprintDistance"
+            days={visibleDays}
+            zoom={zoom}
+            lineColor="#8d6dff"
+            lineKey="maxSpeed"
+            speedTone
+            title={copy.sprint}
+          />
+          <ClusterBand days={visibleDays} title={copy.neuro} zoom={zoom} />
+        </div>
       ) : (
         <strong className="load-athlete-empty">{copy.noData}</strong>
       )}
@@ -193,6 +194,7 @@ function RelativeBarBand({
           const y = 118 - barHeight;
           return (
             <g key={day.date}>
+              <title>{relativeTooltip(day, day[valueKey], day.percent)}</title>
               <rect className={barClassName} x={x - barWidth / 2} y={y} width={barWidth} height={barHeight} rx="4" fill={color} />
               <text className="load-athlete-value" x={x} y={Math.max(15, y - 8)}>{compactNumber(day[valueKey])}</text>
               <text className="load-athlete-percent" x={x} y={Math.max(31, y + 14)}>{day.percent}%</text>
@@ -242,6 +244,7 @@ function ComboBand({
           const linePercent = percentage(day[lineKey], maxLine);
           return (
             <g key={day.date}>
+              <title>{comboTooltip(day, barKey, day[barKey], lineKey, day[lineKey], linePercent)}</title>
               <rect className={barClassName} x={x - barWidth / 2} y={y} width={barWidth} height={barHeight} rx="3" />
               <text className="load-athlete-value" x={x} y={Math.max(14, y - 8)}>{compactNumber(day[barKey])}</text>
               <text className={`load-athlete-percent ${speedTone ? speedToneClass(linePercent) : ""}`} x={x} y={Math.max(28, 118 - (linePercent / 100) * 86 - 8)}>
@@ -252,9 +255,18 @@ function ComboBand({
           );
         })}
         <polyline className="load-athlete-line" fill="none" points={days.map((day, index) => `${pointX(index, zoom)},${118 - (percentage(day[lineKey], maxLine) / 100) * 86}`).join(" ")} stroke={lineColor} />
-        {days.map((day, index) => (
-          <circle key={`${day.date}-line`} className="load-athlete-line-dot" cx={pointX(index, zoom)} cy={118 - (percentage(day[lineKey], maxLine) / 100) * 86} r="4" />
-        ))}
+        {days.map((day, index) => {
+          const linePercent = percentage(day[lineKey], maxLine);
+          const cy = 118 - (linePercent / 100) * 86;
+          const cx = pointX(index, zoom);
+          return (
+            <g key={`${day.date}-line`}>
+              <title>{comboTooltip(day, barKey, day[barKey], lineKey, day[lineKey], linePercent)}</title>
+              <circle className="load-athlete-line-hit" cx={cx} cy={cy} r={Math.max(10, 7 * zoom)} />
+              <circle className="load-athlete-line-dot" cx={cx} cy={cy} r="4" />
+            </g>
+          );
+        })}
       </svg>
     </LongitudinalBand>
   );
@@ -276,6 +288,7 @@ function ClusterBand({ days, title, zoom }: { days: AthleteDay[]; title: string;
           const decelHeight = Math.max(2, (day.decel / maxValue) * 88);
           return (
             <g key={day.date}>
+              <title>{clusterTooltip(day)}</title>
               <rect className="load-athlete-accel-bar" x={x - clusterWidth - 2} y={118 - accelHeight} width={clusterWidth} height={accelHeight} rx="3" />
               <rect className="load-athlete-decel-bar" x={x + 2} y={118 - decelHeight} width={clusterWidth} height={decelHeight} rx="3" />
               <text className="load-athlete-cluster-label" x={x - 8} y={Math.max(16, 118 - accelHeight + 16)}>{compactNumber(day.accel)}</text>
@@ -340,6 +353,7 @@ function dailyAthleteRows(rows: CleanGpsRow[]): AthleteDay[] {
       hsrRel: 0,
       maxSpeed: 0,
       session: sessionLabel(row),
+      sessionName: sessionNameLabel(row),
       sprintDistance: 0,
       totalDistance: 0,
     };
@@ -351,6 +365,7 @@ function dailyAthleteRows(rows: CleanGpsRow[]): AthleteDay[] {
     current.decel += numberValue(row.highIntensityDecelerations);
     current.maxSpeed = Math.max(current.maxSpeed, maxSpeedValue(row));
     current.session = current.session || sessionLabel(row);
+    current.sessionName = mergeSessionNames(current.sessionName, sessionNameLabel(row));
     map.set(date, current);
   }
   return [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
@@ -366,6 +381,17 @@ function athleteName(row: CleanGpsRow) {
 
 function sessionLabel(row: CleanGpsRow) {
   return String(row.weekMatchDay || row.matchDay || row.session_type || row.sessionName || "").trim() || "-";
+}
+
+function sessionNameLabel(row: CleanGpsRow) {
+  return String(row.sessionName || row.session_name || row.session_type || row.sourceSessionId || "").trim() || "-";
+}
+
+function mergeSessionNames(current: string, next: string) {
+  if (!next || next === "-") return current || "-";
+  if (!current || current === "-") return next;
+  if (current.includes(next)) return current;
+  return `${current} / ${next}`;
 }
 
 function distanceValue(row: CleanGpsRow) {
@@ -418,6 +444,56 @@ function athleteChartStyle(width: number, zoom: number) {
     maxWidth: "none",
     width: `${width}px`,
   } as CSSProperties;
+}
+
+function relativeTooltip(day: AthleteDay, value: number, percent: number) {
+  return baseTooltip(day, [
+    `Total distance: ${compactNumber(value)} m`,
+    `Player max share: ${percent}%`,
+  ]);
+}
+
+function comboTooltip(
+  day: AthleteDay,
+  barKey: keyof Pick<AthleteDay, "hsrAbs" | "sprintDistance">,
+  barValue: number,
+  lineKey: keyof Pick<AthleteDay, "hsrRel" | "maxSpeed">,
+  lineValue: number,
+  linePercent: number,
+) {
+  return baseTooltip(day, [
+    `${metricLabel(barKey)}: ${metricValueText(barKey, barValue)}`,
+    `${metricLabel(lineKey)}: ${metricValueText(lineKey, lineValue)}`,
+    `${metricLabel(lineKey)} share: ${linePercent}%`,
+  ]);
+}
+
+function clusterTooltip(day: AthleteDay) {
+  return baseTooltip(day, [
+    `High-intensity accelerations: ${compactNumber(day.accel)}`,
+    `High-intensity decelerations: ${compactNumber(day.decel)}`,
+  ]);
+}
+
+function baseTooltip(day: AthleteDay, lines: string[]) {
+  return [
+    `Date: ${day.date}`,
+    `Session: ${day.sessionName}`,
+    `MD: ${day.session}`,
+    ...lines,
+  ].join("\n");
+}
+
+function metricLabel(key: keyof Pick<AthleteDay, "hsrAbs" | "hsrRel" | "maxSpeed" | "sprintDistance">) {
+  if (key === "hsrAbs") return "HSR absolute";
+  if (key === "hsrRel") return "HSR relative";
+  if (key === "sprintDistance") return "Sprint distance";
+  return "Max speed";
+}
+
+function metricValueText(key: keyof Pick<AthleteDay, "hsrAbs" | "hsrRel" | "maxSpeed" | "sprintDistance">, value: number) {
+  if (key === "maxSpeed") return `${compactNumber(value, 1)} km/h`;
+  return `${compactNumber(value)} m`;
 }
 
 function percentage(value: number, maxValue: number) {

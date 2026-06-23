@@ -1364,6 +1364,11 @@ button {
   stroke-width: 1.5;
 }
 
+.load-athlete-line-hit {
+  fill: transparent;
+  pointer-events: all;
+}
+
 .load-athlete-value,
 .load-athlete-percent,
 .load-athlete-cluster-label,
