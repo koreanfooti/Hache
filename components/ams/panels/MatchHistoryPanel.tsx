@@ -82,6 +82,7 @@ export function MatchHistoryPanel({
   const pitchPlayers = visibleTeamPlayers.slice(0, 11);
   const reservePlayers = visibleTeamPlayers.slice(11);
   const totals = summarizeMatchPlayers(atlasMatchPlayers);
+  const hasFieldPlayers = pitchPlayers.length > 0;
   const activeTeamName = selectedMatch
     ? selectedTeamView === "opponent" ? opponentTeamForMatch(selectedMatch) : "Atlas"
     : "Atlas";
@@ -152,7 +153,7 @@ export function MatchHistoryPanel({
                 onClick={() => updateSelectedMatch(match.id)}
               >
                 <span>{formatMatchDate(match.date, match.displayDate, language)}</span>
-                <strong>{match.homeTeam} {scoreValue(match.homeGoals)} - {scoreValue(match.awayGoals)} {match.awayTeam}</strong>
+                <strong>{matchListTitle(match)}</strong>
                 <small>{match.competition} · {match.round}</small>
               </button>
             )) : (
@@ -238,20 +239,26 @@ export function MatchHistoryPanel({
                     <strong>{playerLabel(player)}</strong>
                   </article>
                 ))}
+                {!hasFieldPlayers ? (
+                  <div className="match-pitch-empty">
+                    <strong>{copy.lineupPending}</strong>
+                    <span>{copy.lineupPendingNote}</span>
+                  </div>
+                ) : null}
               </div>
 
               <aside className="match-player-panel">
                 <div>
                   <span>{copy.onField}</span>
-                  {pitchPlayers.slice(0, 6).map((player) => (
+                  {pitchPlayers.length ? pitchPlayers.slice(0, 6).map((player) => (
                     <PlayerLoadRow key={player.id} player={player} />
-                  ))}
+                  )) : <p>{copy.lineupPendingShort}</p>}
                 </div>
                 <div>
                   <span>{copy.substitutes}</span>
-                  {(reservePlayers.length ? reservePlayers : pitchPlayers.slice(6)).slice(0, 7).map((player) => (
+                  {pitchPlayers.length ? (reservePlayers.length ? reservePlayers : pitchPlayers.slice(6)).slice(0, 7).map((player) => (
                     <PlayerLoadRow key={`${player.id}-reserve`} player={player} compact />
-                  ))}
+                  )) : <p>{copy.lineupPendingShort}</p>}
                 </div>
               </aside>
             </div>
@@ -363,6 +370,7 @@ function buildMatchSummaries(matchRows: PlayerMatchHistoryRow[], gpsRows: CleanG
 
 function buildMatchPlayers(match: MatchSummary) {
   const byPlayer = new Map<string, MatchPlayer>();
+  if (!match.gpsRows.length && !isDefaultReferenceMatch(match)) return [];
   const relevantRows = match.gpsRows.length ? match.gpsRows : match.playerRows.map(matchHistoryToGpsLike);
 
   for (const row of relevantRows) {
@@ -399,7 +407,17 @@ function buildMatchPlayers(match: MatchSummary) {
   if (isDefaultReferenceMatch(match)) {
     return buildAtlasReferencePlayers(players);
   }
-  return assignPitchPositions(ensureAtlasGoalkeeper(players));
+  return buildGpsLineupPlayers(players);
+}
+
+function buildGpsLineupPlayers(players: MatchPlayer[]) {
+  if (!players.length) return [];
+  const withGoalkeeper = ensureAtlasGoalkeeper(players);
+  const byLoad = [...withGoalkeeper].sort((a, b) => b.minutes - a.minutes || b.totalDistanceKm - a.totalDistanceKm);
+  const starterIds = new Set(byLoad.slice(0, 11).map((player) => player.id));
+  const starters = byLoad.filter((player) => starterIds.has(player.id));
+  const reserves = byLoad.filter((player) => !starterIds.has(player.id));
+  return [...assignPitchPositions(starters), ...reserves];
 }
 
 function buildAtlasReferencePlayers(gpsPlayers: MatchPlayer[]) {
@@ -835,6 +853,13 @@ function scoreValue(value: number | undefined) {
   return typeof value === "number" ? value : "-";
 }
 
+function matchListTitle(match: MatchSummary) {
+  if (typeof match.homeGoals === "number" && typeof match.awayGoals === "number") {
+    return `${match.homeTeam} ${match.homeGoals} - ${match.awayGoals} ${match.awayTeam}`;
+  }
+  return `${match.homeTeam} vs ${match.awayTeam}`;
+}
+
 function formatMatchDate(value: string, fallback: string, language: AmsLanguage) {
   if (!value) return fallback;
   const parsed = new Date(`${value}T12:00:00Z`);
@@ -865,6 +890,9 @@ function matchCopy(language: AmsLanguage) {
       fieldView: "Vista de cancha",
       hsr: "HSR",
       kicker: "Primer equipo",
+      lineupPending: "Alineación pendiente",
+      lineupPendingNote: "No hay suficientes filas GPS o alineación scrapeada para construir la vista de cancha de este partido.",
+      lineupPendingShort: "Fuente pendiente",
       matchList: "Partidos",
       matches: "partidos",
       maxSpeed: "Velocidad máx.",
@@ -891,6 +919,9 @@ function matchCopy(language: AmsLanguage) {
     fieldView: "Field view",
     hsr: "HSR",
     kicker: "First team",
+    lineupPending: "Lineup pending",
+    lineupPendingNote: "There are not enough GPS rows or scraped lineup records to build this match field view yet.",
+    lineupPendingShort: "Source pending",
     matchList: "Matches",
     matches: "matches",
     maxSpeed: "Max speed",
