@@ -6,6 +6,7 @@ import type { CleanGpsRow } from "@/lib/ams/types";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 
 type LoadMetricKey = "totalDistance" | "hsrAbsDistance" | "hsrRelDistance" | "sprintDistance" | "accelerations" | "decelerations" | "playerLoad";
+type AggregateMode = "sum" | "max" | "min" | "avg";
 
 type LoadMetric = {
   key: LoadMetricKey;
@@ -16,6 +17,7 @@ type LoadMetric = {
 };
 
 type ChartPoint = {
+  id: string;
   label: string;
   value: number;
 };
@@ -36,10 +38,23 @@ const loadMetrics: LoadMetric[] = [
   { key: "playerLoad", label: { en: "Player load", es: "Carga jugador" }, unit: "AU", color: "#29cd97", aggregate: "avg" },
 ];
 
+const aggregateOptions: AggregateMode[] = ["sum", "max", "min", "avg"];
+
 const chartCopy = {
   en: {
     trend: "Load Trend",
     trendSub: "Selectable GPS metric by recorded date",
+    aggregation: "Daily calculation",
+    filters: "Filters",
+    close: "Close",
+    selectAll: "Select all",
+    clear: "Clear",
+    trendDates: "Daily dates",
+    visibleDays: "visible days",
+    sum: "Sum",
+    max: "Max",
+    min: "Minimum",
+    avg: "Average",
     sessionMix: "Session Mix",
     sessionMixSub: "Match, training, and recovery share",
     speed: "Speed Exposure",
@@ -65,6 +80,17 @@ const chartCopy = {
   es: {
     trend: "Tendencia de carga",
     trendSub: "Métrica GPS seleccionable por fecha registrada",
+    aggregation: "Cálculo diario",
+    filters: "Filtros",
+    close: "Cerrar",
+    selectAll: "Seleccionar todo",
+    clear: "Limpiar",
+    trendDates: "Fechas diarias",
+    visibleDays: "días visibles",
+    sum: "Suma",
+    max: "Máximo",
+    min: "Mínimo",
+    avg: "Promedio",
     sessionMix: "Mezcla de sesiones",
     sessionMixSub: "Distribución partido, entrenamiento y recuperación",
     speed: "Exposición de velocidad",
@@ -91,13 +117,20 @@ const chartCopy = {
 
 export function LoadVisualDashboard({ language, rows }: { language: AmsLanguage; rows: CleanGpsRow[] }) {
   const [selectedMetricKey, setSelectedMetricKey] = useState<LoadMetricKey>("totalDistance");
+  const [selectedAggregate, setSelectedAggregate] = useState<AggregateMode>("sum");
+  const [hiddenTrendDates, setHiddenTrendDates] = useState<string[]>([]);
+  const [isTrendFilterOpen, setIsTrendFilterOpen] = useState(false);
   const copy = chartCopy[language];
   const selectedMetric = loadMetrics.find((metric) => metric.key === selectedMetricKey) ?? loadMetrics[0];
   const sortedRows = useMemo(
     () => [...rows].filter((row) => row.date).sort((a, b) => String(a.date).localeCompare(String(b.date))),
     [rows],
   );
-  const trendRows = useMemo(() => aggregateByDate(sortedRows, selectedMetric).slice(-16), [selectedMetric, sortedRows]);
+  const trendDateOptions = useMemo(() => trendDateFilterOptions(sortedRows), [sortedRows]);
+  const trendRows = useMemo(
+    () => aggregateByDate(sortedRows.filter((row) => !hiddenTrendDates.includes(dateKey(row))), selectedMetric, selectedAggregate),
+    [hiddenTrendDates, selectedAggregate, selectedMetric, sortedRows],
+  );
   const sessionMix = useMemo(() => sessionMixValues(sortedRows, language), [language, sortedRows]);
   const speedExposure = useMemo(() => speedExposureValues(sortedRows), [sortedRows]);
   const neuroLoad = useMemo(() => neuroLoadValues(sortedRows, language), [language, sortedRows]);
@@ -116,24 +149,59 @@ export function LoadVisualDashboard({ language, rows }: { language: AmsLanguage;
   return (
     <section className="load-visual-dashboard">
       <article className="load-chart-panel load-wide-chart">
-        <div className="panel-heading">
+        <div className="panel-heading load-trend-heading">
           <div>
             <h3>{copy.trend}</h3>
             <span>{copy.trendSub}</span>
           </div>
-          <div className="load-metric-buttons" aria-label={copy.trend}>
-            {loadMetrics.map((metric) => (
+          <div className="load-trend-header-actions">
+            <div className="load-metric-buttons" aria-label={copy.trend}>
+              {loadMetrics.map((metric) => (
+                <button
+                  className={metric.key === selectedMetricKey ? "is-active" : ""}
+                  key={metric.key}
+                  type="button"
+                  onClick={() => setSelectedMetricKey(metric.key)}
+                >
+                  {metric.label[language]}
+                </button>
+              ))}
+            </div>
+            <button className="load-filter-toggle" type="button" onClick={() => setIsTrendFilterOpen((isOpen) => !isOpen)}>
+              {copy.filters}
+            </button>
+          </div>
+        </div>
+        <div className="load-trend-control-row">
+          <div className="load-aggregate-buttons" aria-label={copy.aggregation}>
+            <span>{copy.aggregation}</span>
+            {aggregateOptions.map((option) => (
               <button
-                className={metric.key === selectedMetricKey ? "is-active" : ""}
-                key={metric.key}
+                className={option === selectedAggregate ? "is-active" : ""}
+                key={option}
                 type="button"
-                onClick={() => setSelectedMetricKey(metric.key)}
+                onClick={() => setSelectedAggregate(option)}
               >
-                {metric.label[language]}
+                {copy[option]}
               </button>
             ))}
           </div>
+          <small>
+            {trendRows.length} {copy.visibleDays}
+          </small>
         </div>
+        <LoadTrendFilterDrawer
+          copy={copy}
+          hiddenDates={hiddenTrendDates}
+          isOpen={isTrendFilterOpen}
+          options={trendDateOptions}
+          onClear={() => setHiddenTrendDates(trendDateOptions.map((option) => option.id))}
+          onClose={() => setIsTrendFilterOpen(false)}
+          onSelectAll={() => setHiddenTrendDates([])}
+          onToggleDate={(dateId) => {
+            setHiddenTrendDates((current) => (current.includes(dateId) ? current.filter((id) => id !== dateId) : [...current, dateId]));
+          }}
+        />
         <TrendBarChart metric={selectedMetric} points={trendRows} />
       </article>
 
@@ -189,7 +257,7 @@ function ChartHeading({ title, subtitle }: { title: string; subtitle: string }) 
 }
 
 function TrendBarChart({ metric, points }: { metric: LoadMetric; points: ChartPoint[] }) {
-  const width = 780;
+  const width = Math.max(780, points.length * 58 + 84);
   const height = 280;
   const padX = 42;
   const bottomPad = 58;
@@ -200,24 +268,74 @@ function TrendBarChart({ metric, points }: { metric: LoadMetric; points: ChartPo
   const barWidth = Math.max(8, Math.min(28, slot * 0.48));
 
   return (
-    <svg className="load-svg-chart" viewBox={`0 0 ${width} ${height}`} role="img">
-      <ChartGrid width={width} height={height} left={padX} right={20} top={topPad} bottom={bottomPad} />
-      {points.map((point, index) => {
-        const barHeight = (point.value / maxValue) * plotHeight;
-        const center = padX + index * slot + slot / 2;
-        const y = height - bottomPad - barHeight;
-        const labelEvery = Math.max(1, Math.ceil(points.length / 8));
-        return (
-          <g key={point.label}>
-            <rect className="load-trend-bar" x={center - barWidth / 2} y={y} width={barWidth} height={Math.max(2, barHeight)} rx="5" style={{ fill: metric.color }} />
-            {slot > 38 ? <text className="load-chart-value" x={center} y={Math.max(15, y - 8)}>{metricValueLabel(point.value, metric)}</text> : null}
-            {index % labelEvery === 0 || index === points.length - 1 ? (
+    <div className="load-trend-scroll" tabIndex={0}>
+      <svg className="load-svg-chart" viewBox={`0 0 ${width} ${height}`} role="img">
+        <ChartGrid width={width} height={height} left={padX} right={20} top={topPad} bottom={bottomPad} />
+        {points.map((point, index) => {
+          const barHeight = (point.value / maxValue) * plotHeight;
+          const center = padX + index * slot + slot / 2;
+          const y = height - bottomPad - barHeight;
+          return (
+            <g key={point.id}>
+              <rect className="load-trend-bar" x={center - barWidth / 2} y={y} width={barWidth} height={Math.max(2, barHeight)} rx="5" style={{ fill: metric.color }} />
+              {slot > 38 ? <text className="load-chart-value" x={center} y={Math.max(15, y - 8)}>{metricValueLabel(point.value, metric)}</text> : null}
               <text className="load-chart-label" x={center} y={height - 30} transform={`rotate(-35 ${center} ${height - 30})`}>{point.label}</text>
-            ) : null}
-          </g>
-        );
-      })}
-    </svg>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function LoadTrendFilterDrawer({
+  copy,
+  hiddenDates,
+  isOpen,
+  options,
+  onClear,
+  onClose,
+  onSelectAll,
+  onToggleDate,
+}: {
+  copy: typeof chartCopy.en;
+  hiddenDates: string[];
+  isOpen: boolean;
+  options: Array<{ id: string; label: string; count: number }>;
+  onClear: () => void;
+  onClose: () => void;
+  onSelectAll: () => void;
+  onToggleDate: (dateId: string) => void;
+}) {
+  return (
+    <aside className={`load-trend-filter-drawer${isOpen ? " is-open" : ""}`} aria-hidden={!isOpen}>
+      <div className="load-trend-filter-header">
+        <div>
+          <strong>{copy.filters}</strong>
+          <span>{copy.trendDates}</span>
+        </div>
+        <button type="button" onClick={onClose}>
+          {copy.close}
+        </button>
+      </div>
+      <div className="load-trend-filter-actions">
+        <button type="button" onClick={onSelectAll}>
+          {copy.selectAll}
+        </button>
+        <button type="button" onClick={onClear}>
+          {copy.clear}
+        </button>
+      </div>
+      <div className="load-trend-date-checkboxes">
+        {options.map((option) => (
+          <label key={option.id}>
+            <input checked={!hiddenDates.includes(option.id)} type="checkbox" onChange={() => onToggleDate(option.id)} />
+            <span>{option.label}</span>
+            <small>{option.count}</small>
+          </label>
+        ))}
+      </div>
+    </aside>
   );
 }
 
@@ -370,22 +488,39 @@ function ChartLegend({ values }: { values: NamedValue[] }) {
   );
 }
 
-function aggregateByDate(rows: CleanGpsRow[], metric: LoadMetric) {
-  const map = new Map<string, { value: number; count: number }>();
+function aggregateByDate(rows: CleanGpsRow[], metric: LoadMetric, mode: AggregateMode) {
+  const map = new Map<string, number[]>();
   for (const row of rows) {
-    const key = String(row.date ?? "").slice(0, 10);
+    const key = dateKey(row);
     if (!key) continue;
-    const current = map.get(key) ?? { value: metric.aggregate === "max" ? 0 : 0, count: 0 };
     const value = metricValue(row, metric.key);
-    current.value = metric.aggregate === "max" ? Math.max(current.value, value) : current.value + value;
-    current.count += 1;
-    map.set(key, current);
+    map.set(key, [...(map.get(key) ?? []), value]);
   }
 
-  return [...map.entries()].map(([date, item]) => ({
+  return [...map.entries()].map(([date, values]) => ({
+    id: date,
     label: shortDate(date),
-    value: metric.aggregate === "avg" ? item.value / Math.max(1, item.count) : item.value,
+    value: aggregateMetricValues(values, mode),
   }));
+}
+
+function trendDateFilterOptions(rows: CleanGpsRow[]) {
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const key = dateKey(row);
+    if (!key) continue;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([id, count]) => ({ id, label: longDate(id), count }));
+}
+
+function aggregateMetricValues(values: number[], mode: AggregateMode) {
+  const cleanValues = values.filter((value) => Number.isFinite(value));
+  if (!cleanValues.length) return 0;
+  if (mode === "max") return Math.max(...cleanValues);
+  if (mode === "min") return Math.min(...cleanValues);
+  if (mode === "avg") return cleanValues.reduce((total, value) => total + value, 0) / cleanValues.length;
+  return cleanValues.reduce((total, value) => total + value, 0);
 }
 
 function sessionMixValues(rows: CleanGpsRow[], language: AmsLanguage): NamedValue[] {
@@ -513,9 +648,19 @@ function clamp(value: number) {
   return Math.max(0, Math.min(100, value));
 }
 
+function dateKey(row: CleanGpsRow) {
+  return String(row.date ?? "").slice(0, 10);
+}
+
 function shortDate(value: string) {
   const [, month, day] = value.split("-");
   return [month, day].filter(Boolean).join("/") || value;
+}
+
+function longDate(value: string) {
+  const date = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(date);
 }
 
 function metricValueLabel(value: number, metric: LoadMetric) {

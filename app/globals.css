@@ -798,6 +798,7 @@ button {
 
 .load-chart-panel,
 .load-visual-empty {
+  position: relative;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 18px;
   background:
@@ -839,6 +840,200 @@ button {
   border-color: rgb(211 31 47 / 70%);
   background: linear-gradient(135deg, #d31f2f, #8f101a);
   color: #fff;
+}
+
+.load-trend-heading {
+  align-items: start;
+}
+
+.load-trend-header-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.load-trend-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: -4px 0 10px;
+}
+
+.load-trend-control-row small {
+  color: rgb(255 255 255 / 50%);
+  font-size: 0.76rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.load-aggregate-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.load-aggregate-buttons span {
+  color: var(--ams-gold);
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.load-aggregate-buttons button,
+.load-filter-toggle {
+  border: 1px solid rgb(215 180 106 / 24%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 28%);
+  color: rgb(255 255 255 / 68%);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 950;
+  padding: 8px 11px;
+}
+
+.load-aggregate-buttons button:hover,
+.load-aggregate-buttons button.is-active,
+.load-filter-toggle:hover {
+  border-color: rgb(215 180 106 / 64%);
+  background: linear-gradient(135deg, rgb(215 180 106 / 24%), rgb(211 31 47 / 34%));
+  color: #fff;
+}
+
+.load-filter-toggle {
+  min-width: 82px;
+  border-color: rgb(215 180 106 / 42%);
+  color: #f5d489;
+  white-space: nowrap;
+}
+
+.load-trend-filter-drawer {
+  position: absolute;
+  top: 78px;
+  right: 18px;
+  z-index: 20;
+  display: grid;
+  width: min(320px, calc(100% - 36px));
+  max-height: 440px;
+  gap: 14px;
+  overflow: hidden;
+  border: 1px solid rgb(215 180 106 / 28%);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgb(16 8 10 / 96%), rgb(42 10 16 / 96%)),
+    rgb(0 0 0 / 92%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 58%);
+  opacity: 0;
+  padding: 16px;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.98);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.load-trend-filter-drawer.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.load-trend-filter-header,
+.load-trend-filter-actions,
+.load-trend-date-checkboxes label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.load-trend-filter-header div {
+  display: grid;
+  gap: 3px;
+}
+
+.load-trend-filter-header strong {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.load-trend-filter-header span {
+  color: var(--ams-gold);
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.load-trend-filter-header button,
+.load-trend-filter-actions button {
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 5%);
+  color: rgb(255 255 255 / 72%);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 7px 10px;
+}
+
+.load-trend-filter-actions {
+  justify-content: flex-start;
+}
+
+.load-trend-filter-actions button:first-child {
+  border-color: rgb(41 205 151 / 35%);
+  color: #8bf0cd;
+}
+
+.load-trend-filter-actions button:last-child {
+  border-color: rgb(211 31 47 / 44%);
+  color: #ff9ba3;
+}
+
+.load-trend-date-checkboxes {
+  display: grid;
+  max-height: 300px;
+  gap: 8px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.load-trend-date-checkboxes label {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 4%);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 850;
+  padding: 9px 10px;
+}
+
+.load-trend-date-checkboxes input {
+  accent-color: var(--ams-red);
+}
+
+.load-trend-date-checkboxes span {
+  margin-right: auto;
+}
+
+.load-trend-date-checkboxes small {
+  color: var(--ams-muted);
+  font-size: 0.72rem;
+}
+
+.load-trend-scroll {
+  overflow-x: auto;
+  padding: 6px 0 4px;
+  scrollbar-color: rgb(215 180 106 / 52%) rgb(255 255 255 / 8%);
+}
+
+.load-trend-scroll .load-svg-chart {
+  min-width: 780px;
 }
 
 .load-svg-chart {
