@@ -9,6 +9,8 @@ export type CleanGpsRow = GpsDailyRow & {
   totalDistance?: string;
   hsrAbsDistance?: string;
   hsrRelDistance?: string;
+  highIntensityAccelerations?: string;
+  highIntensityDecelerations?: string;
   isMatch?: string;
   matchDay?: string;
   playerLoad?: string;

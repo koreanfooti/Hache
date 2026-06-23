@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import type { CleanGpsRow } from "@/lib/ams/types";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
+import { LoadAthleteDashboard } from "@/components/ams/panels/load/LoadAthleteDashboard";
 
-type LoadMetricKey = "totalDistance" | "hsrAbsDistance" | "hsrRelDistance" | "sprintDistance" | "accelerations" | "decelerations" | "playerLoad";
+type LoadMetricKey = "totalDistance" | "hsrAbsDistance" | "hsrRelDistance" | "sprintDistance" | "highIntensityAccelerations" | "highIntensityDecelerations" | "playerLoad";
 type AggregateMode = "sum" | "max" | "min" | "avg";
 
 type LoadMetric = {
@@ -33,8 +34,8 @@ const loadMetrics: LoadMetric[] = [
   { key: "hsrAbsDistance", label: { en: "HSR abs.", es: "HSR abs." }, unit: "m", color: "#d7b46a", aggregate: "sum" },
   { key: "hsrRelDistance", label: { en: "HSR rel.", es: "HSR rel." }, unit: "m", color: "#f0bd5b", aggregate: "sum" },
   { key: "sprintDistance", label: { en: "Sprint", es: "Sprint" }, unit: "m", color: "#ff8a3d", aggregate: "sum" },
-  { key: "accelerations", label: { en: "Accel.", es: "Acel." }, unit: "count", color: "#e24852", aggregate: "sum" },
-  { key: "decelerations", label: { en: "Decel.", es: "Desacel." }, unit: "count", color: "#9f111d", aggregate: "sum" },
+  { key: "highIntensityAccelerations", label: { en: "HI Accel.", es: "Acel. AI" }, unit: "count", color: "#e24852", aggregate: "sum" },
+  { key: "highIntensityDecelerations", label: { en: "HI Decel.", es: "Desac. AI" }, unit: "count", color: "#1e95ff", aggregate: "sum" },
   { key: "playerLoad", label: { en: "Player load", es: "Carga jugador" }, unit: "AU", color: "#29cd97", aggregate: "avg" },
 ];
 
@@ -50,6 +51,10 @@ const chartCopy = {
     selectAll: "Select all",
     clear: "Clear",
     trendDates: "Daily dates",
+    scrollLeft: "Scroll left",
+    scrollRight: "Scroll right",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
     visibleDays: "visible days",
     sum: "Sum",
     max: "Max",
@@ -86,6 +91,10 @@ const chartCopy = {
     selectAll: "Seleccionar todo",
     clear: "Limpiar",
     trendDates: "Fechas diarias",
+    scrollLeft: "Mover izquierda",
+    scrollRight: "Mover derecha",
+    zoomIn: "Acercar",
+    zoomOut: "Alejar",
     visibleDays: "días visibles",
     sum: "Suma",
     max: "Máximo",
@@ -202,7 +211,11 @@ export function LoadVisualDashboard({ language, rows }: { language: AmsLanguage;
             setHiddenTrendDates((current) => (current.includes(dateId) ? current.filter((id) => id !== dateId) : [...current, dateId]));
           }}
         />
-        <TrendBarChart metric={selectedMetric} points={trendRows} />
+        <TrendBarChart copy={copy} metric={selectedMetric} points={trendRows} />
+      </article>
+
+      <article className="load-chart-panel load-wide-chart">
+        <LoadAthleteDashboard language={language} rows={sortedRows} />
       </article>
 
       <article className="load-chart-panel">
@@ -256,8 +269,10 @@ function ChartHeading({ title, subtitle }: { title: string; subtitle: string }) 
   );
 }
 
-function TrendBarChart({ metric, points }: { metric: LoadMetric; points: ChartPoint[] }) {
-  const width = Math.max(780, points.length * 58 + 84);
+function TrendBarChart({ copy, metric, points }: { copy: typeof chartCopy.en; metric: LoadMetric; points: ChartPoint[] }) {
+  const [zoom, setZoom] = useState(1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const width = Math.max(780, points.length * 58 * zoom + 84);
   const height = 280;
   const padX = 42;
   const bottomPad = 58;
@@ -266,25 +281,35 @@ function TrendBarChart({ metric, points }: { metric: LoadMetric; points: ChartPo
   const maxValue = Math.max(1, ...points.map((point) => point.value));
   const slot = (width - padX * 2) / Math.max(1, points.length);
   const barWidth = Math.max(8, Math.min(28, slot * 0.48));
+  const zoomLabel = `${Math.round(zoom * 100)}%`;
 
   return (
-    <div className="load-trend-scroll" tabIndex={0}>
-      <svg className="load-svg-chart" viewBox={`0 0 ${width} ${height}`} role="img">
-        <ChartGrid width={width} height={height} left={padX} right={20} top={topPad} bottom={bottomPad} />
-        {points.map((point, index) => {
-          const barHeight = (point.value / maxValue) * plotHeight;
-          const center = padX + index * slot + slot / 2;
-          const y = height - bottomPad - barHeight;
-          return (
-            <g key={point.id}>
-              <rect className="load-trend-bar" x={center - barWidth / 2} y={y} width={barWidth} height={Math.max(2, barHeight)} rx="5" style={{ fill: metric.color }} />
-              {slot > 38 ? <text className="load-chart-value" x={center} y={Math.max(15, y - 8)}>{metricValueLabel(point.value, metric)}</text> : null}
-              <text className="load-chart-label" x={center} y={height - 30} transform={`rotate(-35 ${center} ${height - 30})`}>{point.label}</text>
-            </g>
-          );
-        })}
-      </svg>
-    </div>
+    <>
+      <div className="load-chart-toolbar" aria-label="Load trend navigation">
+        <button type="button" onClick={() => scrollRef.current?.scrollBy({ left: -360, behavior: "smooth" })}>{copy.scrollLeft}</button>
+        <button type="button" onClick={() => setZoom((value) => Math.max(0.65, Number((value - 0.2).toFixed(2))))}>{copy.zoomOut}</button>
+        <span>{zoomLabel}</span>
+        <button type="button" onClick={() => setZoom((value) => Math.min(2.4, Number((value + 0.2).toFixed(2))))}>{copy.zoomIn}</button>
+        <button type="button" onClick={() => scrollRef.current?.scrollBy({ left: 360, behavior: "smooth" })}>{copy.scrollRight}</button>
+      </div>
+      <div className="load-trend-scroll" ref={scrollRef} tabIndex={0}>
+        <svg className="load-svg-chart" viewBox={`0 0 ${width} ${height}`} role="img">
+          <ChartGrid width={width} height={height} left={padX} right={20} top={topPad} bottom={bottomPad} />
+          {points.map((point, index) => {
+            const barHeight = (point.value / maxValue) * plotHeight;
+            const center = padX + index * slot + slot / 2;
+            const y = height - bottomPad - barHeight;
+            return (
+              <g key={point.id}>
+                <rect className="load-trend-bar" x={center - barWidth / 2} y={y} width={barWidth} height={Math.max(2, barHeight)} rx="5" style={{ fill: metric.color }} />
+                {slot > 38 ? <text className="load-chart-value" x={center} y={Math.max(15, y - 8)}>{metricValueLabel(point.value, metric)}</text> : null}
+                <text className="load-chart-label" x={center} y={height - 30} transform={`rotate(-35 ${center} ${height - 30})`}>{point.label}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    </>
   );
 }
 
@@ -549,8 +574,8 @@ function speedExposureValues(rows: CleanGpsRow[]): NamedValue[] {
 
 function neuroLoadValues(rows: CleanGpsRow[], language: AmsLanguage): NamedValue[] {
   return [
-    { label: language === "es" ? "Acel." : "Accel.", value: sum(rows, accelerationsValue), color: "#e24852" },
-    { label: language === "es" ? "Desac." : "Decel.", value: sum(rows, decelerationsValue), color: "#9f111d" },
+    { label: language === "es" ? "Acel. AI" : "HI Accel.", value: sum(rows, highIntensityAccelerationsValue), color: "#e24852" },
+    { label: language === "es" ? "Desac. AI" : "HI Decel.", value: sum(rows, highIntensityDecelerationsValue), color: "#1e95ff" },
   ];
 }
 
@@ -569,20 +594,20 @@ function performanceInsights(rows: CleanGpsRow[], language: AmsLanguage) {
   const distance = average(rows, totalDistanceValue);
   const highIntensityRatio = distance ? average(rows, highIntensityValue) / distance : 0;
   const maxSpeed = Math.max(0, ...rows.map(maxSpeedValue));
-  const neuroRatio = sum(rows, accelerationsValue) / Math.max(1, sum(rows, decelerationsValue));
+  const neuroRatio = sum(rows, highIntensityAccelerationsValue) / Math.max(1, sum(rows, highIntensityDecelerationsValue));
 
   if (language === "es") {
     return [
       { title: "Carga de partido", body: `La fila promedio registra ${compactNumber(distance)} m con ${compactNumber(highIntensityRatio * 100, 1)}% de alta intensidad.` },
       { title: "Velocidad", body: `La velocidad pico del filtro es ${compactNumber(maxSpeed, 1)} km/h. Vigila exposiciones semanales sobre 85-90% del pico.` },
-      { title: "Neuromuscular", body: `La relación aceleración/desaceleración es ${compactNumber(neuroRatio, 2)}, útil para revisar fatiga mecánica.` },
+      { title: "Neuromuscular", body: `La relación aceleración/desaceleración de alta intensidad es ${compactNumber(neuroRatio, 2)}, útil para revisar fatiga mecánica.` },
     ];
   }
 
   return [
     { title: "Match load", body: `Average row load is ${compactNumber(distance)} m with ${compactNumber(highIntensityRatio * 100, 1)}% high-intensity exposure.` },
     { title: "Speed", body: `Peak speed in this feed is ${compactNumber(maxSpeed, 1)} km/h. Watch weekly exposure above 85-90% of peak.` },
-    { title: "Neuromuscular", body: `Acceleration/deceleration ratio is ${compactNumber(neuroRatio, 2)}, useful for mechanical fatigue review.` },
+    { title: "Neuromuscular", body: `High-intensity acceleration/deceleration ratio is ${compactNumber(neuroRatio, 2)}, useful for mechanical fatigue review.` },
   ];
 }
 
@@ -612,17 +637,19 @@ function playerLoadValue(row: CleanGpsRow) {
   return numberValue(row.playerLoad);
 }
 
-function accelerationsValue(row: CleanGpsRow) {
-  return numberValue(row.accelerations);
+function highIntensityAccelerationsValue(row: CleanGpsRow) {
+  return numberValue(row.highIntensityAccelerations);
 }
 
-function decelerationsValue(row: CleanGpsRow) {
-  return numberValue(row.decelerations);
+function highIntensityDecelerationsValue(row: CleanGpsRow) {
+  return numberValue(row.highIntensityDecelerations);
 }
 
 function metricValue(row: CleanGpsRow, key: LoadMetricKey) {
   if (key === "totalDistance") return totalDistanceValue(row);
   if (key === "hsrAbsDistance") return highIntensityValue(row);
+  if (key === "highIntensityAccelerations") return highIntensityAccelerationsValue(row);
+  if (key === "highIntensityDecelerations") return highIntensityDecelerationsValue(row);
   return numberValue(row[key]);
 }
 

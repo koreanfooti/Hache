@@ -713,6 +713,13 @@ button {
   padding: 20px;
 }
 
+.load-source-control-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.75fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
 .load-filter-heading {
   display: flex;
   align-items: end;
@@ -788,6 +795,75 @@ button {
   border-color: rgb(211 31 47 / 70%);
   background: rgb(211 31 47 / 24%);
   color: #fff;
+}
+
+.load-metrics-pane {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  border: 1px solid rgb(215 180 106 / 16%);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 0 0, rgb(215 180 106 / 12%), transparent 38%),
+    linear-gradient(135deg, rgb(255 255 255 / 5%), rgb(255 255 255 / 2%));
+  padding: 18px;
+}
+
+.load-metrics-pane-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.load-metrics-pane-heading span {
+  color: var(--ams-gold);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.load-metrics-pane-heading strong {
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.load-metrics-list {
+  display: grid;
+  max-height: 168px;
+  gap: 7px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.load-metrics-list span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 10px;
+  background: rgb(0 0 0 / 20%);
+  padding: 8px 9px;
+}
+
+.load-metrics-list b,
+.load-metrics-list small {
+  overflow: hidden;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.load-metrics-list b {
+  color: #fff;
+  font-weight: 900;
+}
+
+.load-metrics-list small {
+  flex: 0 0 auto;
+  color: var(--ams-muted);
+  font-weight: 800;
 }
 
 .load-visual-dashboard {
@@ -1034,6 +1110,195 @@ button {
 
 .load-trend-scroll .load-svg-chart {
   min-width: 780px;
+}
+
+.load-chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.load-chart-toolbar button,
+.load-chart-toolbar span {
+  border: 1px solid rgb(215 180 106 / 24%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 26%);
+  color: rgb(255 255 255 / 72%);
+  font-size: 0.7rem;
+  font-weight: 950;
+  padding: 7px 10px;
+}
+
+.load-chart-toolbar button {
+  cursor: pointer;
+}
+
+.load-chart-toolbar button:hover {
+  border-color: rgb(211 31 47 / 64%);
+  background: rgb(211 31 47 / 22%);
+  color: #fff;
+}
+
+.load-athlete-dashboard {
+  display: grid;
+  gap: 18px;
+}
+
+.load-athlete-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.load-athlete-header h3 {
+  margin: 4px 0;
+  color: #fff;
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
+}
+
+.load-athlete-header p {
+  margin: 0;
+  color: var(--ams-muted);
+  font-size: 0.9rem;
+}
+
+.load-athlete-header label {
+  display: grid;
+  min-width: min(320px, 100%);
+  gap: 7px;
+}
+
+.load-athlete-header label span,
+.load-athlete-band-title {
+  color: var(--ams-gold);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.load-athlete-header select {
+  min-height: 42px;
+  border: 1px solid rgb(215 180 106 / 34%);
+  border-radius: 10px;
+  background: rgb(0 0 0 / 30%);
+  color: #fff;
+  font: inherit;
+  font-weight: 850;
+  padding: 0 12px;
+}
+
+.load-athlete-chart-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.load-athlete-band {
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 32% 50%, rgb(211 31 47 / 18%), transparent 34%),
+    rgb(0 0 0 / 18%);
+}
+
+.load-athlete-band-title {
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+  background: linear-gradient(90deg, rgb(143 16 26 / 94%), rgb(94 12 19 / 86%));
+  color: #fff;
+  padding: 9px 14px;
+  text-align: center;
+}
+
+.load-athlete-scroll {
+  overflow-x: auto;
+  scrollbar-color: rgb(215 180 106 / 52%) rgb(255 255 255 / 8%);
+}
+
+.load-athlete-svg {
+  display: block;
+  width: max(100%, 980px);
+  height: auto;
+  min-height: 150px;
+}
+
+.load-athlete-grid line {
+  stroke: rgb(255 255 255 / 9%);
+  stroke-width: 1;
+}
+
+.load-athlete-distance-bar {
+  filter: drop-shadow(0 8px 14px rgb(211 31 47 / 24%));
+}
+
+.load-athlete-hsr-bar {
+  fill: #ef7d3e;
+}
+
+.load-athlete-sprint-bar {
+  fill: #d9b500;
+}
+
+.load-athlete-accel-bar {
+  fill: #1597ff;
+}
+
+.load-athlete-decel-bar {
+  fill: #1e32b9;
+}
+
+.load-athlete-line {
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.load-athlete-line-dot {
+  fill: #fff;
+  stroke: rgb(0 0 0 / 55%);
+  stroke-width: 1.5;
+}
+
+.load-athlete-value,
+.load-athlete-percent,
+.load-athlete-cluster-label,
+.load-athlete-axis-date,
+.load-athlete-axis-session {
+  fill: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  text-anchor: middle;
+}
+
+.load-athlete-percent {
+  fill: #fff;
+  font-size: 9px;
+}
+
+.load-athlete-percent.is-green {
+  fill: #46e68f;
+}
+
+.load-athlete-percent.is-yellow {
+  fill: #ffd45c;
+}
+
+.load-athlete-percent.is-red {
+  fill: #ff5b69;
+}
+
+.load-athlete-cluster-label {
+  fill: rgb(255 255 255 / 82%);
+  font-size: 8px;
+}
+
+.load-athlete-axis-date,
+.load-athlete-axis-session {
+  fill: rgb(255 255 255 / 62%);
+  font-size: 9px;
 }
 
 .load-svg-chart {
@@ -9356,6 +9621,10 @@ body,
 }
 
 @media (max-width: 1180px) {
+  .load-source-control-row {
+    grid-template-columns: 1fr;
+  }
+
   .load-filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -9382,6 +9651,16 @@ body,
 }
 
 @media (max-width: 760px) {
+  .load-athlete-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .load-chart-toolbar {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
   .load-filter-heading {
     align-items: flex-start;
     flex-direction: column;

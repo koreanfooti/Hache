@@ -50,6 +50,7 @@ export function LoadPanel({
   const [filterError, setFilterError] = useState<string | null>(null);
   const visibleSummary = filteredSummary.rows.length || isFiltering ? filteredSummary : loadSummary;
   const visibleTeams = teams.length ? teams : uniqueTeams(loadSummary.rows);
+  const metricInventory = useMemo(() => wimuMetricInventory(visibleSummary.rows), [visibleSummary.rows]);
   const selectedTeamLabel = selectedTeam === ALL_TEAMS ? controls.allTeams : selectedTeam;
   const filterStatus = filterError
     ? filterError
@@ -111,45 +112,61 @@ export function LoadPanel({
         title={copy.load.title}
         copy={copy.load.copy}
       />
-      <section className="load-filter-panel" aria-label={controls.filterLabel}>
-        <div className="load-filter-heading">
-          <div>
-            <span>{controls.slicers}</span>
-            <strong>{filterStatus}</strong>
+      <div className="load-source-control-row">
+        <section className="load-filter-panel" aria-label={controls.filterLabel}>
+          <div className="load-filter-heading">
+            <div>
+              <span>{controls.slicers}</span>
+              <strong>{filterStatus}</strong>
+            </div>
+            <small>{dateRangeText}</small>
           </div>
-          <small>{dateRangeText}</small>
-        </div>
-        <div className="load-filter-grid">
-          <label>
-            <span>{controls.team}</span>
-            <select value={selectedTeam} onChange={(event) => handleTeamChange(event.target.value)}>
-              <option value={ALL_TEAMS}>{controls.allTeams}</option>
-              {visibleTeams.map((team) => <option key={team} value={team}>{team}</option>)}
-            </select>
-          </label>
-          <DateSlicerField
-            emptyLabel={controls.noDateSelected}
-            label={controls.from}
-            language={language}
-            tooltipDetail={dateRangeText}
-            tooltipTitle={controls.startWindow}
-            value={dateFrom}
-            onChange={setDateFrom}
-          />
-          <DateSlicerField
-            emptyLabel={controls.noDateSelected}
-            label={controls.to}
-            language={language}
-            tooltipDetail={dateRangeText}
-            tooltipTitle={controls.endWindow}
-            value={dateTo}
-            onChange={setDateTo}
-          />
-          <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); }}>
-            {controls.latest90}
-          </button>
-        </div>
-      </section>
+          <div className="load-filter-grid">
+            <label>
+              <span>{controls.team}</span>
+              <select value={selectedTeam} onChange={(event) => handleTeamChange(event.target.value)}>
+                <option value={ALL_TEAMS}>{controls.allTeams}</option>
+                {visibleTeams.map((team) => <option key={team} value={team}>{team}</option>)}
+              </select>
+            </label>
+            <DateSlicerField
+              emptyLabel={controls.noDateSelected}
+              label={controls.from}
+              language={language}
+              tooltipDetail={dateRangeText}
+              tooltipTitle={controls.startWindow}
+              value={dateFrom}
+              onChange={setDateFrom}
+            />
+            <DateSlicerField
+              emptyLabel={controls.noDateSelected}
+              label={controls.to}
+              language={language}
+              tooltipDetail={dateRangeText}
+              tooltipTitle={controls.endWindow}
+              value={dateTo}
+              onChange={setDateTo}
+            />
+            <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+              {controls.latest90}
+            </button>
+          </div>
+        </section>
+        <aside className="load-metrics-pane">
+          <div className="load-metrics-pane-heading">
+            <span>{controls.metricsPane}</span>
+            <strong>{metricInventory.length} {controls.metrics}</strong>
+          </div>
+          <div className="load-metrics-list">
+            {metricInventory.map((metric) => (
+              <span key={metric.key}>
+                <b>{metric.key}</b>
+                <small>{compactNumber(metric.count)} {controls.rows}</small>
+              </span>
+            ))}
+          </div>
+        </aside>
+      </div>
       <section className="metric-grid">
         <MetricCard label={copy.load.totalDistance} value={`${compactNumber(visibleSummary.totalDistance)} m`} detail={`${compactNumber(visibleSummary.sessions)} ${copy.common.sessions}`} />
         <MetricCard label={copy.load.highIntensity} value={`${compactNumber(visibleSummary.highIntensity)} m`} detail={copy.load.absoluteRelativeExposure} />
@@ -189,6 +206,19 @@ function uniqueTeams(rows: CleanGpsRow[]) {
   return [...new Set(rows.map((row) => row.team).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b));
 }
 
+function wimuMetricInventory(rows: CleanGpsRow[]) {
+  const countByKey = new Map<string, number>();
+  for (const row of rows) {
+    for (const [key, value] of Object.entries(row)) {
+      if (value === undefined || value === null || String(value).trim() === "") continue;
+      countByKey.set(key, (countByKey.get(key) ?? 0) + 1);
+    }
+  }
+  return [...countByKey.entries()]
+    .map(([key, count]) => ({ key, count }))
+    .sort((a, b) => a.key.localeCompare(b.key));
+}
+
 function loadControlCopy(language: AmsLanguage) {
   if (language === "es") {
     return {
@@ -200,10 +230,13 @@ function loadControlCopy(language: AmsLanguage) {
       latestWindow: "Ventana más reciente disponible",
       loadedFiltered: "Filas WIMU/GPS filtradas cargadas.",
       loading: "Cargando filtros...",
+      metrics: "métricas",
+      metricsPane: "Métricas WIMU/GPS",
       noDateSelected: "Sin fecha seleccionada",
       openEnd: "fin abierto",
       openStart: "inicio abierto",
       records: "registros",
+      rows: "filas",
       slicers: "Slicers de GPS",
       startWindow: "Inicio de ventana",
       team: "Equipo",
@@ -221,10 +254,13 @@ function loadControlCopy(language: AmsLanguage) {
     latestWindow: "Latest available window",
     loadedFiltered: "Loaded filtered WIMU/GPS rows.",
     loading: "Loading filters...",
+    metrics: "metrics",
+    metricsPane: "WIMU/GPS metrics",
     noDateSelected: "No date selected",
     openEnd: "open end",
     openStart: "open start",
     records: "records",
+    rows: "rows",
     slicers: "GPS slicers",
     startWindow: "Window start",
     team: "Team",

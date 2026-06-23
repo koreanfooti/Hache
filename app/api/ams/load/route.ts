@@ -91,6 +91,8 @@ function serializeGpsRow(row: CleanGpsRow): CleanGpsRow {
     cleanPlayerName: row.cleanPlayerName,
     date: row.date,
     decelerations: row.decelerations,
+    highIntensityAccelerations: row.highIntensityAccelerations,
+    highIntensityDecelerations: row.highIntensityDecelerations,
     high_intensity_m: row.high_intensity_m,
     hsrAbsDistance: row.hsrAbsDistance,
     hsrRelDistance: row.hsrRelDistance,
