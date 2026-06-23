@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
 import type { AmsAuthRole, AmsFinancialField } from "@/lib/ams/auth-rules";
 import { shouldMaskFinancialField } from "@/lib/ams/auth-rules";
 import type { Player } from "@/lib/ams/content";
@@ -15,6 +14,7 @@ import {
 import type { SourceData } from "@/lib/ams/types";
 import { demoSafeValue } from "@/components/ams/config/mvp";
 import { localizedValue, type AmsLanguage } from "@/components/ams/ui/AmsUi";
+import { PlayerRosterList } from "@/components/ams/ui/PlayerRosterList";
 
 export function BiographyPanel({
   language,
@@ -31,21 +31,6 @@ export function BiographyPanel({
   visiblePlayers: Player[];
   onSelectPlayer: (playerId: string) => void;
 }) {
-  const [positionFilter, setPositionFilter] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const positionOptions = useMemo(
-    () => Array.from(new Set(visiblePlayers.map((player) => player.position))).sort((a, b) => a.localeCompare(b)),
-    [visiblePlayers],
-  );
-  const filteredPlayers = visiblePlayers.filter((player) => {
-    const matchesPosition = positionFilter === "all" || player.position === positionFilter;
-    const query = searchTerm.trim().toLowerCase();
-    const matchesSearch = !query
-      || player.name.toLowerCase().includes(query)
-      || String(player.number).toLowerCase().includes(query)
-      || player.amsId.toLowerCase().includes(query);
-    return matchesPosition && matchesSearch;
-  });
   const selectedExtra = biographyExtraForPlayer(selectedPlayer, sourceData);
   const restrictedFinancialValue = language === "es" ? "Restringido" : "Restricted";
   const selectedStats = seasonStatsForPlayer(selectedPlayer, sourceData.playerSeasonHistory);
@@ -71,61 +56,12 @@ export function BiographyPanel({
       </section>
 
       <section className="biography-layout">
-        <aside className="biography-player-list">
-          <div className="panel-heading">
-            <div>
-              <span>{language === "es" ? "Plantilla visible" : "Visible squad"}</span>
-              <h3>{language === "es" ? "Lista de jugadores" : "Player list"}</h3>
-            </div>
-            <small>{filteredPlayers.length} / {visiblePlayers.length}</small>
-          </div>
-
-          <div className="biography-list-controls">
-            <select
-              aria-label={language === "es" ? "Filtrar por posición" : "Filter by position"}
-              value={positionFilter}
-              onChange={(event) => setPositionFilter(event.target.value)}
-            >
-              <option value="all">{language === "es" ? "Todas las posiciones" : "All positions"}</option>
-              {positionOptions.map((position) => (
-                <option key={position} value={position}>
-                  {localizedValue(position, language)}
-                </option>
-              ))}
-            </select>
-            <input
-              aria-label={language === "es" ? "Buscar jugador" : "Search player"}
-              placeholder={language === "es" ? "Buscar nombre, número o AMS..." : "Search name, number, or AMS..."}
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-          </div>
-
-          <div className="biography-player-list-scroll">
-            {filteredPlayers.map((player) => (
-              <button
-                className={`biography-player-row ${player.id === selectedPlayer.id ? "is-active" : ""}`}
-                key={player.id}
-                type="button"
-                onClick={() => onSelectPlayer(player.id)}
-              >
-                <span className="biography-player-thumb">
-                  {hasPlayerPhoto(player) ? (
-                    <Image src={player.photo} alt="" width={54} height={54} />
-                  ) : (
-                    <b>{player.number || ""}</b>
-                  )}
-                </span>
-                <span>
-                  <strong>{player.name}</strong>
-                  <small>
-                    #{player.number || "-"} · {localizedValue(player.position, language)}
-                  </small>
-                </span>
-              </button>
-            ))}
-          </div>
-        </aside>
+        <PlayerRosterList
+          language={language}
+          players={visiblePlayers}
+          selectedPlayerId={selectedPlayer.id}
+          onSelectPlayer={onSelectPlayer}
+        />
 
         <article className="biography-profile">
           <section className="biography-profile-card">

@@ -246,7 +246,6 @@ export function OverviewPanel({
   selectedPlayer,
   visiblePlayers,
   allowedSections,
-  onSelectPlayer,
   onSelectSection,
 }: {
   currentTime: Date | null;
@@ -256,7 +255,6 @@ export function OverviewPanel({
   selectedPlayer: Player;
   visiblePlayers: Player[];
   allowedSections: AmsSection[];
-  onSelectPlayer: (playerId: string) => void;
   onSelectSection: (section: AmsSection) => void;
 }) {
   const copy = uiCopy[language];
@@ -270,6 +268,8 @@ export function OverviewPanel({
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
     .slice(0, 7);
   const trendRows = [...sessionRows].reverse().slice(-6);
+  const latestSession = sessionRows[0];
+  const latestLoadScore = latestSession ? dashboardLoadScore(latestSession) : 0;
   const sourceCards = mvpSourceCards.map((card) => ({
     ...card,
     count: sourceCount(card.id, loadSummary, sourceData),
@@ -317,56 +317,15 @@ export function OverviewPanel({
 
   return (
     <div className="dashboard-page">
-      <section className="dashboard-roster" aria-label={copy.playerCarousel}>
-        <span>{dashboardCopy.squadRoster}</span>
-        <div className="dashboard-roster-track">
-          {visiblePlayers.map((player) => (
-            <button
-              key={player.id}
-              type="button"
-              className={player.id === selectedPlayer.id ? "is-active" : ""}
-              onClick={() => onSelectPlayer(player.id)}
-            >
-              <span className="dashboard-roster-photo">
-                {hasPlayerPhoto(player) ? (
-                  <Image src={player.photo} alt="" width={42} height={42} />
-                ) : (
-                  <b>{player.number || ""}</b>
-                )}
-              </span>
-              <span>
-                <strong>{player.name}</strong>
-                <small>{player.amsId}</small>
-              </span>
-              <em>{player.number || "-"}</em>
-            </button>
-          ))}
+      <section className="dashboard-hero">
+        <div>
+          <span>{dashboardCopy.homeKicker}</span>
+          <h2>{dashboardCopy.homeTitle}</h2>
+          <p>{dashboardCopy.homeCopy}</p>
         </div>
-      </section>
-
-      <section className="dashboard-assistant-card" aria-labelledby="ask-h-heading">
-        <div className="dashboard-assistant-clock" aria-label={dashboardCopy.guadalajaraTime}>
-          <span>
-            {clock.time} <small>{clock.period}</small>
-          </span>
-          <strong>{clock.date}</strong>
-        </div>
-        <div className="dashboard-assistant-shell">
-          <span>{dashboardCopy.assistantKicker}</span>
-          <h2 id="ask-h-heading">{dashboardCopy.assistantTitle}</h2>
-          <form className="dashboard-assistant-form" onSubmit={(event) => event.preventDefault()}>
-            <input
-              aria-label={dashboardCopy.assistantPlaceholder}
-              placeholder={dashboardCopy.assistantPlaceholder}
-              type="search"
-            />
-            <button type="submit">{dashboardCopy.assistantAsk}</button>
-          </form>
-          <p>{dashboardCopy.assistantStatus}</p>
-          <div className="dashboard-assistant-example">
-            <span>{dashboardCopy.assistantExampleLabel}</span>
-            <strong>{dashboardCopy.assistantExamplePrompt.replace("{player}", selectedPlayer.name)}</strong>
-          </div>
+        <div className="dashboard-player-count" aria-label={dashboardCopy.guadalajaraTime}>
+          <strong>{clock.time}</strong>
+          <small>{clock.period ? `${clock.period} · ${clock.date}` : clock.date}</small>
         </div>
       </section>
 
@@ -382,6 +341,48 @@ export function OverviewPanel({
             <small>{action.detail}</small>
           </button>
         ))}
+      </section>
+
+      <section className="dashboard-focus-card">
+        <div className="dashboard-focus-player">
+          <span>{dashboardCopy.focusPlayer}</span>
+          <div>
+            <span className="dashboard-focus-photo">
+              {hasPlayerPhoto(selectedPlayer) ? (
+                <Image src={selectedPlayer.photo} alt="" width={76} height={76} />
+              ) : (
+                <b>{selectedPlayer.number || ""}</b>
+              )}
+            </span>
+            <div>
+              <h3>{selectedPlayer.name}</h3>
+              <p>{selectedPlayer.position} · {selectedPlayer.amsId}</p>
+              <div className="dashboard-focus-tags">
+                <small>{selectedPlayer.status}</small>
+                <small>{selectedPlayer.nationality}</small>
+                <small>{selectedPlayer.foot}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="dashboard-focus-metrics">
+          <article>
+            <span>{dashboardCopy.latestLoad}</span>
+            <strong>{compactNumber(latestLoadScore)}</strong>
+            <small>{latestSession ? formatShortDate(latestSession.date, language) : dashboardCopy.noSession}</small>
+          </article>
+          <article>
+            <span>{dashboardCopy.distance}</span>
+            <strong>{compactNumber(latestSession ? loadDistanceKm(latestSession) : 0, 1)}</strong>
+            <small>{dashboardCopy.kilometers}</small>
+          </article>
+          <article>
+            <span>{dashboardCopy.highSpeed}</span>
+            <strong>{compactNumber(latestSession ? loadHighSpeed(latestSession) : 0, 1)}</strong>
+            <small>km/h</small>
+          </article>
+        </div>
+        <time>{dashboardCopy.playersVisible.replace("{count}", compactNumber(visiblePlayers.length))}</time>
       </section>
 
       <section className="dashboard-lower-grid">
@@ -479,24 +480,25 @@ export function OverviewPanel({
 function dashboardLabels(language: AmsLanguage) {
   if (language === "es") {
     return {
-      assistantAsk: "Preguntar",
-      assistantExampleLabel: "Ejemplo RAG",
-      assistantExamplePrompt: "Prueba: muestra el riesgo RTP de isquios de {player} esta semana.",
-      assistantKicker: "Asistente privado de rendimiento",
-      assistantPlaceholder: "Pregunta sobre un jugador, lesión, sesión, prueba o recurso...",
-      assistantStatus: "Marcador listo para RAG. Conecta una base vectorial privada y un endpoint LLM cuando el backend esté listo.",
-      assistantTitle: "¿Cómo puede ayudarte H?",
       avgLoad: "Carga media 7 dias",
       connectedSources: "Fuentes conectadas",
       date: "Fecha",
       distance: "Distancia (km)",
+      focusPlayer: "Jugador en foco",
       guadalajaraTime: "Hora de Guadalajara",
       highSpeed: "Alta velocidad",
+      homeCopy: "La pantalla inicial reúne jugadores, módulos activos, sesiones recientes y cobertura de fuentes para el staff de rendimiento.",
+      homeKicker: "Inicio del staff",
+      homeTitle: "Panel principal Atlas FC",
+      kilometers: "kilometros",
       lastSix: "Ultimas 6 semanas",
       latestRows: "Ultimas filas GPS",
+      latestLoad: "Carga reciente",
       loadScore: "Carga",
       monotonyIndex: "Indice monotonia",
+      noSession: "sin sesion",
       peakSession: "Pico sesion",
+      playersVisible: "{count} jugadores visibles",
       records: "registros",
       sessionLog: "Registro de sesiones",
       sessionType: "Tipo de sesion",
@@ -506,24 +508,25 @@ function dashboardLabels(language: AmsLanguage) {
   }
 
   return {
-    assistantAsk: "Ask",
-    assistantExampleLabel: "Example RAG",
-    assistantExamplePrompt: "Try: Show {player}'s hamstring RTP risk this week.",
-    assistantKicker: "Private performance assistant",
-    assistantPlaceholder: "Ask about a player, injury, session, test, or resource...",
-    assistantStatus: "RAG-ready placeholder. Connect a private vector database and LLM endpoint when the backend is ready.",
-    assistantTitle: "How can H help you?",
     avgLoad: "7-day avg load",
     connectedSources: "Connected data sources",
     date: "Date",
     distance: "Distance (km)",
+    focusPlayer: "Focus player",
     guadalajaraTime: "Guadalajara time",
     highSpeed: "High speed",
+    homeCopy: "The staff home gathers players, live modules, recent sessions, and source coverage for the Atlas FC performance room.",
+    homeKicker: "Staff home",
+    homeTitle: "Atlas FC command home",
+    kilometers: "kilometers",
     lastSix: "Last 6 weeks",
     latestRows: "Latest GPS rows",
+    latestLoad: "Latest load",
     loadScore: "Load score",
     monotonyIndex: "Monotony index",
+    noSession: "no session",
     peakSession: "Peak session",
+    playersVisible: "{count} players visible",
     records: "records",
     sessionLog: "Session log",
     sessionType: "Session type",

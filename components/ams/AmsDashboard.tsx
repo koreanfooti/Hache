@@ -9,6 +9,7 @@ import { localizedAuthRoleLabel } from "@/components/ams/auth/auth-copy";
 import { panelCopy } from "@/components/ams/config/copy";
 import { isMvpVisibleSection, mvpSectionLabel } from "@/components/ams/config/mvp";
 import { useAmsLanguage, useAmsSources } from "@/components/ams/hooks/client";
+import { AthleteProfilePanel } from "@/components/ams/panels/AthleteProfilePanel";
 import { BiographyPanel } from "@/components/ams/panels/BiographyPanel";
 import { CalendarPanel } from "@/components/ams/panels/CalendarPanel";
 import {
@@ -17,6 +18,7 @@ import {
   LoadPanel,
   RecoveryPanel,
 } from "@/components/ams/panels/DataPanels";
+import { ExternalFactorsPanel } from "@/components/ams/panels/ExternalFactorsPanel";
 import { InjuryPanel } from "@/components/ams/panels/InjuryPanel";
 import { MatchHistoryPanel } from "@/components/ams/panels/MatchHistoryPanel";
 import { SettingsPanel } from "@/components/ams/panels/SettingsPanel";
@@ -57,6 +59,7 @@ export default function AmsDashboard({
     : allowedSections[0] ?? "biography";
   const canOpenCalendar = allowedSections.includes("calendar");
   const canOpenSettings = allowedSections.includes("settings");
+  const usesProfileRoster = currentSection === "athleteProfile";
   const rosterPlayers = useMemo(
     () => buildRosterPlayers(sourceData.playerMaster),
     [sourceData.playerMaster],
@@ -105,6 +108,8 @@ export default function AmsDashboard({
   }
 
   useEffect(() => {
+    if (usesProfileRoster) return;
+
     const timer = window.setInterval(() => {
       setSelectedPlayerId((currentPlayerId) => {
         const rotationPlayers = visiblePlayers.length ? visiblePlayers : rosterPlayers;
@@ -118,7 +123,7 @@ export default function AmsDashboard({
     }, 5200);
 
     return () => window.clearInterval(timer);
-  }, [rosterPlayers, visiblePlayers]);
+  }, [rosterPlayers, usesProfileRoster, visiblePlayers]);
 
   useEffect(() => {
     const firstTick = window.setTimeout(() => setCurrentTime(new Date()), 0);
@@ -152,19 +157,17 @@ export default function AmsDashboard({
       />
       <div className="ams-shell">
         <section className="ams-stage">
-          {currentSection !== "overview" ? (
-            <>
-              <ContextStrip language={language} playerCount={visiblePlayers.length} />
-              <PlayerStrip
-                language={language}
-                playersInView={visiblePlayers}
-                selectedPlayerId={selectedPlayer.id}
-                onNext={() => rotateSelectedPlayer(1)}
-                onPrevious={() => rotateSelectedPlayer(-1)}
-                onSelect={setSelectedPlayerId}
-              />
-            </>
-          ) : null}
+          <ContextStrip language={language} playerCount={visiblePlayers.length} />
+          {!usesProfileRoster && (
+            <PlayerStrip
+              language={language}
+              playersInView={visiblePlayers}
+              selectedPlayerId={selectedPlayer.id}
+              onNext={() => rotateSelectedPlayer(1)}
+              onPrevious={() => rotateSelectedPlayer(-1)}
+              onSelect={setSelectedPlayerId}
+            />
+          )}
           {currentSection === "overview" && (
             <OverviewPanel
               currentTime={currentTime}
@@ -174,7 +177,6 @@ export default function AmsDashboard({
               selectedPlayer={selectedPlayer}
               visiblePlayers={visiblePlayers}
               allowedSections={allowedSections}
-              onSelectPlayer={setSelectedPlayerId}
               onSelectSection={selectAllowedSection}
             />
           )}
@@ -217,6 +219,15 @@ export default function AmsDashboard({
               language={language}
               loadSummary={loadSummary}
               sourceData={sourceData}
+            />
+          )}
+          {currentSection === "external" && <ExternalFactorsPanel language={language} />}
+          {currentSection === "athleteProfile" && (
+            <AthleteProfilePanel
+              language={language}
+              selectedPlayer={selectedPlayer}
+              visiblePlayers={visiblePlayers}
+              onSelectPlayer={setSelectedPlayerId}
             />
           )}
           {currentSection === "calendar" && <CalendarPanel language={language} />}

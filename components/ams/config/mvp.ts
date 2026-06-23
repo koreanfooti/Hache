@@ -10,11 +10,14 @@ export const mvpVisibleSections = [
   "recovery",
   "biography",
   "matchHistory",
+  "external",
+  "athleteProfile",
   "calendar",
   "settings",
 ] as const satisfies readonly AmsSection[];
 
 export const mvpSidebarSections = [
+  "overview",
   "load",
   "injury",
   "development",
@@ -22,6 +25,8 @@ export const mvpSidebarSections = [
   "recovery",
   "biography",
   "matchHistory",
+  "external",
+  "athleteProfile",
 ] as const satisfies readonly AmsSection[];
 
 export const mvpSourceKeys = [
@@ -110,14 +115,18 @@ export function isMvpSourceKey(key: string) {
 export function mvpSectionLabel(section: AmsSection, language: AmsLanguage) {
   const labels: Record<AmsLanguage, Partial<Record<AmsSection, string>>> = {
     en: {
-      overview: "Command Center",
+      overview: "Home",
       bodyComp: "Body Composition",
+      external: "External Factors",
+      athleteProfile: "Athlete Profile",
       matchHistory: "Match History",
       settings: "Data Sources",
     },
     es: {
-      overview: "Centro de mando",
+      overview: "Inicio",
       bodyComp: "Composición corporal",
+      external: "Factores externos",
+      athleteProfile: "Perfil del atleta",
       matchHistory: "Historial de partidos",
       settings: "Fuentes de datos",
     },

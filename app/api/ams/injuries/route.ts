@@ -16,6 +16,6 @@ export async function GET() {
         error: error instanceof Error ? error.message : "Unable to load injury history.",
       },
       { status: 500 },
-    );
+    )
   }
 }
