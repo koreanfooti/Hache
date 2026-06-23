@@ -1,22 +1,35 @@
 import type { GpsDailyRow } from "@/lib/ams/data";
 
 export type CleanGpsRow = GpsDailyRow & {
+  accelerations?: string;
   amsId?: string;
   cleanPlayerName?: string;
+  decelerations?: string;
   sourcePlayerName?: string;
   totalDistance?: string;
   hsrAbsDistance?: string;
   hsrRelDistance?: string;
+  isMatch?: string;
+  matchDay?: string;
+  playerLoad?: string;
+  rpeCentral?: string;
+  rpePeripheral?: string;
   sprintDistance?: string;
   sprintCount?: string;
   maxSpeedKmh?: string;
   rollupSourceTask?: string;
-  isMatch?: string;
+  sessionDuration?: string;
   playerPosition?: string;
   position?: string;
   session_name?: string;
   shirtNumber?: string | number;
   sourceSessionId?: string;
+  wellnessDoms?: string;
+  wellnessFatigue?: string;
+  wellnessMood?: string;
+  wellnessSleep?: string;
+  wellnessStress?: string;
+  weekMatchDay?: string;
   wimuPosition?: string;
   wimuShirtNumber?: string | number;
 };

@@ -702,6 +702,207 @@ button {
   text-overflow: ellipsis;
 }
 
+.load-visual-dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.load-chart-panel,
+.load-visual-empty {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgb(114 13 23 / 18%), transparent 42%),
+    rgb(255 255 255 / 3%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%);
+  padding: 22px;
+}
+
+.load-wide-chart {
+  grid-column: span 2;
+}
+
+.load-visual-empty {
+  color: var(--ams-muted);
+}
+
+.load-metric-buttons {
+  display: flex;
+  max-width: 560px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.load-metric-buttons button {
+  border: 1px solid rgb(215 180 106 / 22%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 24%);
+  color: rgb(255 255 255 / 64%);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 900;
+  padding: 8px 11px;
+}
+
+.load-metric-buttons button:hover,
+.load-metric-buttons button.is-active {
+  border-color: rgb(211 31 47 / 70%);
+  background: linear-gradient(135deg, #d31f2f, #8f101a);
+  color: #fff;
+}
+
+.load-svg-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 220px;
+  overflow: visible;
+}
+
+.load-chart-grid line {
+  stroke: rgb(255 255 255 / 9%);
+  stroke-width: 1;
+}
+
+.load-trend-bar {
+  filter: drop-shadow(0 10px 18px rgb(0 0 0 / 34%));
+}
+
+.load-chart-value,
+.load-chart-label,
+.load-axis-label {
+  fill: rgb(255 255 255 / 72%);
+  font-size: 11px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+.load-chart-value {
+  fill: #fff;
+  font-size: 10px;
+}
+
+.load-donut-wrap {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.8fr) 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.load-donut-chart {
+  width: 100%;
+  min-width: 150px;
+  filter: drop-shadow(0 12px 22px rgb(0 0 0 / 34%));
+}
+
+.load-donut-total,
+.load-donut-caption {
+  fill: #fff;
+  font-weight: 950;
+  text-anchor: middle;
+}
+
+.load-donut-total {
+  font-size: 1.35rem;
+}
+
+.load-donut-caption {
+  fill: rgb(255 255 255 / 48%);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.load-chart-legend {
+  display: grid;
+  gap: 9px;
+}
+
+.load-chart-legend span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgb(255 255 255 / 62%);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.load-chart-legend i {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+}
+
+.load-chart-legend b {
+  margin-left: auto;
+  color: #fff;
+}
+
+.load-radar-ring {
+  fill: transparent;
+  stroke: rgb(255 255 255 / 12%);
+  stroke-width: 1;
+}
+
+.load-radar-axis {
+  stroke: rgb(255 255 255 / 10%);
+  stroke-width: 1;
+}
+
+.load-radar-area {
+  fill: rgb(211 31 47 / 28%);
+  stroke: #f2555b;
+  stroke-width: 2;
+}
+
+.load-radar-dot {
+  fill: #d7b46a;
+  stroke: #10080a;
+  stroke-width: 2;
+}
+
+.load-scatter-chart circle {
+  fill: #d7b46a;
+  opacity: 0.7;
+}
+
+.load-scatter-chart circle.is-match {
+  fill: #f2555b;
+  opacity: 0.92;
+}
+
+.load-insight-card {
+  grid-column: span 2;
+}
+
+.load-insight-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.load-insight-list article {
+  border: 1px solid rgb(215 180 106 / 14%);
+  border-radius: 14px;
+  background: rgb(0 0 0 / 22%);
+  padding: 16px;
+}
+
+.load-insight-list strong {
+  color: #fff;
+  font-weight: 950;
+}
+
+.load-insight-list p {
+  margin: 8px 0 0;
+  color: rgb(255 255 255 / 56%);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
 .definition-grid article,
 .placeholder-grid article,
 .testing-card {
@@ -8772,6 +8973,16 @@ body,
 }
 
 @media (max-width: 1180px) {
+  .load-visual-dashboard,
+  .load-insight-list {
+    grid-template-columns: 1fr;
+  }
+
+  .load-wide-chart,
+  .load-insight-card {
+    grid-column: auto;
+  }
+
   .match-history-hero,
   .match-history-layout,
   .match-field-layout {
@@ -8784,6 +8995,19 @@ body,
 }
 
 @media (max-width: 760px) {
+  .load-chart-panel,
+  .load-visual-empty {
+    padding: 16px;
+  }
+
+  .load-donut-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .load-metric-buttons {
+    justify-content: flex-start;
+  }
+
   .match-kpi-grid,
   .match-score-line {
     grid-template-columns: 1fr;

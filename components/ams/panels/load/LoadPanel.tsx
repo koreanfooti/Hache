@@ -1,8 +1,8 @@
-import type { CSSProperties } from "react";
 import { metricDefinitions } from "@/lib/ams/content";
-import { compactNumber, numberValue } from "@/lib/ams/data";
+import { compactNumber } from "@/lib/ams/data";
 import type { LoadSummary } from "@/lib/ams/types";
 import type { DataPanelCopy } from "@/components/ams/panels/panelTypes";
+import { LoadVisualDashboard } from "@/components/ams/panels/load/LoadVisuals";
 import {
   MetricCard,
   PanelIntro,
@@ -19,11 +19,6 @@ export function LoadPanel({
   language: AmsLanguage;
   loadSummary: LoadSummary;
 }) {
-  const recentRows = [...loadSummary.rows]
-    .filter((row) => row.date)
-    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
-    .slice(-10);
-
   return (
     <div className="panel-stack">
       <PanelIntro
@@ -37,24 +32,7 @@ export function LoadPanel({
         <MetricCard label={copy.load.maxSpeed} value={`${compactNumber(loadSummary.maxSpeed, 1)} km/h`} detail={copy.load.peakRecordedValue} />
         <MetricCard label={copy.load.dataStatus} value={localizedLoadStatus(loadSummary.status, language)} detail={copy.load.servedFromPublicData} />
       </section>
-      <section className="chart-panel">
-        <div className="panel-heading">
-          <h3>{copy.load.recentTrend}</h3>
-          <span>{copy.load.recentTrendSub}</span>
-        </div>
-        <div className="bar-chart">
-          {recentRows.map((row, index) => {
-            const distance = numberValue(row.totalDistance ?? row.total_distance_m);
-            const height = Math.max(8, Math.min(100, distance / 120));
-            return (
-              <div key={`${row.date}-${index}`} style={{ "--bar-height": `${height}%` } as CSSProperties}>
-                <span />
-                <small>{row.date?.slice(5) || index + 1}</small>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      <LoadVisualDashboard language={language} rows={loadSummary.rows} />
       <section className="definition-grid">
         {metricDefinitions.map(([label, description, unit]) => {
           const metric = localizedMetricDefinition(label, description, unit, language);
