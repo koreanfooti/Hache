@@ -86,6 +86,7 @@ function normalizedDate(value: unknown) {
 
 function serializeGpsRow(row: CleanGpsRow): CleanGpsRow {
   return {
+    ...row,
     accelerations: row.accelerations,
     amsId: row.amsId,
     cleanPlayerName: row.cleanPlayerName,
