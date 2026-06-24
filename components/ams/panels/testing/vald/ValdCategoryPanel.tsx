@@ -9,6 +9,7 @@ import type {
   ValdDeviceCardData,
 } from "@/components/ams/panels/testing/testingTypes";
 import { NordbordDashboard } from "@/components/ams/panels/testing/vald/nordbord/NordbordDashboard";
+import type { NordbordRefreshPayload } from "@/components/ams/panels/testing/vald/nordbord/nordbordTypes";
 import { ValdDeviceCard } from "@/components/ams/panels/testing/vald/ValdDeviceCard";
 
 export function ValdCategoryPanel({
@@ -16,12 +17,14 @@ export function ValdCategoryPanel({
   language,
   labels,
   metrics,
+  onNordbordRefresh,
   tests,
 }: {
   copy: TestingBatteryCopy;
   language: AmsLanguage;
   labels: TestingLabels;
   metrics: ValdNordbordMetricRow[];
+  onNordbordRefresh: (payload: NordbordRefreshPayload) => void;
   tests: ValdNordbordTestRow[];
 }) {
   const [isNordbordOpen, setIsNordbordOpen] = useState(true);
@@ -56,6 +59,7 @@ export function ValdCategoryPanel({
           copy={copy}
           language={language}
           metrics={metrics}
+          onRefreshData={onNordbordRefresh}
           tests={tests}
         />
       ) : null}

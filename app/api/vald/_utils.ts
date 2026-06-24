@@ -2,6 +2,7 @@ const VALD_AUTH_URL = "https://auth.prd.vald.com/oauth/token";
 
 export const DEFAULT_TENANTS_BASE_URL = "https://prd-use-api-externaltenants.valdperformance.com";
 export const DEFAULT_PROFILES_BASE_URL = "https://prd-use-api-externalprofile.valdperformance.com";
+export const DEFAULT_NORDBORD_BASE_URL = "https://prd-use-api-externalnordbord.valdperformance.com";
 
 export type ValdCategory = {
   id?: string;

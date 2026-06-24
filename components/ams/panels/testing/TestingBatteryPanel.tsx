@@ -9,6 +9,7 @@ import type {
   TestingCategoryCardData,
 } from "@/components/ams/panels/testing/testingTypes";
 import { ValdCategoryPanel } from "@/components/ams/panels/testing/vald/ValdCategoryPanel";
+import type { NordbordRefreshPayload } from "@/components/ams/panels/testing/vald/nordbord/nordbordTypes";
 import { YBalanceTestingDashboard } from "@/components/ams/panels/testing/y-balance/YBalanceTestingDashboard";
 
 export function TestingBatteryPanel({
@@ -23,14 +24,22 @@ export function TestingBatteryPanel({
 }: TestingBatteryPanelProps) {
   const labels = testingLabels(language);
   const [selectedCategory, setSelectedCategory] = useState<TestingCategory | null>("vald");
+  const [nordbordRefreshPayload, setNordbordRefreshPayload] = useState<NordbordRefreshPayload | null>(null);
+  const activeValdNordbordTests = nordbordRefreshPayload?.tests ?? valdNordbordTests;
+  const activeValdNordbordMetrics = nordbordRefreshPayload?.metrics ?? valdNordbordMetrics;
   const flaggedFmsExercises = fmsExerciseScores.filter((row) => numberValue(row.pointScore) <= 1 || Boolean(row.asymmetryRaw)).length;
+
+  function handleNordbordRefresh(payload: NordbordRefreshPayload) {
+    setNordbordRefreshPayload(payload);
+  }
+
   const categories: TestingCategoryCardData[] = [
     {
       copy: copy.development.valdCopy ?? labels.valdCopy,
       eyebrow: labels.deviceFamily,
       id: "vald",
       image: "/ams/assets/testing/vald-logo.png",
-      stat: `${compactNumber(valdNordbordTests.length)} ${labels.mappedTests}`,
+      stat: `${compactNumber(activeValdNordbordTests.length)} ${labels.mappedTests}`,
       title: "VALD",
     },
     {
@@ -76,8 +85,9 @@ export function TestingBatteryPanel({
           copy={copy}
           language={language}
           labels={labels}
-          metrics={valdNordbordMetrics}
-          tests={valdNordbordTests}
+          metrics={activeValdNordbordMetrics}
+          tests={activeValdNordbordTests}
+          onNordbordRefresh={handleNordbordRefresh}
         />
       ) : null}
 

@@ -9,7 +9,7 @@ import { NordbordKpi } from "@/components/ams/panels/testing/vald/nordbord/Nordb
 import { NordbordPlayerPanel } from "@/components/ams/panels/testing/vald/nordbord/NordbordPlayerPanel";
 import { nordbordLabels } from "@/components/ams/panels/testing/vald/nordbord/nordbordLabels";
 import { DateSlicerField } from "@/components/ams/ui/DateSlicerField";
-import type { NordbordDashboardProps } from "@/components/ams/panels/testing/vald/nordbord/nordbordTypes";
+import type { NordbordDashboardProps, NordbordRefreshPayload } from "@/components/ams/panels/testing/vald/nordbord/nordbordTypes";
 import {
   average,
   changeFromMax,
@@ -32,7 +32,7 @@ import {
 
 const nordbordLogo = "/ams/assets/testing/nordbord-logo.png";
 
-export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDashboardProps) {
+export function NordbordDashboard({ copy, language, metrics, onRefreshData, tests }: NordbordDashboardProps) {
   const labels = nordbordLabels(language);
   const orderedTests = useMemo(() => sortNordbordRows(tests), [tests]);
   const playerIds = useMemo(() => unique(orderedTests.map((row) => row.amsId)), [orderedTests]);
@@ -41,6 +41,9 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
   const [selectedPlayerId, setSelectedPlayerId] = useState(playerIds[0] ?? "");
   const [selectedTestType, setSelectedTestType] = useState("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [refreshStatus, setRefreshStatus] = useState<"idle" | "refreshing" | "success" | "error">("idle");
+  const [refreshMessage, setRefreshMessage] = useState("");
+  const [lastSynced, setLastSynced] = useState("");
   const [hiddenTestIds, setHiddenTestIds] = useState<string[]>([]);
   const allDates = useMemo(() => unique(orderedTests.map((row) => dateInputValue(row.testDateUtc))).sort(), [orderedTests]);
   const [fromDate, setFromDate] = useState(allDates[0] ?? "");
@@ -101,6 +104,37 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
   const isopronoReference = getNordbordIsopronoReference(activePlayer.position);
   const isopronoReferenceLabel = isopronoReference ? referenceDisplayLabel(isopronoReference, language) : "";
 
+  async function refreshNordbordData() {
+    setRefreshStatus("refreshing");
+    setRefreshMessage("");
+
+    try {
+      const response = await fetch("/api/vald/nordbord", {
+        cache: "no-store",
+        method: "POST",
+      });
+      const payload = await response.json() as NordbordRefreshPayload & { error?: string };
+
+      if (!response.ok) {
+        throw new Error(payload.error || labels.refreshFailed);
+      }
+
+      onRefreshData?.(payload);
+
+      const refreshedDates = unique((payload.tests ?? []).map((row) => dateInputValue(row.testDateUtc))).sort();
+      setFromDate(refreshedDates[0] ?? "");
+      setToDate(refreshedDates.at(-1) ?? "");
+      setSelectedTestType("all");
+      setHiddenTestIds([]);
+      setLastSynced(payload.meta?.lastSynced ?? new Date().toISOString());
+      setRefreshStatus("success");
+      setRefreshMessage(`${labels.refreshed}: ${payload.meta?.testCount ?? payload.tests?.length ?? 0} ${copy.common.tests}`);
+    } catch (error) {
+      setRefreshStatus("error");
+      setRefreshMessage(error instanceof Error ? error.message : labels.refreshFailed);
+    }
+  }
+
   return (
     <article className="nordbord-powerbi-dashboard">
       <header className="nordbord-report-header">
@@ -142,11 +176,30 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
         </div>
         <div className="nordbord-atlas-lockup">
           <span>Atlas FC {language === "es" ? "Rendimiento" : "Performance"}</span>
+          <button
+            className="nordbord-refresh-button"
+            type="button"
+            disabled={refreshStatus === "refreshing"}
+            onClick={refreshNordbordData}
+          >
+            {refreshStatus === "refreshing" ? labels.refreshing : labels.refresh}
+          </button>
           <button className="nordbord-filter-toggle" type="button" onClick={() => setIsFilterOpen((isOpen) => !isOpen)}>
             {labels.filters}
           </button>
         </div>
       </header>
+
+      {(refreshMessage || lastSynced) ? (
+        <div className={`nordbord-sync-banner ${refreshStatus === "error" ? "is-error" : ""}`}>
+          <span>{refreshMessage || labels.refreshed}</span>
+          {lastSynced ? (
+            <small>
+              {new Intl.DateTimeFormat(language === "es" ? "es-MX" : "en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(lastSynced))}
+            </small>
+          ) : null}
+        </div>
+      ) : null}
 
       <NordbordFilterDrawer
         hiddenTestIds={hiddenTestIds}

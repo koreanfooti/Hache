@@ -8,6 +8,7 @@ export type NordbordDashboardProps = {
   };
   language: AmsLanguage;
   metrics: ValdNordbordMetricRow[];
+  onRefreshData?: (payload: NordbordRefreshPayload) => void;
   tests: ValdNordbordTestRow[];
 };
 
@@ -25,4 +26,17 @@ export type NordbordTestFilterOption = {
   id: string;
   label: string;
   type: string;
+};
+
+export type NordbordRefreshPayload = {
+  tests: ValdNordbordTestRow[];
+  metrics: ValdNordbordMetricRow[];
+  meta?: {
+    lastSynced?: string;
+    sourceLabel?: string;
+    testCount?: number;
+    metricCount?: number;
+    profileCount?: number;
+    unmappedCount?: number;
+  };
 };

@@ -134,24 +134,34 @@ export type YBalanceMetricRow = {
 
 export type ValdNordbordTestRow = {
   amsId?: string;
+  tenantId?: string;
+  valdProfileId?: string;
   testId?: string;
+  modifiedDateUtc?: string;
   testDateUtc?: string;
+  testTypeId?: string;
   testTypeName?: string;
+  notes?: string | null;
   device?: string;
   leftMaxForce?: number;
   rightMaxForce?: number;
   leftAvgForce?: number;
   rightAvgForce?: number;
-};
+} & Record<string, unknown>;
 
 export type ValdNordbordMetricRow = {
   amsId?: string;
+  tenantId?: string;
+  valdProfileId?: string;
+  athleteId?: string;
   testId?: string;
   leftMaxForcePerKg?: number | null;
   rightMaxForcePerKg?: number | null;
+  leftAvgForcePerKg?: number | null;
+  rightAvgForcePerKg?: number | null;
   leftAvgTimeToMaxForceSeconds?: number | null;
   rightAvgTimeToMaxForceSeconds?: number | null;
-};
+} & Record<string, unknown>;
 
 export type RehabServiceRow = {
   dateIso?: string;

@@ -4099,7 +4099,8 @@ button {
   font-weight: 900;
 }
 
-.nordbord-filter-toggle {
+.nordbord-filter-toggle,
+.nordbord-refresh-button {
   border: 1px solid rgb(215 180 106 / 38%);
   border-radius: 999px;
   background: rgb(0 0 0 / 30%);
@@ -4109,6 +4110,41 @@ button {
   font-weight: 950;
   padding: 9px 13px;
   text-transform: uppercase;
+}
+
+.nordbord-refresh-button {
+  border-color: rgb(226 29 50 / 58%);
+  background: linear-gradient(135deg, rgb(226 29 50 / 88%), rgb(116 9 18 / 74%));
+  color: #fff;
+  box-shadow: 0 10px 28px rgb(226 29 50 / 16%);
+}
+
+.nordbord-refresh-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.nordbord-sync-banner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border-bottom: 1px solid rgb(215 180 106 / 18%);
+  background: rgb(12 5 7 / 62%);
+  color: var(--ams-gold);
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 8px 18px;
+}
+
+.nordbord-sync-banner small {
+  color: var(--ams-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.nordbord-sync-banner.is-error {
+  color: var(--ams-red);
 }
 
 .nordbord-filter-drawer {
