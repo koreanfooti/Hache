@@ -25,6 +25,13 @@ type AthleteDay = {
   totalDistance: number;
 };
 
+type AthleteLegendItem = {
+  color: string;
+  detail?: string;
+  kind: "bar" | "line";
+  label: string;
+};
+
 const athleteCopy = {
   en: {
     title: "Individual Longitudinal Load",
@@ -41,6 +48,16 @@ const athleteCopy = {
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     visibleDays: "visible days",
+    legends: {
+      accelBar: "High-intensity accelerations",
+      decelBar: "High-intensity decelerations",
+      distanceBar: "Daily total distance",
+      distanceLine: "% of athlete max distance",
+      hsrBar: "HSR absolute distance",
+      hsrLine: "HSR relative line",
+      sprintBar: "Sprint distance",
+      sprintLine: "Max-speed intensity line",
+    },
   },
   es: {
     title: "Carga longitudinal individual",
@@ -57,6 +74,16 @@ const athleteCopy = {
     zoomIn: "Acercar",
     zoomOut: "Alejar",
     visibleDays: "días visibles",
+    legends: {
+      accelBar: "Aceleraciones de alta intensidad",
+      decelBar: "Desaceleraciones de alta intensidad",
+      distanceBar: "Distancia total diaria",
+      distanceLine: "% del maximo de distancia del atleta",
+      hsrBar: "Distancia HSR absoluta",
+      hsrLine: "Linea HSR relativa",
+      sprintBar: "Distancia sprint",
+      sprintLine: "Linea de intensidad de velocidad maxima",
+    },
   },
 };
 
@@ -133,6 +160,10 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
             days={visibleDays}
             zoom={zoom}
             lineColor="#d7b46a"
+            legend={[
+              { color: "#d31f2f", kind: "bar", label: copy.legends.distanceBar },
+              { color: "#d7b46a", kind: "line", label: copy.legends.distanceLine },
+            ]}
             title={copy.totalDistance}
             valueKey="totalDistance"
           />
@@ -144,6 +175,10 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
             zoom={zoom}
             lineColor="#2f6dff"
             lineKey="hsrRel"
+            legend={[
+              { color: "#ef7d3e", kind: "bar", label: copy.legends.hsrBar },
+              { color: "#2f6dff", kind: "line", label: copy.legends.hsrLine },
+            ]}
             title={copy.hsr}
           />
           <ComboBand
@@ -154,10 +189,23 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
             zoom={zoom}
             lineColor="#8d6dff"
             lineKey="maxSpeed"
+            legend={[
+              { color: "#d9b500", kind: "bar", label: copy.legends.sprintBar },
+              { color: "#8d6dff", kind: "line", label: copy.legends.sprintLine },
+            ]}
             speedTone
             title={copy.sprint}
           />
-          <ClusterBand athleteLabel={activeAthleteLabel} days={visibleDays} title={copy.neuro} zoom={zoom} />
+          <ClusterBand
+            athleteLabel={activeAthleteLabel}
+            days={visibleDays}
+            legend={[
+              { color: "#1597ff", kind: "bar", label: copy.legends.accelBar },
+              { color: "#1e32b9", kind: "bar", label: copy.legends.decelBar },
+            ]}
+            title={copy.neuro}
+            zoom={zoom}
+          />
         </div>
       ) : (
         <strong className="load-athlete-empty">{copy.noData}</strong>
@@ -172,6 +220,7 @@ function RelativeBarBand({
   color,
   days,
   lineColor,
+  legend,
   title,
   valueKey,
   zoom,
@@ -181,6 +230,7 @@ function RelativeBarBand({
   color: string;
   days: AthleteDay[];
   lineColor: string;
+  legend: AthleteLegendItem[];
   title: string;
   valueKey: keyof Pick<AthleteDay, "totalDistance">;
   zoom: number;
@@ -193,7 +243,7 @@ function RelativeBarBand({
   const barWidth = 16 * barScale(zoom);
 
   return (
-    <LongitudinalBand title={title} tooltip={tooltip} onTooltipClear={() => setTooltip(null)}>
+    <LongitudinalBand legend={legend} title={title} tooltip={tooltip} onTooltipClear={() => setTooltip(null)}>
       <svg className="load-athlete-svg" style={style} viewBox={`0 0 ${width} 170`} role="img">
         <BandGrid width={width} />
         {points.map((day, index) => {
@@ -225,6 +275,7 @@ function ComboBand({
   days,
   lineColor,
   lineKey,
+  legend,
   speedTone = false,
   title,
   zoom,
@@ -235,6 +286,7 @@ function ComboBand({
   days: AthleteDay[];
   lineColor: string;
   lineKey: keyof Pick<AthleteDay, "hsrRel" | "maxSpeed">;
+  legend: AthleteLegendItem[];
   speedTone?: boolean;
   title: string;
   zoom: number;
@@ -247,7 +299,7 @@ function ComboBand({
   const barWidth = 22 * barScale(zoom);
 
   return (
-    <LongitudinalBand title={title} tooltip={tooltip} onTooltipClear={() => setTooltip(null)}>
+    <LongitudinalBand legend={legend} title={title} tooltip={tooltip} onTooltipClear={() => setTooltip(null)}>
       <svg className="load-athlete-svg" style={style} viewBox={`0 0 ${width} 170`} role="img">
         <BandGrid width={width} />
         {days.map((day, index) => {
@@ -289,7 +341,7 @@ function ComboBand({
   );
 }
 
-function ClusterBand({ athleteLabel, days, title, zoom }: { athleteLabel: string; days: AthleteDay[]; title: string; zoom: number }) {
+function ClusterBand({ athleteLabel, days, legend, title, zoom }: { athleteLabel: string; days: AthleteDay[]; legend: AthleteLegendItem[]; title: string; zoom: number }) {
   const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const maxValue = Math.max(1, ...days.flatMap((day) => [day.accel, day.decel]));
   const width = chartWidth(days.length, zoom);
@@ -297,7 +349,7 @@ function ClusterBand({ athleteLabel, days, title, zoom }: { athleteLabel: string
   const clusterWidth = 13 * barScale(zoom);
 
   return (
-    <LongitudinalBand title={title} tooltip={tooltip} onTooltipClear={() => setTooltip(null)}>
+    <LongitudinalBand legend={legend} title={title} tooltip={tooltip} onTooltipClear={() => setTooltip(null)}>
       <svg className="load-athlete-svg" style={style} viewBox={`0 0 ${width} 170`} role="img">
         <BandGrid width={width} />
         {days.map((day, index) => {
@@ -322,13 +374,40 @@ function ClusterBand({ athleteLabel, days, title, zoom }: { athleteLabel: string
   );
 }
 
-function LongitudinalBand({ children, onTooltipClear, title, tooltip }: { children: ReactNode; onTooltipClear: () => void; title: string; tooltip: ChartTooltipState | null }) {
+function LongitudinalBand({
+  children,
+  legend,
+  onTooltipClear,
+  title,
+  tooltip,
+}: {
+  children: ReactNode;
+  legend: AthleteLegendItem[];
+  onTooltipClear: () => void;
+  title: string;
+  tooltip: ChartTooltipState | null;
+}) {
   return (
     <article className="load-athlete-band" onMouseLeave={onTooltipClear}>
       <div className="load-athlete-band-title">{title}</div>
       <div className="load-athlete-scroll">{children}</div>
+      <AthleteLegend items={legend} />
       <ChartTooltip tooltip={tooltip} />
     </article>
+  );
+}
+
+function AthleteLegend({ items }: { items: AthleteLegendItem[] }) {
+  return (
+    <div className="load-athlete-legend">
+      {items.map((item) => (
+        <span key={`${item.kind}-${item.label}`}>
+          <i className={`is-${item.kind}`} style={{ background: item.color }} />
+          {item.label}
+          {item.detail ? <small>{item.detail}</small> : null}
+        </span>
+      ))}
+    </div>
   );
 }
 

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { metricDefinitions } from "@/lib/ams/content";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import type { CleanGpsRow, LoadSummary } from "@/lib/ams/types";
+import { getWimuMetricDefinition } from "@/lib/ams/wimu-metric-definitions";
 import type { DataPanelCopy } from "@/components/ams/panels/panelTypes";
 import { LoadVisualDashboard } from "@/components/ams/panels/load/LoadVisuals";
 import {
@@ -12,6 +13,7 @@ import {
   localizedValue,
   type AmsLanguage,
 } from "@/components/ams/ui/AmsUi";
+import { ChartTooltip, chartTooltipPosition, type ChartTooltipPayload, type ChartTooltipState } from "@/components/ams/ui/ChartTooltip";
 import { DateSlicerField } from "@/components/ams/ui/DateSlicerField";
 
 type LoadFilterPayload = {
@@ -48,6 +50,7 @@ export function LoadPanel({
   const [filteredSummary, setFilteredSummary] = useState<LoadSummary>(loadSummary);
   const [isFiltering, setIsFiltering] = useState(false);
   const [filterError, setFilterError] = useState<string | null>(null);
+  const [metricTooltip, setMetricTooltip] = useState<ChartTooltipState | null>(null);
   const visibleSummary = filteredSummary.rows.length || isFiltering ? filteredSummary : loadSummary;
   const visibleTeams = teams.length ? teams : uniqueTeams(loadSummary.rows);
   const metricInventory = useMemo(() => wimuMetricInventory(visibleSummary.rows), [visibleSummary.rows]);
@@ -157,14 +160,20 @@ export function LoadPanel({
             <span>{controls.metricsPane}</span>
             <strong>{metricInventory.length} {controls.metrics}</strong>
           </div>
-          <div className="load-metrics-list">
+          <div className="load-metrics-list" onMouseLeave={() => setMetricTooltip(null)}>
             {metricInventory.map((metric) => (
-              <span key={metric.key}>
-                <b>{metric.key}</b>
+              <button
+                className="load-metric-row"
+                key={metric.key}
+                type="button"
+                onMouseMove={(event) => setMetricTooltip({ ...chartTooltipPosition(event), payload: metricDefinitionTooltip(metric.key, metric.count, language, controls) })}
+              >
+                <b>{metricDefinitionLabel(metric.key, language)}</b>
                 <small>{compactNumber(metric.count)} {controls.rows}</small>
-              </span>
+              </button>
             ))}
           </div>
+          <ChartTooltip tooltip={metricTooltip} />
         </aside>
       </div>
       <section className="metric-grid">
@@ -189,6 +198,43 @@ export function LoadPanel({
       </section>
     </div>
   );
+}
+
+function metricDefinitionLabel(key: string, language: AmsLanguage) {
+  return getWimuMetricDefinition(key).label[language];
+}
+
+function metricDefinitionTooltip(key: string, count: number, language: AmsLanguage, controls: ReturnType<typeof loadControlCopy>): ChartTooltipPayload {
+  const definition = getWimuMetricDefinition(key);
+  const copy = {
+    en: {
+      definition: "Definition",
+      field: "Source field",
+      rows: "Rows loaded",
+      source: "Source",
+      unit: "Unit",
+    },
+    es: {
+      definition: "Definicion",
+      field: "Campo fuente",
+      rows: "Filas cargadas",
+      source: "Fuente",
+      unit: "Unidad",
+    },
+  }[language];
+
+  return {
+    kicker: definition.source,
+    rows: [
+      { label: copy.definition, value: definition.definition[language], tone: "gold", wide: true },
+      { label: copy.unit, value: definition.unit, tone: "blue" },
+      { label: copy.field, value: key },
+      { label: copy.rows, value: `${compactNumber(count)} ${controls.rows}`, tone: "green" },
+      { label: copy.source, value: definition.source, wide: true },
+    ],
+    subtitle: key,
+    title: definition.label[language],
+  };
 }
 
 function summarizeRows(rows: CleanGpsRow[], status: string): LoadSummary {

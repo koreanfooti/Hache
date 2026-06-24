@@ -64,7 +64,7 @@ button {
   left: var(--tooltip-x);
   top: var(--tooltip-y);
   min-width: 210px;
-  max-width: 290px;
+  max-width: 360px;
   max-height: calc(100vh - 28px);
   overflow-y: auto;
   pointer-events: none;
@@ -198,6 +198,12 @@ button {
   padding-top: 6px;
 }
 
+.ams-chart-tooltip dl div.is-wide {
+  display: grid;
+  justify-content: stretch;
+  gap: 4px;
+}
+
 .ams-chart-tooltip dt,
 .ams-chart-tooltip dd {
   margin: 0;
@@ -212,6 +218,13 @@ button {
 .ams-chart-tooltip dd {
   color: #fff;
   text-align: right;
+}
+
+.ams-chart-tooltip .is-wide dd {
+  color: rgb(255 255 255 / 86%);
+  line-height: 1.35;
+  text-align: left;
+  white-space: normal;
 }
 
 .ams-chart-tooltip .is-gold dd {
@@ -1009,14 +1022,26 @@ button {
   padding-right: 4px;
 }
 
-.load-metrics-list span {
+.load-metric-row {
   display: flex;
+  width: 100%;
   justify-content: space-between;
   gap: 10px;
   border: 1px solid rgb(255 255 255 / 9%);
   border-radius: 10px;
   background: rgb(0 0 0 / 20%);
+  color: inherit;
   padding: 8px 9px;
+  text-align: left;
+}
+
+.load-metric-row:hover,
+.load-metric-row:focus-visible {
+  border-color: rgb(215 180 106 / 42%);
+  background:
+    radial-gradient(circle at 10% 0%, rgb(211 31 47 / 18%), transparent 50%),
+    rgb(255 255 255 / 5%);
+  outline: none;
 }
 
 .load-metrics-list b,
@@ -1491,6 +1516,41 @@ button {
   overflow-x: auto;
   padding-bottom: 8px;
   scrollbar-color: rgb(215 180 106 / 52%) rgb(255 255 255 / 8%);
+}
+
+.load-athlete-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  padding: 10px 14px 12px;
+}
+
+.load-athlete-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: rgb(255 255 255 / 68%);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.load-athlete-legend i {
+  width: 16px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  box-shadow: 0 0 12px rgb(255 255 255 / 10%);
+}
+
+.load-athlete-legend i.is-line {
+  height: 3px;
+  border-radius: 999px;
+}
+
+.load-athlete-legend small {
+  color: rgb(255 255 255 / 46%);
+  font-size: 0.68rem;
 }
 
 .load-athlete-svg {

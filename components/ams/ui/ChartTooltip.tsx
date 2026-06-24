@@ -6,6 +6,7 @@ export type ChartTooltipRow = {
   label: string;
   tone?: "gold" | "green" | "red" | "blue";
   value: string;
+  wide?: boolean;
 };
 
 export type ChartTooltipPayload = {
@@ -40,7 +41,7 @@ export function ChartTooltip({ tooltip }: { tooltip: ChartTooltipState | null })
       {tooltip.payload.subtitle ? <em>{tooltip.payload.subtitle}</em> : null}
       <dl>
         {tooltip.payload.rows.map((row) => (
-          <div className={row.tone ? `is-${row.tone}` : ""} key={`${row.label}-${row.value}`}>
+          <div className={`${row.tone ? `is-${row.tone}` : ""}${row.wide ? " is-wide" : ""}`} key={`${row.label}-${row.value}`}>
             <dt>{row.label}</dt>
             <dd>{row.value}</dd>
           </div>
