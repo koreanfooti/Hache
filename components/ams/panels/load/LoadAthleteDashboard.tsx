@@ -42,7 +42,12 @@ const athleteCopy = {
     sprint: "Sprint distance bars and max-speed intensity line",
     neuro: "High-intensity acceleration / deceleration",
     noData: "No athlete rows available for the selected view.",
+    clear: "Clear",
+    close: "Close",
+    dailyDates: "Daily dates",
+    filters: "Filters",
     from: "From",
+    selectAll: "Select all",
     to: "To",
     reset: "Reset dates",
     zoomIn: "Zoom in",
@@ -68,7 +73,12 @@ const athleteCopy = {
     sprint: "Barras sprint y línea de intensidad de velocidad máxima",
     neuro: "Aceleración / desaceleración de alta intensidad",
     noData: "No hay filas de atleta disponibles para la vista seleccionada.",
+    clear: "Limpiar",
+    close: "Cerrar",
+    dailyDates: "Fechas diarias",
+    filters: "Filtros",
     from: "Desde",
+    selectAll: "Seleccionar todo",
     to: "Hasta",
     reset: "Reiniciar fechas",
     zoomIn: "Acercar",
@@ -93,6 +103,8 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
   const [selectedAthleteId, setSelectedAthleteId] = useState(athleteOptions[0]?.id ?? "");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [hiddenDates, setHiddenDates] = useState<string[]>([]);
+  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const activeAthleteId = athleteOptions.some((option) => option.id === selectedAthleteId)
     ? selectedAthleteId
@@ -104,7 +116,12 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
   const activeAthleteLabel = athleteOptions.find((option) => option.id === activeAthleteId)?.label ?? copy.athlete;
   const days = useMemo(() => dailyAthleteRows(athleteRows), [athleteRows]);
   const dateBounds = useMemo(() => dateWindowBounds(days), [days]);
-  const visibleDays = useMemo(() => filterDaysByDate(days, dateFrom, dateTo), [dateFrom, dateTo, days]);
+  const dateWindowDays = useMemo(() => filterDaysByDate(days, dateFrom, dateTo), [dateFrom, dateTo, days]);
+  const dateFilterOptions = useMemo(() => athleteDateFilterOptions(dateWindowDays), [dateWindowDays]);
+  const visibleDays = useMemo(
+    () => dateWindowDays.filter((day) => !hiddenDates.includes(day.date)),
+    [dateWindowDays, hiddenDates],
+  );
   const zoomLabel = `${Math.round(zoom * 100)}%`;
 
   if (!athleteOptions.length || !days.length) {
@@ -125,7 +142,14 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
         </div>
         <label>
           <span>{copy.athlete}</span>
-          <select value={activeAthleteId} onChange={(event) => setSelectedAthleteId(event.target.value)}>
+          <select
+            value={activeAthleteId}
+            onChange={(event) => {
+              setSelectedAthleteId(event.target.value);
+              setHiddenDates([]);
+              setIsDateFilterOpen(false);
+            }}
+          >
             {athleteOptions.map((option) => (
               <option key={option.id} value={option.id}>{option.label}</option>
             ))}
@@ -135,22 +159,55 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
       <div className="load-athlete-controls">
         <label>
           <span>{copy.from}</span>
-          <input max={dateBounds.max} min={dateBounds.min} type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+          <input
+            max={dateBounds.max}
+            min={dateBounds.min}
+            type="date"
+            value={dateFrom}
+            onChange={(event) => {
+              setDateFrom(event.target.value);
+              setHiddenDates([]);
+            }}
+          />
         </label>
         <label>
           <span>{copy.to}</span>
-          <input max={dateBounds.max} min={dateBounds.min} type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+          <input
+            max={dateBounds.max}
+            min={dateBounds.min}
+            type="date"
+            value={dateTo}
+            onChange={(event) => {
+              setDateTo(event.target.value);
+              setHiddenDates([]);
+            }}
+          />
         </label>
-        <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+        <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); setHiddenDates([]); }}>
           {copy.reset}
         </button>
-        <div className="load-athlete-zoom" aria-label={copy.title}>
-          <button type="button" onClick={() => setZoom((value) => Math.max(0.65, Number((value - 0.2).toFixed(2))))}>{copy.zoomOut}</button>
-          <span>{zoomLabel}</span>
-          <button type="button" onClick={() => setZoom((value) => Math.min(2.6, Number((value + 0.2).toFixed(2))))}>{copy.zoomIn}</button>
-        </div>
-        <small>{visibleDays.length} {copy.visibleDays}</small>
       </div>
+      <div className="load-athlete-toolbar" aria-label={copy.title}>
+        <button className="load-filter-toggle" type="button" onClick={() => setIsDateFilterOpen((isOpen) => !isOpen)}>
+          {copy.filters}
+        </button>
+        <button type="button" onClick={() => setZoom((value) => Math.max(0.65, Number((value - 0.2).toFixed(2))))}>{copy.zoomOut}</button>
+        <span>{zoomLabel}</span>
+        <button type="button" onClick={() => setZoom((value) => Math.min(2.6, Number((value + 0.2).toFixed(2))))}>{copy.zoomIn}</button>
+        <small>{visibleDays.length} / {dateWindowDays.length} {copy.visibleDays}</small>
+      </div>
+      <AthleteDateFilterDrawer
+        copy={copy}
+        hiddenDates={hiddenDates}
+        isOpen={isDateFilterOpen}
+        options={dateFilterOptions}
+        onClear={() => setHiddenDates(dateFilterOptions.map((option) => option.id))}
+        onClose={() => setIsDateFilterOpen(false)}
+        onSelectAll={() => setHiddenDates([])}
+        onToggleDate={(dateId) => {
+          setHiddenDates((current) => (current.includes(dateId) ? current.filter((id) => id !== dateId) : [...current, dateId]));
+        }}
+      />
       {visibleDays.length ? (
         <div className="load-athlete-chart-stack">
           <RelativeBarBand
@@ -211,6 +268,57 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
         <strong className="load-athlete-empty">{copy.noData}</strong>
       )}
     </section>
+  );
+}
+
+function AthleteDateFilterDrawer({
+  copy,
+  hiddenDates,
+  isOpen,
+  options,
+  onClear,
+  onClose,
+  onSelectAll,
+  onToggleDate,
+}: {
+  copy: typeof athleteCopy.en;
+  hiddenDates: string[];
+  isOpen: boolean;
+  options: Array<{ id: string; label: string; session: string }>;
+  onClear: () => void;
+  onClose: () => void;
+  onSelectAll: () => void;
+  onToggleDate: (dateId: string) => void;
+}) {
+  return (
+    <aside className={`load-trend-filter-drawer load-athlete-filter-drawer${isOpen ? " is-open" : ""}`} aria-hidden={!isOpen}>
+      <div className="load-trend-filter-header">
+        <div>
+          <strong>{copy.filters}</strong>
+          <span>{copy.dailyDates}</span>
+        </div>
+        <button type="button" onClick={onClose}>
+          {copy.close}
+        </button>
+      </div>
+      <div className="load-trend-filter-actions">
+        <button type="button" onClick={onSelectAll}>
+          {copy.selectAll}
+        </button>
+        <button type="button" onClick={onClear}>
+          {copy.clear}
+        </button>
+      </div>
+      <div className="load-trend-date-checkboxes">
+        {options.map((option) => (
+          <label key={option.id}>
+            <input checked={!hiddenDates.includes(option.id)} type="checkbox" onChange={() => onToggleDate(option.id)} />
+            <span>{option.label}</span>
+            <small>{option.session}</small>
+          </label>
+        ))}
+      </div>
+    </aside>
   );
 }
 
@@ -515,6 +623,12 @@ function shortDate(date: string) {
   return [month, day].filter(Boolean).join("/") || date;
 }
 
+function longDate(date: string) {
+  const parsed = new Date(`${date}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(parsed);
+}
+
 function dateWindowBounds(days: AthleteDay[]) {
   const dates = days.map((day) => day.date).filter(Boolean);
   return { min: dates[0] ?? "", max: dates[dates.length - 1] ?? "" };
@@ -522,6 +636,14 @@ function dateWindowBounds(days: AthleteDay[]) {
 
 function filterDaysByDate(days: AthleteDay[], from: string, to: string) {
   return days.filter((day) => (!from || day.date >= from) && (!to || day.date <= to));
+}
+
+function athleteDateFilterOptions(days: AthleteDay[]) {
+  return days.map((day) => ({
+    id: day.date,
+    label: longDate(day.date),
+    session: day.session,
+  }));
 }
 
 function chartWidth(count: number, zoom: number) {

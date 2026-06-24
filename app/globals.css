@@ -1118,6 +1118,8 @@ button {
 .load-chart-panel,
 .load-visual-empty {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 18px;
   background:
@@ -1129,6 +1131,7 @@ button {
 
 .load-wide-chart {
   grid-column: span 2;
+  min-width: 0;
 }
 
 .load-visual-empty {
@@ -1368,7 +1371,8 @@ button {
   min-width: 780px;
 }
 
-.load-chart-toolbar {
+.load-chart-toolbar,
+.load-athlete-toolbar {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -1377,7 +1381,9 @@ button {
 }
 
 .load-chart-toolbar button,
-.load-chart-toolbar span {
+.load-chart-toolbar span,
+.load-athlete-toolbar button,
+.load-athlete-toolbar span {
   border: 1px solid rgb(215 180 106 / 24%);
   border-radius: 999px;
   background: rgb(0 0 0 / 26%);
@@ -1387,26 +1393,50 @@ button {
   padding: 7px 10px;
 }
 
-.load-chart-toolbar button {
+.load-chart-toolbar button,
+.load-athlete-toolbar button {
   cursor: pointer;
 }
 
-.load-chart-toolbar button:hover {
+.load-chart-toolbar button:hover,
+.load-athlete-toolbar button:hover {
   border-color: rgb(211 31 47 / 64%);
   background: rgb(211 31 47 / 22%);
   color: #fff;
 }
 
+.load-athlete-toolbar {
+  flex-wrap: wrap;
+  margin: -8px 0 -4px;
+}
+
+.load-athlete-toolbar small {
+  align-self: center;
+  color: rgb(255 255 255 / 50%);
+  font-size: 0.76rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
 .load-athlete-dashboard {
+  position: relative;
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   gap: 18px;
 }
 
 .load-athlete-header {
   display: flex;
+  min-width: 0;
   align-items: end;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 18px;
+}
+
+.load-athlete-header > div {
+  min-width: 0;
 }
 
 .load-athlete-header h3 {
@@ -1449,6 +1479,7 @@ button {
 
 .load-athlete-controls {
   display: flex;
+  min-width: 0;
   align-items: end;
   flex-wrap: wrap;
   gap: 10px;
@@ -1526,6 +1557,8 @@ button {
 
 .load-athlete-chart-stack {
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   gap: 12px;
 }
 
@@ -1540,7 +1573,9 @@ button {
 
 .load-athlete-band {
   position: relative;
-  overflow: visible;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 14px;
   background:
@@ -1549,17 +1584,42 @@ button {
 }
 
 .load-athlete-band-title {
+  overflow: hidden;
   border-bottom: 1px solid rgb(255 255 255 / 12%);
   background: linear-gradient(90deg, rgb(143 16 26 / 94%), rgb(94 12 19 / 86%));
   color: #fff;
   padding: 9px 14px;
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .load-athlete-scroll {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
-  padding-bottom: 8px;
+  overflow-y: hidden;
+  padding-bottom: 12px;
   scrollbar-color: rgb(215 180 106 / 52%) rgb(255 255 255 / 8%);
+}
+
+.load-athlete-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.load-athlete-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgb(255 255 255 / 7%);
+}
+
+.load-athlete-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgb(215 180 106 / 72%), rgb(211 31 47 / 72%));
+}
+
+.load-athlete-filter-drawer {
+  top: 176px;
+  right: 0;
 }
 
 .load-athlete-legend {
