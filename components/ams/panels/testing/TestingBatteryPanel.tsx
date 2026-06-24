@@ -22,7 +22,7 @@ export function TestingBatteryPanel({
   valdNordbordMetrics,
 }: TestingBatteryPanelProps) {
   const labels = testingLabels(language);
-  const [selectedCategory, setSelectedCategory] = useState<TestingCategory>("vald");
+  const [selectedCategory, setSelectedCategory] = useState<TestingCategory | null>("vald");
   const flaggedFmsExercises = fmsExerciseScores.filter((row) => numberValue(row.pointScore) <= 1 || Boolean(row.asymmetryRaw)).length;
   const categories: TestingCategoryCardData[] = [
     {
@@ -66,7 +66,7 @@ export function TestingBatteryPanel({
             isActive={selectedCategory === category.id}
             key={category.id}
             category={category}
-            onClick={() => setSelectedCategory(category.id)}
+            onClick={() => setSelectedCategory((currentCategory) => (currentCategory === category.id ? null : category.id))}
           />
         ))}
       </section>

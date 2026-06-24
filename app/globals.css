@@ -4057,6 +4057,17 @@ button {
   padding: 7px 9px;
 }
 
+.nordbord-date-slicer input,
+.nordbord-date-slicer select {
+  font-size: 0.74rem;
+  letter-spacing: -0.03em;
+  padding-inline: 6px;
+}
+
+.nordbord-date-slicer select {
+  font-size: 0.78rem;
+}
+
 .nordbord-title-lockup {
   display: flex;
   align-items: center;

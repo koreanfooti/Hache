@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Image from "next/image";
 import { compactNumber } from "@/lib/ams/data";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
@@ -23,6 +24,7 @@ export function ValdCategoryPanel({
   metrics: ValdNordbordMetricRow[];
   tests: ValdNordbordTestRow[];
 }) {
+  const [isNordbordOpen, setIsNordbordOpen] = useState(true);
   const deviceCard: ValdDeviceCardData = {
     copy: copy.development.nordbordCopy ?? labels.nordbordCopy,
     id: "nordbord",
@@ -42,15 +44,21 @@ export function ValdCategoryPanel({
       </div>
 
       <section className="vald-device-grid" aria-label={labels.valdDevices}>
-        <ValdDeviceCard device={deviceCard} isActive />
+        <ValdDeviceCard
+          device={deviceCard}
+          isActive={isNordbordOpen}
+          onClick={() => setIsNordbordOpen((isOpen) => !isOpen)}
+        />
       </section>
 
-      <NordbordDashboard
-        copy={copy}
-        language={language}
-        metrics={metrics}
-        tests={tests}
-      />
+      {isNordbordOpen ? (
+        <NordbordDashboard
+          copy={copy}
+          language={language}
+          metrics={metrics}
+          tests={tests}
+        />
+      ) : null}
     </section>
   );
 }
