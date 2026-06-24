@@ -50,10 +50,18 @@ export function LoadPanel({
   const [filteredSummary, setFilteredSummary] = useState<LoadSummary>(loadSummary);
   const [isFiltering, setIsFiltering] = useState(false);
   const [filterError, setFilterError] = useState<string | null>(null);
+  const [metricSearch, setMetricSearch] = useState("");
   const [metricTooltip, setMetricTooltip] = useState<ChartTooltipState | null>(null);
   const visibleSummary = filteredSummary.rows.length || isFiltering ? filteredSummary : loadSummary;
   const visibleTeams = teams.length ? teams : uniqueTeams(loadSummary.rows);
   const metricInventory = useMemo(() => wimuMetricInventory(visibleSummary.rows), [visibleSummary.rows]);
+  const filteredMetricInventory = useMemo(
+    () => filterMetricInventory(metricInventory, metricSearch, language),
+    [language, metricInventory, metricSearch],
+  );
+  const metricCountText = metricSearch.trim()
+    ? `${filteredMetricInventory.length} / ${metricInventory.length} ${controls.metrics}`
+    : `${metricInventory.length} ${controls.metrics}`;
   const selectedTeamLabel = selectedTeam === ALL_TEAMS ? controls.allTeams : selectedTeam;
   const filterStatus = filterError
     ? filterError
@@ -157,11 +165,23 @@ export function LoadPanel({
         </section>
         <aside className="load-metrics-pane">
           <div className="load-metrics-pane-heading">
-            <span>{controls.metricsPane}</span>
-            <strong>{metricInventory.length} {controls.metrics}</strong>
+            <div className="load-metrics-title-row">
+              <span>{controls.metricsPane}</span>
+              <input
+                aria-label={controls.searchMetrics}
+                placeholder={controls.searchMetrics}
+                type="search"
+                value={metricSearch}
+                onChange={(event) => {
+                  setMetricSearch(event.target.value);
+                  setMetricTooltip(null);
+                }}
+              />
+            </div>
+            <strong>{metricCountText}</strong>
           </div>
           <div className="load-metrics-list" onMouseLeave={() => setMetricTooltip(null)}>
-            {metricInventory.map((metric) => (
+            {filteredMetricInventory.map((metric) => (
               <button
                 className="load-metric-row"
                 key={metric.key}
@@ -172,6 +192,7 @@ export function LoadPanel({
                 <small>{compactNumber(metric.count)} {controls.rows}</small>
               </button>
             ))}
+            {!filteredMetricInventory.length ? <strong className="load-metrics-empty">{controls.noMetricMatches}</strong> : null}
           </div>
           <ChartTooltip tooltip={metricTooltip} />
         </aside>
@@ -202,6 +223,36 @@ export function LoadPanel({
 
 function metricDefinitionLabel(key: string, language: AmsLanguage) {
   return getWimuMetricDefinition(key).label[language];
+}
+
+function filterMetricInventory(metrics: ReturnType<typeof wimuMetricInventory>, search: string, language: AmsLanguage) {
+  const query = normalizeSearch(search);
+  if (!query) return metrics;
+
+  return metrics.filter((metric) => {
+    const definition = getWimuMetricDefinition(metric.key);
+    const searchable = [
+      metric.key,
+      definition.label.en,
+      definition.label.es,
+      definition.definition.en,
+      definition.definition.es,
+      definition.source,
+      definition.unit,
+      definition.label[language],
+      definition.definition[language],
+    ].join(" ");
+
+    return normalizeSearch(searchable).includes(query);
+  });
+}
+
+function normalizeSearch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 function metricDefinitionTooltip(key: string, count: number, language: AmsLanguage, controls: ReturnType<typeof loadControlCopy>): ChartTooltipPayload {
@@ -279,10 +330,12 @@ function loadControlCopy(language: AmsLanguage) {
       metrics: "métricas",
       metricsPane: "Métricas WIMU/GPS",
       noDateSelected: "Sin fecha seleccionada",
+      noMetricMatches: "No hay métricas que coincidan.",
       openEnd: "fin abierto",
       openStart: "inicio abierto",
       records: "registros",
       rows: "filas",
+      searchMetrics: "Buscar métricas...",
       slicers: "Slicers de GPS",
       startWindow: "Inicio de ventana",
       team: "Equipo",
@@ -303,10 +356,12 @@ function loadControlCopy(language: AmsLanguage) {
     metrics: "metrics",
     metricsPane: "WIMU/GPS metrics",
     noDateSelected: "No date selected",
+    noMetricMatches: "No metrics match this search.",
     openEnd: "open end",
     openStart: "open start",
     records: "records",
     rows: "rows",
+    searchMetrics: "Search metrics...",
     slicers: "GPS slicers",
     startWindow: "Window start",
     team: "Team",
