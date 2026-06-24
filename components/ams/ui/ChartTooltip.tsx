@@ -16,17 +16,23 @@ export type ChartTooltipPayload = {
 };
 
 export type ChartTooltipState = {
+  placement?: "left" | "right";
   payload: ChartTooltipPayload;
+  vertical?: "above" | "below" | "middle";
   x: number;
   y: number;
 };
+
+type ChartTooltipPosition = Pick<ChartTooltipState, "placement" | "vertical" | "x" | "y">;
+type ChartTooltipPlacement = NonNullable<ChartTooltipState["placement"]>;
+type ChartTooltipVertical = NonNullable<ChartTooltipState["vertical"]>;
 
 export function ChartTooltip({ tooltip }: { tooltip: ChartTooltipState | null }) {
   if (!tooltip) return null;
 
   return (
     <div
-      className="ams-chart-tooltip"
+      className={`ams-chart-tooltip is-${tooltip.placement ?? "right"} is-${tooltip.vertical ?? "middle"}`}
       style={{ "--tooltip-x": `${tooltip.x}px`, "--tooltip-y": `${tooltip.y}px` } as CSSProperties}
     >
       {tooltip.payload.kicker ? <span>{tooltip.payload.kicker}</span> : null}
@@ -44,13 +50,19 @@ export function ChartTooltip({ tooltip }: { tooltip: ChartTooltipState | null })
   );
 }
 
-export function chartTooltipPosition(event: MouseEvent<Element>, containerSelector: string) {
-  const target = event.currentTarget;
-  const container = target.closest(containerSelector);
-  const rect = (container ?? target).getBoundingClientRect();
+export function chartTooltipPosition(event: MouseEvent<Element>, _containerSelector?: string): ChartTooltipPosition {
+  void _containerSelector;
+
+  const safeWindow = typeof window === "undefined" ? null : window;
+  const viewportWidth = safeWindow?.innerWidth ?? 0;
+  const viewportHeight = safeWindow?.innerHeight ?? 0;
+  const placement: ChartTooltipPlacement = viewportWidth > 0 && event.clientX > viewportWidth - 340 ? "left" : "right";
+  const vertical: ChartTooltipVertical = viewportHeight > 0 && event.clientY > viewportHeight - 260 ? "above" : event.clientY < 150 ? "below" : "middle";
 
   return {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top,
+    placement,
+    vertical,
+    x: event.clientX,
+    y: event.clientY,
   };
 }

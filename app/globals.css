@@ -59,12 +59,14 @@ button {
 }
 
 .ams-chart-tooltip {
-  position: absolute;
-  z-index: 45;
+  position: fixed;
+  z-index: 2147483647;
   left: var(--tooltip-x);
   top: var(--tooltip-y);
   min-width: 210px;
   max-width: 290px;
+  max-height: calc(100vh - 28px);
+  overflow-y: auto;
   pointer-events: none;
   transform: translate(18px, -48%);
   border: 1px solid rgb(215 180 106 / 42%);
@@ -77,6 +79,28 @@ button {
     inset 0 1px 0 rgb(255 255 255 / 8%);
   color: #fff;
   padding: 12px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(215 180 106 / 64%) rgb(255 255 255 / 8%);
+}
+
+.ams-chart-tooltip.is-left {
+  transform: translate(calc(-100% - 18px), -48%);
+}
+
+.ams-chart-tooltip.is-below {
+  transform: translate(18px, 14px);
+}
+
+.ams-chart-tooltip.is-left.is-below {
+  transform: translate(calc(-100% - 18px), 14px);
+}
+
+.ams-chart-tooltip.is-above {
+  transform: translate(18px, calc(-100% - 14px));
+}
+
+.ams-chart-tooltip.is-left.is-above {
+  transform: translate(calc(-100% - 18px), calc(-100% - 14px));
 }
 
 .ams-chart-tooltip::before {
@@ -90,6 +114,45 @@ button {
   background: rgb(16 7 8 / 96%);
   content: "";
   transform: translateY(-50%) rotate(45deg);
+}
+
+.ams-chart-tooltip.is-left::before {
+  right: -7px;
+  left: auto;
+  border-right: 1px solid rgb(215 180 106 / 42%);
+  border-left: 0;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.ams-chart-tooltip.is-below::before {
+  top: -7px;
+  left: 22px;
+  border-top: 1px solid rgb(215 180 106 / 42%);
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 1px solid rgb(215 180 106 / 42%);
+  transform: rotate(45deg);
+}
+
+.ams-chart-tooltip.is-left.is-below::before {
+  right: 22px;
+  left: auto;
+}
+
+.ams-chart-tooltip.is-above::before {
+  top: auto;
+  bottom: -7px;
+  left: 22px;
+  border-top: 0;
+  border-right: 1px solid rgb(215 180 106 / 42%);
+  border-bottom: 1px solid rgb(215 180 106 / 42%);
+  border-left: 0;
+  transform: rotate(45deg);
+}
+
+.ams-chart-tooltip.is-left.is-above::before {
+  right: 22px;
+  left: auto;
 }
 
 .ams-chart-tooltip span {
