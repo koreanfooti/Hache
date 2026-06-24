@@ -1,19 +1,24 @@
+import { useState } from "react";
 import { compactNumber } from "@/lib/ams/data";
 import type { NordbordIsopronoReference } from "@/lib/ams/valdReferences";
 import type { NordbordLabels } from "@/components/ams/panels/testing/vald/nordbord/nordbordLabels";
 import type { ForceSeriesPoint } from "@/components/ams/panels/testing/vald/nordbord/nordbordTypes";
+import { ChartTooltip, chartTooltipPosition, type ChartTooltipPayload, type ChartTooltipState } from "@/components/ams/ui/ChartTooltip";
 
 export function ForceBarChart({
   labels,
+  playerName,
   points,
   reference,
   referenceLabel,
 }: {
   labels: NordbordLabels;
+  playerName: string;
   points: ForceSeriesPoint[];
   reference?: NordbordIsopronoReference;
   referenceLabel: string;
 }) {
+  const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const width = 980;
   const height = 318;
   const padding = { bottom: 66, left: 42, right: 20, top: 30 };
@@ -27,7 +32,7 @@ export function ForceBarChart({
   const yFor = (value: number) => padding.top + innerHeight - (value / maxForce) * innerHeight;
 
   return (
-    <section className="nordbord-chart-card">
+    <section className="nordbord-chart-card" onMouseLeave={() => setTooltip(null)}>
       <div className="nordbord-chart-legend">
         <span><i className="is-left" />{labels.leftMaxForce}</span>
         <span><i className="is-right" />{labels.rightMaxForce}</span>
@@ -63,7 +68,10 @@ export function ForceBarChart({
           const rightHeight = innerHeight - (yFor(point.right) - padding.top);
 
           return (
-            <g key={point.testId}>
+            <g
+              key={point.testId}
+              onMouseMove={(event) => setTooltip({ ...chartTooltipPosition(event, ".nordbord-chart-card"), payload: nordbordForceTooltip(playerName, labels, point) })}
+            >
               <rect className="nordbord-force-bar is-left" x={centerX - barWidth - 2} y={yFor(point.left)} width={barWidth} height={Math.max(2, leftHeight)} rx="2" />
               <rect className="nordbord-force-bar is-right" x={centerX + 2} y={yFor(point.right)} width={barWidth} height={Math.max(2, rightHeight)} rx="2" />
               <text className="nordbord-bar-value" x={centerX - barWidth / 2 - 2} y={yFor(point.left) - 8}>{compactNumber(point.left, 0)}</text>
@@ -73,11 +81,13 @@ export function ForceBarChart({
           );
         })}
       </svg>
+      <ChartTooltip tooltip={tooltip} />
     </section>
   );
 }
 
-export function AsymmetryLineChart({ labels, points }: { labels: NordbordLabels; points: ForceSeriesPoint[] }) {
+export function AsymmetryLineChart({ labels, playerName, points }: { labels: NordbordLabels; playerName: string; points: ForceSeriesPoint[] }) {
+  const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const width = 980;
   const height = 214;
   const padding = { bottom: 54, left: 42, right: 20, top: 24 };
@@ -92,7 +102,7 @@ export function AsymmetryLineChart({ labels, points }: { labels: NordbordLabels;
   const zeroY = yFor(0);
 
   return (
-    <section className="nordbord-chart-card nordbord-line-card">
+    <section className="nordbord-chart-card nordbord-line-card" onMouseLeave={() => setTooltip(null)}>
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={labels.asymmetryChart}>
         <line className="nordbord-grid-line is-zero" x1={padding.left} x2={width - padding.right} y1={zeroY} y2={zeroY} />
         <polyline className="nordbord-asymmetry-line" points={polyline} />
@@ -100,7 +110,11 @@ export function AsymmetryLineChart({ labels, points }: { labels: NordbordLabels;
           const x = xFor(index);
           const y = yFor(point.asymmetry);
           return (
-            <g key={point.testId}>
+            <g
+              key={point.testId}
+              onMouseMove={(event) => setTooltip({ ...chartTooltipPosition(event, ".nordbord-chart-card"), payload: nordbordAsymmetryTooltip(playerName, labels, point) })}
+            >
+              <circle className="load-athlete-line-hit" cx={x} cy={y} r="12" />
               <circle className="nordbord-asymmetry-dot" cx={x} cy={y} r="3.6" />
               <text className="nordbord-line-value" x={x} y={y - 10}>{compactNumber(point.asymmetry, 0)}</text>
               <text className="nordbord-axis-label" transform={`translate(${x - 18} ${height - 18}) rotate(-28)`}>{point.displayDate}</text>
@@ -109,6 +123,33 @@ export function AsymmetryLineChart({ labels, points }: { labels: NordbordLabels;
         })}
         <text className="nordbord-y-label" transform={`translate(15 ${height / 2 + 30}) rotate(-90)`}>{labels.asymmetry}</text>
       </svg>
+      <ChartTooltip tooltip={tooltip} />
     </section>
   );
+}
+
+function nordbordForceTooltip(playerName: string, labels: NordbordLabels, point: ForceSeriesPoint): ChartTooltipPayload {
+  return {
+    kicker: point.type,
+    rows: [
+      { label: labels.leftMaxForce, value: `${compactNumber(point.left, 1)} N`, tone: "gold" },
+      { label: labels.rightMaxForce, value: `${compactNumber(point.right, 1)} N`, tone: "blue" },
+      { label: labels.asymmetry, value: `${compactNumber(point.asymmetry, 1)}%`, tone: Math.abs(point.asymmetry) > 10 ? "red" : "green" },
+    ],
+    subtitle: point.date,
+    title: playerName,
+  };
+}
+
+function nordbordAsymmetryTooltip(playerName: string, labels: NordbordLabels, point: ForceSeriesPoint): ChartTooltipPayload {
+  return {
+    kicker: labels.asymmetryChart,
+    rows: [
+      { label: labels.asymmetry, value: `${compactNumber(point.asymmetry, 1)}%`, tone: Math.abs(point.asymmetry) > 10 ? "red" : "green" },
+      { label: labels.leftMaxForce, value: `${compactNumber(point.left, 1)} N`, tone: "gold" },
+      { label: labels.rightMaxForce, value: `${compactNumber(point.right, 1)} N`, tone: "blue" },
+    ],
+    subtitle: point.type,
+    title: `${playerName} · ${point.date}`,
+  };
 }

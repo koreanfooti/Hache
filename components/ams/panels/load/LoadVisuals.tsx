@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import type { CleanGpsRow } from "@/lib/ams/types";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
+import { ChartTooltip, chartTooltipPosition, type ChartTooltipPayload, type ChartTooltipState } from "@/components/ams/ui/ChartTooltip";
 import { LoadAthleteDashboard } from "@/components/ams/panels/load/LoadAthleteDashboard";
 
 type LoadMetricKey = "totalDistance" | "hsrAbsDistance" | "hsrRelDistance" | "sprintDistance" | "highIntensityAccelerations" | "highIntensityDecelerations" | "playerLoad";
@@ -267,6 +268,7 @@ function ChartHeading({ title, subtitle }: { title: string; subtitle: string }) 
 }
 
 function TrendBarChart({ copy, metric, points }: { copy: typeof chartCopy.en; metric: LoadMetric; points: ChartPoint[] }) {
+  const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const [zoom, setZoom] = useState(1);
   const width = Math.max(780, points.length * 58 * zoom + 84);
   const height = 280;
@@ -292,7 +294,7 @@ function TrendBarChart({ copy, metric, points }: { copy: typeof chartCopy.en; me
         <span>{zoomLabel}</span>
         <button type="button" onClick={() => setZoom((value) => Math.min(2.6, Number((value + 0.2).toFixed(2))))}>{copy.zoomIn}</button>
       </div>
-      <div className="load-trend-scroll" tabIndex={0}>
+      <div className="load-trend-scroll" tabIndex={0} onMouseLeave={() => setTooltip(null)}>
         <svg className="load-svg-chart" style={chartStyle} viewBox={`0 0 ${width} ${height}`} role="img">
           <ChartGrid width={width} height={height} left={padX} right={20} top={topPad} bottom={bottomPad} />
           {points.map((point, index) => {
@@ -300,7 +302,10 @@ function TrendBarChart({ copy, metric, points }: { copy: typeof chartCopy.en; me
             const center = padX + index * slot + slot / 2;
             const y = height - bottomPad - barHeight;
             return (
-              <g key={point.id}>
+              <g
+                key={point.id}
+                onMouseMove={(event) => setTooltip({ ...chartTooltipPosition(event, ".load-chart-panel"), payload: loadTrendTooltip(metric, point) })}
+              >
                 <rect className="load-trend-bar" x={center - barWidth / 2} y={y} width={barWidth} height={Math.max(2, barHeight)} rx="5" style={{ fill: metric.color }} />
                 {slot > 32 ? <text className="load-chart-value" x={center} y={Math.max(15, y - 8)}>{metricValueLabel(point.value, metric)}</text> : null}
                 <text className="load-chart-label" x={center} y={height - 30} transform={`rotate(-35 ${center} ${height - 30})`}>{point.label}</text>
@@ -309,6 +314,7 @@ function TrendBarChart({ copy, metric, points }: { copy: typeof chartCopy.en; me
           })}
         </svg>
       </div>
+      <ChartTooltip tooltip={tooltip} />
     </>
   );
 }
@@ -404,6 +410,7 @@ function DonutChart({ values }: { values: NamedValue[] }) {
 }
 
 function VerticalBars({ values }: { values: NamedValue[] }) {
+  const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const width = 340;
   const height = 230;
   const padX = 34;
@@ -414,21 +421,27 @@ function VerticalBars({ values }: { values: NamedValue[] }) {
   const barWidth = Math.max(24, Math.min(58, slot * 0.52));
 
   return (
-    <svg className="load-svg-chart" viewBox={`0 0 ${width} ${height}`} role="img">
-      <ChartGrid width={width} height={height} left={padX} right={20} top={topPad} bottom={bottomPad} />
-      {values.map((item, index) => {
-        const barHeight = (item.value / maxValue) * (height - topPad - bottomPad);
-        const center = padX + index * slot + slot / 2;
-        const y = height - bottomPad - barHeight;
-        return (
-          <g key={item.label}>
-            <rect x={center - barWidth / 2} y={y} width={barWidth} height={Math.max(2, barHeight)} rx="7" fill={item.color ?? "#d31f2f"} />
-            <text className="load-chart-value" x={center} y={Math.max(15, y - 8)}>{compactNumber(item.value)}</text>
-            <text className="load-chart-label" x={center} y={height - 20}>{item.label}</text>
-          </g>
-        );
-      })}
-    </svg>
+    <>
+      <svg className="load-svg-chart" viewBox={`0 0 ${width} ${height}`} role="img" onMouseLeave={() => setTooltip(null)}>
+        <ChartGrid width={width} height={height} left={padX} right={20} top={topPad} bottom={bottomPad} />
+        {values.map((item, index) => {
+          const barHeight = (item.value / maxValue) * (height - topPad - bottomPad);
+          const center = padX + index * slot + slot / 2;
+          const y = height - bottomPad - barHeight;
+          return (
+            <g
+              key={item.label}
+              onMouseMove={(event) => setTooltip({ ...chartTooltipPosition(event, ".load-chart-panel"), payload: namedValueTooltip(item) })}
+            >
+              <rect x={center - barWidth / 2} y={y} width={barWidth} height={Math.max(2, barHeight)} rx="7" fill={item.color ?? "#d31f2f"} />
+              <text className="load-chart-value" x={center} y={Math.max(15, y - 8)}>{compactNumber(item.value)}</text>
+              <text className="load-chart-label" x={center} y={height - 20}>{item.label}</text>
+            </g>
+          );
+        })}
+      </svg>
+      <ChartTooltip tooltip={tooltip} />
+    </>
   );
 }
 
@@ -694,6 +707,28 @@ function metricValueLabel(value: number, metric: LoadMetric) {
   if (metric.unit === "count") return compactNumber(value);
   if (metric.unit === "AU") return compactNumber(value, 1);
   return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+}
+
+function loadTrendTooltip(metric: LoadMetric, point: ChartPoint): ChartTooltipPayload {
+  return {
+    kicker: "Load trend",
+    rows: [
+      { label: "Metric", value: metric.label.en, tone: "gold" },
+      { label: "Value", value: `${metricValueLabel(point.value, metric)} ${metric.unit}`, tone: "red" },
+    ],
+    subtitle: point.id,
+    title: point.label,
+  };
+}
+
+function namedValueTooltip(item: NamedValue): ChartTooltipPayload {
+  return {
+    kicker: "Chart value",
+    rows: [
+      { label: "Value", value: compactNumber(item.value), tone: "gold" },
+    ],
+    title: item.label,
+  };
 }
 
 function radarPoint(cx: number, cy: number, radius: number, index: number, total: number) {

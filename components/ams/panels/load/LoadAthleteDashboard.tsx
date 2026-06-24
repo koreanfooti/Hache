@@ -5,6 +5,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import type { CleanGpsRow } from "@/lib/ams/types";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
+import { ChartTooltip, chartTooltipPosition, type ChartTooltipPayload, type ChartTooltipState } from "@/components/ams/ui/ChartTooltip";
 
 type AthleteOption = {
   id: string;
@@ -73,6 +74,7 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
     () => rows.filter((row) => athleteId(row) === activeAthleteId).sort((a, b) => dateKey(a).localeCompare(dateKey(b))),
     [activeAthleteId, rows],
   );
+  const activeAthleteLabel = athleteOptions.find((option) => option.id === activeAthleteId)?.label ?? copy.athlete;
   const days = useMemo(() => dailyAthleteRows(athleteRows), [athleteRows]);
   const dateBounds = useMemo(() => dateWindowBounds(days), [days]);
   const visibleDays = useMemo(() => filterDaysByDate(days, dateFrom, dateTo), [dateFrom, dateTo, days]);
@@ -127,6 +129,7 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
           <RelativeBarBand
             barClassName="load-athlete-distance-bar"
             color="#d31f2f"
+            athleteLabel={activeAthleteLabel}
             days={visibleDays}
             zoom={zoom}
             lineColor="#d7b46a"
@@ -136,6 +139,7 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
           <ComboBand
             barClassName="load-athlete-hsr-bar"
             barKey="hsrAbs"
+            athleteLabel={activeAthleteLabel}
             days={visibleDays}
             zoom={zoom}
             lineColor="#2f6dff"
@@ -145,6 +149,7 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
           <ComboBand
             barClassName="load-athlete-sprint-bar"
             barKey="sprintDistance"
+            athleteLabel={activeAthleteLabel}
             days={visibleDays}
             zoom={zoom}
             lineColor="#8d6dff"
@@ -152,7 +157,7 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
             speedTone
             title={copy.sprint}
           />
-          <ClusterBand days={visibleDays} title={copy.neuro} zoom={zoom} />
+          <ClusterBand athleteLabel={activeAthleteLabel} days={visibleDays} title={copy.neuro} zoom={zoom} />
         </div>
       ) : (
         <strong className="load-athlete-empty">{copy.noData}</strong>
@@ -162,6 +167,7 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
 }
 
 function RelativeBarBand({
+  athleteLabel,
   barClassName,
   color,
   days,
@@ -170,6 +176,7 @@ function RelativeBarBand({
   valueKey,
   zoom,
 }: {
+  athleteLabel: string;
   barClassName: string;
   color: string;
   days: AthleteDay[];
@@ -178,6 +185,7 @@ function RelativeBarBand({
   valueKey: keyof Pick<AthleteDay, "totalDistance">;
   zoom: number;
 }) {
+  const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const maxValue = Math.max(1, ...days.map((day) => day[valueKey]));
   const points = days.map((day) => ({ ...day, percent: percentage(day[valueKey], maxValue) }));
   const width = chartWidth(days.length, zoom);
@@ -185,7 +193,7 @@ function RelativeBarBand({
   const barWidth = 16 * barScale(zoom);
 
   return (
-    <LongitudinalBand title={title}>
+    <LongitudinalBand title={title} tooltip={tooltip} onTooltipClear={() => setTooltip(null)}>
       <svg className="load-athlete-svg" style={style} viewBox={`0 0 ${width} 170`} role="img">
         <BandGrid width={width} />
         {points.map((day, index) => {
@@ -193,8 +201,10 @@ function RelativeBarBand({
           const barHeight = Math.max(3, (day[valueKey] / maxValue) * 92);
           const y = 118 - barHeight;
           return (
-            <g key={day.date}>
-              <title>{relativeTooltip(day, day[valueKey], day.percent)}</title>
+            <g
+              key={day.date}
+              onMouseMove={(event) => setTooltip({ ...chartTooltipPosition(event, ".load-athlete-band"), payload: relativeTooltip(athleteLabel, day, day[valueKey], day.percent) })}
+            >
               <rect className={barClassName} x={x - barWidth / 2} y={y} width={barWidth} height={barHeight} rx="4" fill={color} />
               <text className="load-athlete-value" x={x} y={Math.max(15, y - 8)}>{compactNumber(day[valueKey])}</text>
               <text className="load-athlete-percent" x={x} y={Math.max(31, y + 14)}>{day.percent}%</text>
@@ -209,6 +219,7 @@ function RelativeBarBand({
 }
 
 function ComboBand({
+  athleteLabel,
   barClassName,
   barKey,
   days,
@@ -218,6 +229,7 @@ function ComboBand({
   title,
   zoom,
 }: {
+  athleteLabel: string;
   barClassName: string;
   barKey: keyof Pick<AthleteDay, "hsrAbs" | "sprintDistance">;
   days: AthleteDay[];
@@ -227,6 +239,7 @@ function ComboBand({
   title: string;
   zoom: number;
 }) {
+  const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const maxBar = Math.max(1, ...days.map((day) => day[barKey]));
   const maxLine = Math.max(1, ...days.map((day) => day[lineKey]));
   const width = chartWidth(days.length, zoom);
@@ -234,7 +247,7 @@ function ComboBand({
   const barWidth = 22 * barScale(zoom);
 
   return (
-    <LongitudinalBand title={title}>
+    <LongitudinalBand title={title} tooltip={tooltip} onTooltipClear={() => setTooltip(null)}>
       <svg className="load-athlete-svg" style={style} viewBox={`0 0 ${width} 170`} role="img">
         <BandGrid width={width} />
         {days.map((day, index) => {
@@ -243,8 +256,10 @@ function ComboBand({
           const y = 118 - barHeight;
           const linePercent = percentage(day[lineKey], maxLine);
           return (
-            <g key={day.date}>
-              <title>{comboTooltip(day, barKey, day[barKey], lineKey, day[lineKey], linePercent)}</title>
+            <g
+              key={day.date}
+              onMouseMove={(event) => setTooltip({ ...chartTooltipPosition(event, ".load-athlete-band"), payload: comboTooltip(athleteLabel, day, barKey, day[barKey], lineKey, day[lineKey], linePercent) })}
+            >
               <rect className={barClassName} x={x - barWidth / 2} y={y} width={barWidth} height={barHeight} rx="3" />
               <text className="load-athlete-value" x={x} y={Math.max(14, y - 8)}>{compactNumber(day[barKey])}</text>
               <text className={`load-athlete-percent ${speedTone ? speedToneClass(linePercent) : ""}`} x={x} y={Math.max(28, 118 - (linePercent / 100) * 86 - 8)}>
@@ -260,8 +275,10 @@ function ComboBand({
           const cy = 118 - (linePercent / 100) * 86;
           const cx = pointX(index, zoom);
           return (
-            <g key={`${day.date}-line`}>
-              <title>{comboTooltip(day, barKey, day[barKey], lineKey, day[lineKey], linePercent)}</title>
+            <g
+              key={`${day.date}-line`}
+              onMouseMove={(event) => setTooltip({ ...chartTooltipPosition(event, ".load-athlete-band"), payload: comboTooltip(athleteLabel, day, barKey, day[barKey], lineKey, day[lineKey], linePercent) })}
+            >
               <circle className="load-athlete-line-hit" cx={cx} cy={cy} r={Math.max(10, 7 * zoom)} />
               <circle className="load-athlete-line-dot" cx={cx} cy={cy} r="4" />
             </g>
@@ -272,14 +289,15 @@ function ComboBand({
   );
 }
 
-function ClusterBand({ days, title, zoom }: { days: AthleteDay[]; title: string; zoom: number }) {
+function ClusterBand({ athleteLabel, days, title, zoom }: { athleteLabel: string; days: AthleteDay[]; title: string; zoom: number }) {
+  const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const maxValue = Math.max(1, ...days.flatMap((day) => [day.accel, day.decel]));
   const width = chartWidth(days.length, zoom);
   const style = athleteChartStyle(width, zoom);
   const clusterWidth = 13 * barScale(zoom);
 
   return (
-    <LongitudinalBand title={title}>
+    <LongitudinalBand title={title} tooltip={tooltip} onTooltipClear={() => setTooltip(null)}>
       <svg className="load-athlete-svg" style={style} viewBox={`0 0 ${width} 170`} role="img">
         <BandGrid width={width} />
         {days.map((day, index) => {
@@ -287,8 +305,10 @@ function ClusterBand({ days, title, zoom }: { days: AthleteDay[]; title: string;
           const accelHeight = Math.max(2, (day.accel / maxValue) * 88);
           const decelHeight = Math.max(2, (day.decel / maxValue) * 88);
           return (
-            <g key={day.date}>
-              <title>{clusterTooltip(day)}</title>
+            <g
+              key={day.date}
+              onMouseMove={(event) => setTooltip({ ...chartTooltipPosition(event, ".load-athlete-band"), payload: clusterTooltip(athleteLabel, day) })}
+            >
               <rect className="load-athlete-accel-bar" x={x - clusterWidth - 2} y={118 - accelHeight} width={clusterWidth} height={accelHeight} rx="3" />
               <rect className="load-athlete-decel-bar" x={x + 2} y={118 - decelHeight} width={clusterWidth} height={decelHeight} rx="3" />
               <text className="load-athlete-cluster-label" x={x - 8} y={Math.max(16, 118 - accelHeight + 16)}>{compactNumber(day.accel)}</text>
@@ -302,11 +322,12 @@ function ClusterBand({ days, title, zoom }: { days: AthleteDay[]; title: string;
   );
 }
 
-function LongitudinalBand({ children, title }: { children: ReactNode; title: string }) {
+function LongitudinalBand({ children, onTooltipClear, title, tooltip }: { children: ReactNode; onTooltipClear: () => void; title: string; tooltip: ChartTooltipState | null }) {
   return (
-    <article className="load-athlete-band">
+    <article className="load-athlete-band" onMouseLeave={onTooltipClear}>
       <div className="load-athlete-band-title">{title}</div>
       <div className="load-athlete-scroll">{children}</div>
+      <ChartTooltip tooltip={tooltip} />
     </article>
   );
 }
@@ -446,42 +467,43 @@ function athleteChartStyle(width: number, zoom: number) {
   } as CSSProperties;
 }
 
-function relativeTooltip(day: AthleteDay, value: number, percent: number) {
-  return baseTooltip(day, [
-    `Total distance: ${compactNumber(value)} m`,
-    `Player max share: ${percent}%`,
+function relativeTooltip(athleteLabel: string, day: AthleteDay, value: number, percent: number): ChartTooltipPayload {
+  return baseTooltip(athleteLabel, day, [
+    { label: "Total distance", value: `${compactNumber(value)} m`, tone: "red" },
+    { label: "Player max share", value: `${percent}%`, tone: "gold" },
   ]);
 }
 
 function comboTooltip(
+  athleteLabel: string,
   day: AthleteDay,
   barKey: keyof Pick<AthleteDay, "hsrAbs" | "sprintDistance">,
   barValue: number,
   lineKey: keyof Pick<AthleteDay, "hsrRel" | "maxSpeed">,
   lineValue: number,
   linePercent: number,
-) {
-  return baseTooltip(day, [
-    `${metricLabel(barKey)}: ${metricValueText(barKey, barValue)}`,
-    `${metricLabel(lineKey)}: ${metricValueText(lineKey, lineValue)}`,
-    `${metricLabel(lineKey)} share: ${linePercent}%`,
+): ChartTooltipPayload {
+  return baseTooltip(athleteLabel, day, [
+    { label: metricLabel(barKey), value: metricValueText(barKey, barValue), tone: "red" },
+    { label: metricLabel(lineKey), value: metricValueText(lineKey, lineValue), tone: lineKey === "maxSpeed" ? "blue" : "gold" },
+    { label: `${metricLabel(lineKey)} share`, value: `${linePercent}%`, tone: "gold" },
   ]);
 }
 
-function clusterTooltip(day: AthleteDay) {
-  return baseTooltip(day, [
-    `High-intensity accelerations: ${compactNumber(day.accel)}`,
-    `High-intensity decelerations: ${compactNumber(day.decel)}`,
+function clusterTooltip(athleteLabel: string, day: AthleteDay): ChartTooltipPayload {
+  return baseTooltip(athleteLabel, day, [
+    { label: "HI accelerations", value: compactNumber(day.accel), tone: "blue" },
+    { label: "HI decelerations", value: compactNumber(day.decel), tone: "gold" },
   ]);
 }
 
-function baseTooltip(day: AthleteDay, lines: string[]) {
-  return [
-    `Date: ${day.date}`,
-    `Session: ${day.sessionName}`,
-    `MD: ${day.session}`,
-    ...lines,
-  ].join("\n");
+function baseTooltip(athleteLabel: string, day: AthleteDay, rows: ChartTooltipPayload["rows"]): ChartTooltipPayload {
+  return {
+    kicker: day.session,
+    rows,
+    subtitle: `${day.date} · ${day.sessionName}`,
+    title: athleteLabel,
+  };
 }
 
 function metricLabel(key: keyof Pick<AthleteDay, "hsrAbs" | "hsrRel" | "maxSpeed" | "sprintDistance">) {

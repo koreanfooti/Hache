@@ -58,6 +58,115 @@ button {
   cursor: pointer;
 }
 
+.ams-chart-tooltip {
+  position: absolute;
+  z-index: 45;
+  left: var(--tooltip-x);
+  top: var(--tooltip-y);
+  min-width: 210px;
+  max-width: 290px;
+  pointer-events: none;
+  transform: translate(18px, -48%);
+  border: 1px solid rgb(215 180 106 / 42%);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 14% 0%, rgb(211 31 47 / 22%), transparent 42%),
+    linear-gradient(135deg, rgb(12 5 7 / 96%), rgb(34 12 15 / 94%));
+  box-shadow:
+    0 22px 44px rgb(0 0 0 / 46%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+  color: #fff;
+  padding: 12px 14px;
+}
+
+.ams-chart-tooltip::before {
+  position: absolute;
+  top: 50%;
+  left: -7px;
+  width: 12px;
+  height: 12px;
+  border-bottom: 1px solid rgb(215 180 106 / 42%);
+  border-left: 1px solid rgb(215 180 106 / 42%);
+  background: rgb(16 7 8 / 96%);
+  content: "";
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.ams-chart-tooltip span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--ams-gold);
+  font-size: 0.65rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ams-chart-tooltip strong {
+  display: block;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.ams-chart-tooltip em {
+  display: block;
+  margin-top: 4px;
+  color: rgb(255 255 255 / 60%);
+  font-size: 0.74rem;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.ams-chart-tooltip dl {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+}
+
+.ams-chart-tooltip dl div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid rgb(255 255 255 / 7%);
+  padding-top: 6px;
+}
+
+.ams-chart-tooltip dt,
+.ams-chart-tooltip dd {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ams-chart-tooltip dt {
+  color: rgb(255 255 255 / 58%);
+}
+
+.ams-chart-tooltip dd {
+  color: #fff;
+  text-align: right;
+}
+
+.ams-chart-tooltip .is-gold dd {
+  color: var(--ams-gold);
+}
+
+.ams-chart-tooltip .is-green dd {
+  color: #46e68f;
+}
+
+.ams-chart-tooltip .is-red dd {
+  color: #ff5b69;
+}
+
+.ams-chart-tooltip .is-blue dd {
+  color: #5fb3ff;
+}
+
 .ams-app {
   min-height: 100vh;
   padding-bottom: 48px;
@@ -1298,7 +1407,8 @@ button {
 }
 
 .load-athlete-band {
-  overflow: hidden;
+  position: relative;
+  overflow: visible;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 14px;
   background:
@@ -4068,7 +4178,9 @@ button {
 }
 
 .nordbord-chart-card {
+  position: relative;
   overflow-x: auto;
+  overflow-y: visible;
   border: 1px solid rgb(215 180 106 / 30%);
   border-radius: 8px;
   background:
@@ -4363,6 +4475,7 @@ button {
 .body-composition-chart-card,
 .body-composition-table-card,
 .body-composition-team-card {
+  position: relative;
   min-width: 0;
   border: 1px solid var(--ams-line);
   border-radius: 8px;

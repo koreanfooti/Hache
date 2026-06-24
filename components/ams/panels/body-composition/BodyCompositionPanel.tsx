@@ -4,6 +4,7 @@ import { compactNumber, numberValue } from "@/lib/ams/data";
 import type { BodyCompRow } from "@/lib/ams/types";
 import type { DataPanelCopy } from "@/components/ams/panels/panelTypes";
 import { MetricCard, type AmsLanguage } from "@/components/ams/ui/AmsUi";
+import { ChartTooltip, chartTooltipPosition, type ChartTooltipPayload, type ChartTooltipState } from "@/components/ams/ui/ChartTooltip";
 
 const bodyCompositionSheetUrl =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQUcyFgPRUf5wsz0647lu_T3QlLDfXvcwrkEu0A9vnVJYpHujNMHjGxuyqYRl6RhyVFp3Hke-97wkPt/pubhtml";
@@ -23,6 +24,9 @@ export function BodyCompositionPanel({
   const [selectedCategory, setSelectedCategory] = useState("U21");
   const [selectedPlayer, setSelectedPlayer] = useState("all");
   const [selectedDate, setSelectedDate] = useState("latest");
+  const [energyTooltip, setEnergyTooltip] = useState<ChartTooltipState | null>(null);
+  const [somatotypeTooltip, setSomatotypeTooltip] = useState<ChartTooltipState | null>(null);
+  const [weightTooltip, setWeightTooltip] = useState<ChartTooltipState | null>(null);
   const activeCategory = categoryOptions.includes(selectedCategory) ? selectedCategory : categoryOptions[0] ?? selectedCategory;
   const categoryRows = useMemo(
     () => rows.filter((row) => (row.category ?? row.sourceCategory) === activeCategory),
@@ -168,7 +172,7 @@ export function BodyCompositionPanel({
           </div>
         </article>
 
-        <article className="body-composition-somatotype-card">
+        <article className="body-composition-somatotype-card" onMouseLeave={() => setSomatotypeTooltip(null)}>
           <div className="panel-heading">
             <h3>{copy.bodyComp.somatotypeChart ?? "Somatotype"}</h3>
             <span>{copy.bodyComp.somatotypeSub ?? "Heath-Carter ISAK profile dots"}</span>
@@ -190,42 +194,52 @@ export function BodyCompositionPanel({
                   className={index % 3 === 0 ? "is-gold" : ""}
                   key={`${row.playerId ?? row.playerName}-${row.testDate}-${index}`}
                   style={{ "--somato-left": `${point.x}%`, "--somato-top": `${point.y}%` } as CSSProperties}
-                  title={`${row.playerName}: ${point.label}`}
+                  onMouseMove={(event) => setSomatotypeTooltip({ ...chartTooltipPosition(event, ".body-composition-somatotype-card"), payload: somatotypeTooltipPayload(row, point) })}
                 />
               );
             })}
           </div>
+          <ChartTooltip tooltip={somatotypeTooltip} />
         </article>
 
-        <article className="body-composition-chart-card body-composition-weight-card">
+        <article className="body-composition-chart-card body-composition-weight-card" onMouseLeave={() => setWeightTooltip(null)}>
           <div className="panel-heading">
             <h3>{copy.bodyComp.weightTracking ?? "Weight Tracking"}</h3>
             <span>{copy.bodyComp.weightTrackingSub ?? "Longitudinal player record"}</span>
           </div>
           <div className="body-composition-mini-bars">
             {bodyCompSeriesRows(playerRows).slice(-10).map((row, index) => (
-              <span key={`${row.playerId}-${row.testDate}-${index}`} style={{ "--bar-height": `${Math.max(8, Math.min(100, numberValue(row.weightKg) * 1.15))}%` } as CSSProperties}>
+              <span
+                key={`${row.playerId}-${row.testDate}-${index}`}
+                style={{ "--bar-height": `${Math.max(8, Math.min(100, numberValue(row.weightKg) * 1.15))}%` } as CSSProperties}
+                onMouseMove={(event) => setWeightTooltip({ ...chartTooltipPosition(event, ".body-composition-weight-card"), payload: weightTooltipPayload(row) })}
+              >
                 <i />
                 <small>{String(row.testDate ?? "").slice(5) || index + 1}</small>
               </span>
             ))}
           </div>
+          <ChartTooltip tooltip={weightTooltip} />
         </article>
 
-        <article className="body-composition-chart-card body-composition-energy-card">
+        <article className="body-composition-chart-card body-composition-energy-card" onMouseLeave={() => setEnergyTooltip(null)}>
           <div className="panel-heading">
             <h3>{copy.bodyComp.energyExpenditure ?? "Energy Expenditure"}</h3>
             <span>{copy.bodyComp.energyExpenditureSub ?? "Estimated calories by activity level"}</span>
           </div>
           <div className="body-composition-energy-list">
             {energyRows.map((row) => (
-              <span key={row.label}>
+              <span
+                key={row.label}
+                onMouseMove={(event) => setEnergyTooltip({ ...chartTooltipPosition(event, ".body-composition-energy-card"), payload: energyTooltipPayload(row, profileRow) })}
+              >
                 <strong>{row.label}</strong>
                 <i style={{ "--energy-width": `${row.width}%` } as CSSProperties} />
                 <small>{bodyCompMetricUnit(row.value, "kcal", 0)}</small>
               </span>
             ))}
           </div>
+          <ChartTooltip tooltip={energyTooltip} />
         </article>
 
         <article className="body-composition-table-card">
@@ -377,6 +391,46 @@ function somatotypePoint(row: BodyCompRow | undefined) {
     label: `${compactNumber(somato.endo, 1)}-${compactNumber(somato.meso, 1)}-${compactNumber(somato.ecto, 1)}`,
     x,
     y,
+  };
+}
+
+function somatotypeTooltipPayload(row: BodyCompRow, point: ReturnType<typeof somatotypePoint>): ChartTooltipPayload {
+  const somato = somatotypeComponents(row);
+
+  return {
+    kicker: "Heath-Carter ISAK profile",
+    rows: [
+      { label: "Endomorphy", value: compactNumber(somato.endo, 1), tone: "gold" },
+      { label: "Mesomorphy", value: compactNumber(somato.meso, 1), tone: "red" },
+      { label: "Ectomorphy", value: compactNumber(somato.ecto, 1), tone: "blue" },
+      { label: "Plot", value: point.label, tone: "green" },
+    ],
+    subtitle: row.testDate ?? row.date ?? "No date",
+    title: row.playerName ?? row.player_name ?? "Unknown athlete",
+  };
+}
+
+function weightTooltipPayload(row: BodyCompRow): ChartTooltipPayload {
+  return {
+    kicker: "Weight tracking",
+    rows: [
+      { label: "Weight", value: bodyCompMetricUnit(row.weightKg, "kg", 1), tone: "red" },
+      { label: "BMI", value: bodyCompMetric(row.bmi, 1), tone: "gold" },
+    ],
+    subtitle: row.testDate ?? row.date ?? "No date",
+    title: row.playerName ?? row.player_name ?? "Unknown athlete",
+  };
+}
+
+function energyTooltipPayload(row: ReturnType<typeof bodyCompEnergyRows>[number], profileRow: BodyCompRow | undefined): ChartTooltipPayload {
+  return {
+    kicker: "Energy expenditure",
+    rows: [
+      { label: "Activity", value: row.label, tone: "gold" },
+      { label: "Estimated kcal", value: bodyCompMetricUnit(row.value, "kcal", 0), tone: row.label === "Match" ? "red" : "green" },
+    ],
+    subtitle: profileRow?.testDate ?? profileRow?.date ?? "Latest",
+    title: profileRow?.playerName ?? profileRow?.player_name ?? "Team profile",
   };
 }
 

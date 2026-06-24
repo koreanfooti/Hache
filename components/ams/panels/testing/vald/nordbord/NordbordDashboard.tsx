@@ -198,8 +198,8 @@ export function NordbordDashboard({ copy, language, metrics, tests }: NordbordDa
 
           {series.length ? (
             <>
-              <ForceBarChart labels={labels} points={series} reference={isopronoReference} referenceLabel={isopronoReferenceLabel} />
-              <AsymmetryLineChart labels={labels} points={series} />
+              <ForceBarChart labels={labels} playerName={activePlayer.name} points={series} reference={isopronoReference} referenceLabel={isopronoReferenceLabel} />
+              <AsymmetryLineChart labels={labels} playerName={activePlayer.name} points={series} />
             </>
           ) : (
             <div className="nordbord-empty-state">{copy.common.noRecords}</div>
