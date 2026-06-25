@@ -1,20 +1,20 @@
-import { readFile } from "fs/promises";
-import path from "path";
 import {
   DEFAULT_NORDBORD_BASE_URL,
   fetchValdWithRetry,
   getAccessToken,
   missingConfigResponse,
 } from "@/app/api/vald/_utils";
+import {
+  amsIdForValdProfile,
+  mapWithConcurrency,
+  profileIdsFromRows,
+  profileMapFromRows,
+  readValdProfileMap,
+  type ValdProfileMapRow,
+} from "@/app/api/vald/_profile-map";
 import type { ValdNordbordMetricRow, ValdNordbordTestRow } from "@/lib/ams/types";
 
 export const dynamic = "force-dynamic";
-
-type ValdProfileMapRow = {
-  amsId?: string;
-  valdProfileId?: string;
-  tenantId?: string;
-};
 
 type ValdNordbordApiTest = {
   profileId?: string;
@@ -86,16 +86,8 @@ async function refreshNordbord(request: Request) {
       "2020-01-01T00:00:00.000Z";
     const profileId = requestUrl.searchParams.get("profileId");
     const profileMapRows = await readValdProfileMap();
-    const profileMap = new Map(
-      profileMapRows
-        .filter((row) => row.valdProfileId)
-        .map((row) => [row.valdProfileId as string, row]),
-    );
-    const profileIds = profileId
-      ? [profileId]
-      : profileMapRows
-        .map((row) => row.valdProfileId)
-        .filter((id): id is string => Boolean(id));
+    const profileMap = profileMapFromRows(profileMapRows);
+    const profileIds = profileIdsFromRows(profileMapRows, profileId);
     const tests = profileIds.length
       ? (await Promise.all(profileIds.map((id) => fetchNordbordTestsForProfile(id, tenantId, modifiedFromUtc, token)))).flat()
       : await fetchNordbordTestsForProfile(undefined, tenantId, modifiedFromUtc, token);
@@ -167,10 +159,9 @@ async function fetchNordbordMetrics(
 
 function normalizeTest(test: ValdNordbordApiTest, tenantId: string, profileMap: Map<string, ValdProfileMapRow>) {
   const profileId = test.profileId ?? test.athleteId ?? "";
-  const profileMapRow = profileMap.get(profileId);
 
   return {
-    amsId: profileMapRow?.amsId ?? (profileId ? `VALD-${profileId}` : undefined),
+    amsId: amsIdForValdProfile(profileId, profileMap),
     tenantId,
     valdProfileId: profileId,
     testId: test.testId,
@@ -204,28 +195,4 @@ function dedupeTests(tests: ValdNordbordTestRow[]) {
   }
 
   return Array.from(testById.values());
-}
-
-async function readValdProfileMap(): Promise<ValdProfileMapRow[]> {
-  const mapPath = path.join(process.cwd(), "public", "ams", "data", "clean", "vald_profile_map.json");
-
-  try {
-    const file = await readFile(mapPath, "utf8");
-    const rows = JSON.parse(file) as unknown;
-
-    return Array.isArray(rows) ? rows as ValdProfileMapRow[] : [];
-  } catch {
-    return [];
-  }
-}
-
-async function mapWithConcurrency<T, R>(items: T[], limit: number, mapper: (item: T) => Promise<R>) {
-  const results: R[] = [];
-
-  for (let index = 0; index < items.length; index += limit) {
-    const chunk = items.slice(index, index + limit);
-    results.push(...await Promise.all(chunk.map(mapper)));
-  }
-
-  return results;
 }

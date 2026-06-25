@@ -163,6 +163,39 @@ export type ValdNordbordMetricRow = {
   rightAvgTimeToMaxForceSeconds?: number | null;
 } & Record<string, unknown>;
 
+export type ValdForceFrameTestRow = {
+  amsId?: string;
+  tenantId?: string;
+  valdProfileId?: string;
+  testId?: string;
+  modifiedDateUtc?: string;
+  testDateUtc?: string;
+  testTypeId?: string;
+  testTypeName?: string;
+  testPositionId?: string;
+  testPositionName?: string;
+  notes?: string | null;
+  device?: string;
+} & Record<string, unknown>;
+
+export type ValdForceFrameMetricRow = {
+  amsId?: string;
+  tenantId?: string;
+  valdProfileId?: string;
+  athleteId?: string;
+  testId?: string;
+} & Record<string, unknown>;
+
+export type ValdForceFrameRepetitionRow = {
+  amsId?: string;
+  tenantId?: string;
+  valdProfileId?: string;
+  id?: string;
+  testId?: string;
+  sensorType?: string | number;
+  repNumber?: number;
+} & Record<string, unknown>;
+
 export type RehabServiceRow = {
   dateIso?: string;
   serviceCode?: string;
