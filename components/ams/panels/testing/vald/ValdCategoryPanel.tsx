@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Image from "next/image";
 import { compactNumber } from "@/lib/ams/data";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 import type { ValdNordbordMetricRow, ValdNordbordTestRow } from "@/lib/ams/types";
@@ -42,7 +41,7 @@ export function ValdCategoryPanel({
   const forceFrameCard: ValdDeviceCardData = {
     copy: copy.development.forceframeCopy ?? labels.forceframeCopy,
     id: "forceframe",
-    label: "02",
+    image: "/ams/assets/testing/forceframe-logo.webp",
     stat: forceFramePayload
       ? `${compactNumber(forceFramePayload.tests.length)} ${copy.common.tests}`
       : "Live API",
@@ -51,14 +50,6 @@ export function ValdCategoryPanel({
 
   return (
     <section className="testing-category-detail">
-      <div className="testing-brand-card">
-        <Image src="/ams/assets/testing/vald-logo.png" alt="VALD logo" width={190} height={86} />
-        <div>
-          <strong>VALD</strong>
-          <p>{copy.development.valdCopy ?? labels.valdCopy}</p>
-        </div>
-      </div>
-
       <section className="vald-device-grid" aria-label={labels.valdDevices}>
         <ValdDeviceCard
           device={nordbordCard}
