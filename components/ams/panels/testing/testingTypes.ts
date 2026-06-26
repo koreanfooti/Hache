@@ -9,7 +9,7 @@ import type {
 } from "@/lib/ams/types";
 
 export type TestingCategory = "vald" | "fms" | "yBalance";
-export type ValdDevice = "nordbord";
+export type ValdDevice = "forceframe" | "nordbord";
 
 export type TestingBatteryCopy = {
   common: Record<string, string>;

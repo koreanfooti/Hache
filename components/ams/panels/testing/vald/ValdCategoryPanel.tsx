@@ -8,6 +8,8 @@ import type {
   TestingBatteryCopy,
   ValdDeviceCardData,
 } from "@/components/ams/panels/testing/testingTypes";
+import { ForceFrameDashboard } from "@/components/ams/panels/testing/vald/forceframe/ForceFrameDashboard";
+import type { ForceFrameRefreshPayload } from "@/components/ams/panels/testing/vald/forceframe/forceframeTypes";
 import { NordbordDashboard } from "@/components/ams/panels/testing/vald/nordbord/NordbordDashboard";
 import type { NordbordRefreshPayload } from "@/components/ams/panels/testing/vald/nordbord/nordbordTypes";
 import { ValdDeviceCard } from "@/components/ams/panels/testing/vald/ValdDeviceCard";
@@ -28,12 +30,23 @@ export function ValdCategoryPanel({
   tests: ValdNordbordTestRow[];
 }) {
   const [isNordbordOpen, setIsNordbordOpen] = useState(true);
-  const deviceCard: ValdDeviceCardData = {
+  const [isForceFrameOpen, setIsForceFrameOpen] = useState(false);
+  const [forceFramePayload, setForceFramePayload] = useState<ForceFrameRefreshPayload | null>(null);
+  const nordbordCard: ValdDeviceCardData = {
     copy: copy.development.nordbordCopy ?? labels.nordbordCopy,
     id: "nordbord",
     image: "/ams/assets/testing/nordbord-logo.png",
     stat: `${compactNumber(tests.length)} ${copy.common.tests}`,
     title: "NordBord",
+  };
+  const forceFrameCard: ValdDeviceCardData = {
+    copy: copy.development.forceframeCopy ?? labels.forceframeCopy,
+    id: "forceframe",
+    label: "02",
+    stat: forceFramePayload
+      ? `${compactNumber(forceFramePayload.tests.length)} ${copy.common.tests}`
+      : "Live API",
+    title: "ForceFrame",
   };
 
   return (
@@ -48,9 +61,14 @@ export function ValdCategoryPanel({
 
       <section className="vald-device-grid" aria-label={labels.valdDevices}>
         <ValdDeviceCard
-          device={deviceCard}
+          device={nordbordCard}
           isActive={isNordbordOpen}
           onClick={() => setIsNordbordOpen((isOpen) => !isOpen)}
+        />
+        <ValdDeviceCard
+          device={forceFrameCard}
+          isActive={isForceFrameOpen}
+          onClick={() => setIsForceFrameOpen((isOpen) => !isOpen)}
         />
       </section>
 
@@ -61,6 +79,15 @@ export function ValdCategoryPanel({
           metrics={metrics}
           onRefreshData={onNordbordRefresh}
           tests={tests}
+        />
+      ) : null}
+
+      {isForceFrameOpen ? (
+        <ForceFrameDashboard
+          copy={copy}
+          language={language}
+          payload={forceFramePayload}
+          onRefreshData={setForceFramePayload}
         />
       ) : null}
     </section>

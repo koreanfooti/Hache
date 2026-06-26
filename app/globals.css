@@ -4624,6 +4624,246 @@ button {
   place-items: center;
 }
 
+.forceframe-dashboard {
+  margin-top: 2px;
+}
+
+.forceframe-report-header {
+  background:
+    radial-gradient(circle at 22% 0%, rgb(226 29 50 / 20%), transparent 34%),
+    linear-gradient(135deg, rgb(148 11 21 / 96%), rgb(36 8 12 / 96%));
+}
+
+.forceframe-title-lockup h3 {
+  font-size: clamp(2.15rem, 4.1vw, 4rem);
+}
+
+.forceframe-title-lockup img {
+  width: min(112px, 13vw);
+  opacity: 0.9;
+}
+
+.forceframe-kpi-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.forceframe-kpi-row .nordbord-kpi-card {
+  min-height: 82px;
+}
+
+.forceframe-kpi-row .nordbord-kpi-card strong {
+  font-size: clamp(1.18rem, 1.9vw, 1.74rem);
+}
+
+.forceframe-control-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.62fr) minmax(360px, 1.38fr);
+  gap: 10px;
+}
+
+.forceframe-toggle-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 74%);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 30% 50%, rgb(30 86 123 / 28%), transparent 46%),
+    rgb(0 0 0 / 34%);
+  padding: 10px 12px;
+}
+
+.forceframe-toggle-box span {
+  margin-right: 8px;
+  color: var(--ams-muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.forceframe-toggle-box button {
+  flex: 1 1 92px;
+  min-height: 38px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 950;
+  padding: 8px 10px;
+}
+
+.forceframe-toggle-box button.is-active {
+  border-color: rgb(215 180 106 / 44%);
+  background: linear-gradient(135deg, var(--ams-red), var(--ams-red-dark));
+}
+
+.forceframe-toggle-box.is-wide {
+  flex-wrap: wrap;
+}
+
+.forceframe-chart-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.52fr) minmax(0, 1.48fr);
+  gap: 12px;
+}
+
+.forceframe-chart-card {
+  position: relative;
+  overflow: auto visible;
+  border: 1px solid rgb(215 180 106 / 30%);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 20% 50%, rgb(226 29 50 / 14%), transparent 36%),
+    radial-gradient(circle at 75% 20%, rgb(24 146 255 / 8%), transparent 34%),
+    rgb(0 0 0 / 32%);
+  padding: 12px;
+}
+
+.forceframe-chart-card svg {
+  display: block;
+  width: 100%;
+  min-width: 420px;
+  height: auto;
+}
+
+.forceframe-chart-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+.forceframe-chart-title strong {
+  font-size: 0.92rem;
+  font-weight: 950;
+}
+
+.forceframe-chart-title span {
+  color: var(--ams-gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.forceframe-row-date {
+  fill: var(--ams-muted);
+  font-size: 10px;
+  font-weight: 850;
+  text-anchor: end;
+}
+
+.forceframe-asymmetry-bar {
+  fill: var(--ams-red);
+  opacity: 0.94;
+  stroke: #fff;
+  stroke-width: 1.4;
+}
+
+.forceframe-force-bar.is-left {
+  fill: #ffaf14;
+}
+
+.forceframe-force-bar.is-right {
+  fill: #2598ff;
+}
+
+.forceframe-bar-label,
+.forceframe-split-label {
+  fill: #fff;
+  font-size: 10px;
+  font-weight: 950;
+  pointer-events: none;
+}
+
+.forceframe-bar-label {
+  text-anchor: end;
+}
+
+.forceframe-split-label.is-left {
+  text-anchor: start;
+}
+
+.forceframe-split-label.is-right {
+  text-anchor: end;
+}
+
+.forceframe-axis-line,
+.forceframe-center-line {
+  stroke: rgb(255 255 255 / 30%);
+  stroke-width: 1.4;
+}
+
+.forceframe-center-line {
+  stroke-dasharray: 4 6;
+}
+
+.forceframe-reference-line {
+  fill: none;
+  opacity: 0.96;
+  stroke-dasharray: 5 5;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.forceframe-reference-line.is-white {
+  stroke: rgb(255 255 255 / 86%);
+}
+
+.forceframe-reference-line.is-left {
+  stroke: #fff;
+}
+
+.forceframe-reference-line.is-right {
+  stroke: #ff7a35;
+}
+
+.forceframe-reference-caption,
+.forceframe-axis-caption,
+.forceframe-axis-title {
+  fill: #fff;
+  font-size: 10px;
+  font-weight: 850;
+  paint-order: stroke;
+  stroke: rgb(0 0 0 / 70%);
+  stroke-width: 3px;
+}
+
+.forceframe-reference-caption.is-left {
+  fill: #ffcf76;
+  text-anchor: end;
+}
+
+.forceframe-reference-caption.is-right {
+  fill: #61b6ff;
+  text-anchor: start;
+}
+
+.forceframe-axis-title {
+  fill: #fff;
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.forceframe-empty-state {
+  gap: 12px;
+  margin: 16px;
+  text-align: center;
+}
+
+.forceframe-empty-state strong {
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.forceframe-empty-state span {
+  color: var(--ams-muted);
+  font-size: 0.9rem;
+}
+
 .body-composition-dashboard {
   --body-panel-bg: linear-gradient(135deg, rgb(255 255 255 / 5%), rgb(255 255 255 / 2%));
 }
@@ -5137,6 +5377,8 @@ button {
   .testing-category-grid,
   .vald-device-grid,
   .testing-dashboard-lists,
+  .forceframe-chart-grid,
+  .forceframe-control-row,
   .nordbord-report-header,
   .nordbord-layout,
   .body-composition-controls {
@@ -5150,6 +5392,10 @@ button {
 
   .nordbord-kpi-row {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .forceframe-kpi-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -5202,6 +5448,8 @@ button {
   .testing-category-grid,
   .vald-device-grid,
   .testing-dashboard-lists,
+  .forceframe-chart-grid,
+  .forceframe-control-row,
   .nordbord-report-header,
   .nordbord-date-slicer,
   .nordbord-layout,
@@ -5244,6 +5492,10 @@ button {
 
   .nordbord-position-row > div {
     border-radius: 14px;
+  }
+
+  .forceframe-kpi-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .body-composition-hero h2 {
