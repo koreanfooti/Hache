@@ -4742,6 +4742,11 @@ button {
   color: #fff;
 }
 
+.forceframe-chart-title > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
 .forceframe-chart-title strong {
   font-size: 0.92rem;
   font-weight: 950;
@@ -4752,6 +4757,39 @@ button {
   font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.forceframe-reference-legend {
+  display: flex;
+  max-width: 58%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  text-align: right;
+}
+
+.forceframe-reference-legend strong {
+  flex-basis: 100%;
+  color: var(--ams-gold);
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.forceframe-reference-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.forceframe-reference-legend i {
+  width: 18px;
+  height: 3px;
+  border-radius: 999px;
 }
 
 .forceframe-row-date {
@@ -4826,6 +4864,24 @@ button {
   stroke: #ff7a35;
 }
 
+.forceframe-reference-line.is-p25,
+.forceframe-reference-legend .is-p25 {
+  background: #ff3b30;
+  stroke: #ff3b30;
+}
+
+.forceframe-reference-line.is-p50,
+.forceframe-reference-legend .is-p50 {
+  background: #f4c34f;
+  stroke: #f4c34f;
+}
+
+.forceframe-reference-line.is-p75,
+.forceframe-reference-legend .is-p75 {
+  background: #42c45a;
+  stroke: #42c45a;
+}
+
 .forceframe-reference-caption,
 .forceframe-axis-caption,
 .forceframe-axis-title {
@@ -4845,6 +4901,18 @@ button {
 .forceframe-reference-caption.is-right {
   fill: #61b6ff;
   text-anchor: start;
+}
+
+.forceframe-reference-caption.is-p25 {
+  fill: #ff8d86;
+}
+
+.forceframe-reference-caption.is-p50 {
+  fill: #ffdf7a;
+}
+
+.forceframe-reference-caption.is-p75 {
+  fill: #86e795;
 }
 
 .forceframe-axis-title {

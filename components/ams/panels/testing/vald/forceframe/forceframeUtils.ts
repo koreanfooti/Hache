@@ -1,6 +1,7 @@
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 import { compactNumber, numberValue } from "@/lib/ams/data";
 import type { Player } from "@/lib/ams/content";
+import type { ForceFrameHipAdAbReference } from "@/lib/ams/valdReferences";
 import type { ValdForceFrameTestRow } from "@/lib/ams/types";
 import {
   average,
@@ -99,6 +100,26 @@ export function positionLabel(position: string | undefined, language: AmsLanguag
     : {};
 
   return labels[position ?? ""] ?? position ?? "-";
+}
+
+export function forceFrameReferenceDisplayLabel(reference: ForceFrameHipAdAbReference, language: AmsLanguage, aggregateSuffix: string) {
+  const label = language === "es" ? reference.esLabel : reference.enLabel;
+  return reference.isAggregate ? `${label} ${aggregateSuffix}` : label;
+}
+
+export function isForceFrameHipAdAbTestType(type: string | undefined) {
+  const normalizedType = String(type ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  return Boolean(
+    normalizedType.includes("hip")
+      || normalizedType.includes("ad/ab")
+      || normalizedType.includes("ab/ad")
+      || normalizedType.includes("adduction")
+      || normalizedType.includes("abduction"),
+  );
 }
 
 export function fallbackPlayer(amsId: string, unknownPlayer: string): Player {

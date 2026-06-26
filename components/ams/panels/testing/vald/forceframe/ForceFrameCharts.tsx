@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { compactNumber } from "@/lib/ams/data";
+import type { ForceFrameHipAdAbReference, ValdReferenceLine } from "@/lib/ams/valdReferences";
 import type { ForceFrameLabels } from "@/components/ams/panels/testing/vald/forceframe/forceframeLabels";
 import type { ForceFrameSeriesPoint } from "@/components/ams/panels/testing/vald/forceframe/forceframeTypes";
 import { median } from "@/components/ams/panels/testing/vald/forceframe/forceframeUtils";
@@ -64,10 +65,16 @@ export function ForceFrameSplitForceChart({
   labels,
   playerName,
   points,
+  reference,
+  referenceLabel,
+  referenceMetric,
 }: {
   labels: ForceFrameLabels;
   playerName: string;
   points: ForceFrameSeriesPoint[];
+  reference?: ForceFrameHipAdAbReference;
+  referenceLabel?: string;
+  referenceMetric: "abd" | "add";
 }) {
   const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const width = Math.max(640, 600 + points.length * 8);
@@ -76,19 +83,32 @@ export function ForceFrameSplitForceChart({
   const padding = { bottom: 40, left: 22, right: 36, top: 28 };
   const centerX = width / 2;
   const halfWidth = centerX - padding.left - 34;
-  const maxForce = Math.max(100, ...points.flatMap((point) => [point.left, point.right])) * 1.12;
+  const referenceLines = reference ? forceFrameReferenceLines(reference, referenceMetric) : [];
+  const referenceValues = referenceLines.map((line) => line.value);
+  const maxDomainForce = Math.max(100, ...points.flatMap((point) => [point.left, point.right]), ...referenceValues) * 1.12;
   const leftMedian = median(points.map((point) => point.left));
   const rightMedian = median(points.map((point) => point.right));
   const yFor = (index: number) => padding.top + index * rowHeight;
-  const widthFor = (value: number) => (value / maxForce) * halfWidth;
+  const widthFor = (value: number) => (value / maxDomainForce) * halfWidth;
   const leftMedianX = centerX - widthFor(leftMedian);
   const rightMedianX = centerX + widthFor(rightMedian);
+  const referenceMetricLabel = referenceMetric === "abd" ? labels.referenceAbd : labels.referenceAdd;
 
   return (
     <section className="forceframe-chart-card forceframe-split-card" onMouseLeave={() => setTooltip(null)}>
       <div className="forceframe-chart-title">
-        <strong>{labels.forceSplit}</strong>
-        <span>{labels.leftMaxForce} / {labels.rightMaxForce}</span>
+        <div>
+          <strong>{labels.forceSplit}</strong>
+          <span>{labels.leftMaxForce} / {labels.rightMaxForce}</span>
+        </div>
+        {reference ? (
+          <div className="forceframe-reference-legend">
+            <strong>{labels.percentileReference}: {referenceLabel} · {referenceMetricLabel}</strong>
+            {referenceLines.map((line) => (
+              <span key={line.key}><i className={`is-${line.key}`} />P{line.percentile} {compactNumber(line.value, 0)}</span>
+            ))}
+          </div>
+        ) : null}
       </div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
@@ -97,10 +117,33 @@ export function ForceFrameSplitForceChart({
         style={{ minWidth: `${width}px` } as CSSProperties}
       >
         <line className="forceframe-center-line" x1={centerX} x2={centerX} y1={padding.top - 10} y2={height - padding.bottom} />
-        <line className="forceframe-reference-line is-left" x1={leftMedianX} x2={leftMedianX} y1={padding.top - 8} y2={height - padding.bottom} />
-        <line className="forceframe-reference-line is-right" x1={rightMedianX} x2={rightMedianX} y1={padding.top - 8} y2={height - padding.bottom} />
-        <text className="forceframe-reference-caption is-left" x={leftMedianX - 6} y={height - 12}>{labels.medianLeft}: {compactNumber(leftMedian, 0)}</text>
-        <text className="forceframe-reference-caption is-right" x={rightMedianX + 6} y={height - 12}>{labels.medianRight}: {compactNumber(rightMedian, 0)}</text>
+        {referenceLines.length ? (
+          referenceLines.map((line, index) => {
+            const leftX = centerX - widthFor(line.value);
+            const rightX = centerX + widthFor(line.value);
+            const captionY = height - 30 + index * 9;
+
+            return (
+              <g key={line.key}>
+                <line className={`forceframe-reference-line is-${line.key}`} x1={leftX} x2={leftX} y1={padding.top - 8} y2={height - padding.bottom} />
+                <line className={`forceframe-reference-line is-${line.key}`} x1={rightX} x2={rightX} y1={padding.top - 8} y2={height - padding.bottom} />
+                <text className={`forceframe-reference-caption is-left is-${line.key}`} x={leftX - 6} y={captionY}>
+                  P{line.percentile} {compactNumber(line.value, 0)}
+                </text>
+                <text className={`forceframe-reference-caption is-right is-${line.key}`} x={rightX + 6} y={captionY}>
+                  P{line.percentile} {compactNumber(line.value, 0)}
+                </text>
+              </g>
+            );
+          })
+        ) : (
+          <>
+            <line className="forceframe-reference-line is-left" x1={leftMedianX} x2={leftMedianX} y1={padding.top - 8} y2={height - padding.bottom} />
+            <line className="forceframe-reference-line is-right" x1={rightMedianX} x2={rightMedianX} y1={padding.top - 8} y2={height - padding.bottom} />
+            <text className="forceframe-reference-caption is-left" x={leftMedianX - 6} y={height - 12}>{labels.medianLeft}: {compactNumber(leftMedian, 0)}</text>
+            <text className="forceframe-reference-caption is-right" x={rightMedianX + 6} y={height - 12}>{labels.medianRight}: {compactNumber(rightMedian, 0)}</text>
+          </>
+        )}
         {points.map((point, index) => {
           const y = yFor(index);
           const leftWidth = widthFor(point.left);
@@ -127,6 +170,10 @@ export function ForceFrameSplitForceChart({
       <ChartTooltip tooltip={tooltip} />
     </section>
   );
+}
+
+function forceFrameReferenceLines(reference: ForceFrameHipAdAbReference, metric: "abd" | "add"): ValdReferenceLine[] {
+  return metric === "abd" ? reference.abdLines : reference.addLines;
 }
 
 function forceTooltip(labels: ForceFrameLabels, playerName: string, point: ForceFrameSeriesPoint): ChartTooltipPayload {

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { players } from "@/lib/ams/content";
+import { getForceFrameHipAdAbReference } from "@/lib/ams/valdReferences";
 import { DateSlicerField } from "@/components/ams/ui/DateSlicerField";
 import { ForceFrameAsymmetryChart, ForceFrameSplitForceChart } from "@/components/ams/panels/testing/vald/forceframe/ForceFrameCharts";
 import { ForceFrameFilterDrawer } from "@/components/ams/panels/testing/vald/forceframe/ForceFrameFilterDrawer";
@@ -13,9 +14,11 @@ import {
   fallbackPlayer,
   forceFrameDateInput,
   forceFramePoint,
+  forceFrameReferenceDisplayLabel,
   forceFrameTestKey,
   forceLabel,
   formatDisplayDate,
+  isForceFrameHipAdAbTestType,
   maxValue,
   percentChange,
   percentLabel,
@@ -101,6 +104,13 @@ export function ForceFrameDashboard({ copy, language, onRefreshData, payload }: 
   const asymmetryValues = series.map((point) => point.asymmetry);
   const averageAsymmetry = average(asymmetryValues);
   const maximumAsymmetry = Math.max(0, ...asymmetryValues.map((value) => Math.abs(value)));
+  const forceFrameReferenceCandidate = getForceFrameHipAdAbReference(activePlayer.position);
+  const shouldShowForceFrameReference = series.length > 0 && series.every((point) => isForceFrameHipAdAbTestType(point.type));
+  const forceFrameReference = shouldShowForceFrameReference ? forceFrameReferenceCandidate : undefined;
+  const forceFrameReferenceLabel = forceFrameReference
+    ? forceFrameReferenceDisplayLabel(forceFrameReference, language, labels.referenceAvg)
+    : "";
+  const forceFrameReferenceMetric = selectedDirection === "pull" ? "abd" : "add";
 
   async function refreshForceFrameData() {
     setRefreshStatus("refreshing");
@@ -271,7 +281,14 @@ export function ForceFrameDashboard({ copy, language, onRefreshData, payload }: 
             {series.length ? (
               <section className="forceframe-chart-grid">
                 <ForceFrameAsymmetryChart labels={labels} playerName={activePlayer.name} points={series} />
-                <ForceFrameSplitForceChart labels={labels} playerName={activePlayer.name} points={series} />
+                <ForceFrameSplitForceChart
+                  labels={labels}
+                  playerName={activePlayer.name}
+                  points={series}
+                  reference={forceFrameReference}
+                  referenceLabel={forceFrameReferenceLabel}
+                  referenceMetric={forceFrameReferenceMetric}
+                />
               </section>
             ) : (
               <div className="nordbord-empty-state">{copy.common.noRecords}</div>
