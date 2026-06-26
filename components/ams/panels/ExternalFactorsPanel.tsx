@@ -170,8 +170,6 @@ export function ExternalFactorsPanel({ language }: { language: AmsLanguage }) {
             language={language}
             max={environmentEndDate || lastFixtureDate}
             min={firstFixtureDate}
-            tooltipDetail={language === "es" ? "Filtra viajes, sedes y carga ambiental." : "Filters travel, venues, and environment load."}
-            tooltipTitle={language === "es" ? "Inicio del viaje" : "Travel window start"}
             value={environmentStartDate}
             onChange={setEnvironmentStartDate}
           />
@@ -181,8 +179,6 @@ export function ExternalFactorsPanel({ language }: { language: AmsLanguage }) {
             language={language}
             max={lastFixtureDate}
             min={environmentStartDate || firstFixtureDate}
-            tooltipDetail={language === "es" ? "Controla qué partidos aparecen abajo." : "Controls which matches appear below."}
-            tooltipTitle={language === "es" ? "Fin del viaje" : "Travel window end"}
             value={environmentEndDate}
             onChange={setEnvironmentEndDate}
           />

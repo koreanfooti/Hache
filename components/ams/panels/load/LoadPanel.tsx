@@ -144,8 +144,6 @@ export function LoadPanel({
               emptyLabel={controls.noDateSelected}
               label={controls.from}
               language={language}
-              tooltipDetail={dateRangeText}
-              tooltipTitle={controls.startWindow}
               value={dateFrom}
               onChange={setDateFrom}
             />
@@ -153,8 +151,6 @@ export function LoadPanel({
               emptyLabel={controls.noDateSelected}
               label={controls.to}
               language={language}
-              tooltipDetail={dateRangeText}
-              tooltipTitle={controls.endWindow}
               value={dateTo}
               onChange={setDateTo}
             />

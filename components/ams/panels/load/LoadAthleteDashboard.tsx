@@ -6,6 +6,7 @@ import { compactNumber, numberValue } from "@/lib/ams/data";
 import type { CleanGpsRow } from "@/lib/ams/types";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
 import { ChartTooltip, chartTooltipPosition, type ChartTooltipPayload, type ChartTooltipState } from "@/components/ams/ui/ChartTooltip";
+import { DateSlicerField } from "@/components/ams/ui/DateSlicerField";
 
 type AthleteOption = {
   id: string;
@@ -157,32 +158,30 @@ export function LoadAthleteDashboard({ language, rows }: { language: AmsLanguage
         </label>
       </header>
       <div className="load-athlete-controls">
-        <label>
-          <span>{copy.from}</span>
-          <input
-            max={dateBounds.max}
-            min={dateBounds.min}
-            type="date"
-            value={dateFrom}
-            onChange={(event) => {
-              setDateFrom(event.target.value);
-              setHiddenDates([]);
-            }}
-          />
-        </label>
-        <label>
-          <span>{copy.to}</span>
-          <input
-            max={dateBounds.max}
-            min={dateBounds.min}
-            type="date"
-            value={dateTo}
-            onChange={(event) => {
-              setDateTo(event.target.value);
-              setHiddenDates([]);
-            }}
-          />
-        </label>
+        <DateSlicerField
+          emptyLabel={copy.from}
+          label={copy.from}
+          language={language}
+          max={dateBounds.max}
+          min={dateBounds.min}
+          value={dateFrom}
+          onChange={(nextDate) => {
+            setDateFrom(nextDate);
+            setHiddenDates([]);
+          }}
+        />
+        <DateSlicerField
+          emptyLabel={copy.to}
+          label={copy.to}
+          language={language}
+          max={dateBounds.max}
+          min={dateBounds.min}
+          value={dateTo}
+          onChange={(nextDate) => {
+            setDateTo(nextDate);
+            setHiddenDates([]);
+          }}
+        />
         <button type="button" onClick={() => { setDateFrom(""); setDateTo(""); setHiddenDates([]); }}>
           {copy.reset}
         </button>

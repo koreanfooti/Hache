@@ -145,8 +145,6 @@ export function NordbordDashboard({ copy, language, metrics, onRefreshData, test
             language={language}
             max={toDate || allDates.at(-1) || undefined}
             min={allDates[0] ?? undefined}
-            tooltipDetail={language === "es" ? "Inicio del rango NordBord visible." : "Start of the visible NordBord range."}
-            tooltipTitle={labels.dateSlicer}
             value={fromDate}
             onChange={setFromDate}
           />
@@ -156,8 +154,6 @@ export function NordbordDashboard({ copy, language, metrics, onRefreshData, test
             language={language}
             max={allDates.at(-1) || undefined}
             min={fromDate || allDates[0] || undefined}
-            tooltipDetail={language === "es" ? "Fin del rango NordBord visible." : "End of the visible NordBord range."}
-            tooltipTitle={labels.dateSlicer}
             value={toDate}
             onChange={setToDate}
           />

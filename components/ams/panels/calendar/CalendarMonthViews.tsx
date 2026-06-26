@@ -31,8 +31,6 @@ export function CalendarTextInput({
         emptyLabel={language === "es" ? "Sin fecha seleccionada" : "No date selected"}
         label={label}
         language={language}
-        tooltipDetail={language === "es" ? "Fecha editable del evento del calendario." : "Editable calendar event date."}
-        tooltipTitle={language === "es" ? "Fecha del evento" : "Event date"}
         value={value}
         onChange={onChange}
       />
