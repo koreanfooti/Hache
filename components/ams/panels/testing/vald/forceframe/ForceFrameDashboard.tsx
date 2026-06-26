@@ -25,7 +25,7 @@ import {
 } from "@/components/ams/panels/testing/vald/forceframe/forceframeUtils";
 import { NordbordKpi } from "@/components/ams/panels/testing/vald/nordbord/NordbordKpi";
 
-const forceFrameLogo = "/ams/assets/testing/vald-logo.png";
+const forceFrameLogo = "/ams/assets/testing/forceframe-logo.webp";
 
 export function ForceFrameDashboard({ copy, language, onRefreshData, payload }: ForceFrameDashboardProps) {
   const labels = forceFrameLabels(language);
@@ -171,7 +171,7 @@ export function ForceFrameDashboard({ copy, language, onRefreshData, payload }: 
         </div>
         <div className="nordbord-title-lockup forceframe-title-lockup">
           <h3>{labels.title}</h3>
-          <Image src={forceFrameLogo} alt="VALD ForceFrame logo" width={118} height={54} />
+          <Image src={forceFrameLogo} alt="VALD ForceFrame logo" width={82} height={82} />
         </div>
         <div className="nordbord-atlas-lockup">
           <span>Atlas FC {language === "es" ? "Rendimiento" : "Performance"}</span>
