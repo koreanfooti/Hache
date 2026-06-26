@@ -4632,6 +4632,226 @@ button {
   margin-top: 2px;
 }
 
+.forceframe-reference-dock {
+  position: sticky;
+  top: 86px;
+  z-index: 72;
+  display: flex;
+  height: 0;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.forceframe-orlegi-tab {
+  position: absolute;
+  top: 12px;
+  right: -104px;
+  display: grid;
+  width: 82px;
+  gap: 4px;
+  place-items: center;
+  border: 1px solid rgb(215 180 106 / 44%);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 0%, rgb(215 180 106 / 24%), transparent 52%),
+    rgb(9 7 7 / 92%);
+  box-shadow:
+    0 18px 46px rgb(0 0 0 / 46%),
+    inset 0 1px 0 rgb(255 255 255 / 9%);
+  color: var(--ams-gold);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  padding: 8px 6px;
+  pointer-events: auto;
+  text-transform: uppercase;
+}
+
+.forceframe-orlegi-tab img {
+  overflow: hidden;
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.forceframe-orlegi-tab:hover,
+.forceframe-orlegi-tab.is-open {
+  border-color: rgb(226 29 50 / 62%);
+  background:
+    radial-gradient(circle at 50% 0%, rgb(226 29 50 / 34%), transparent 52%),
+    rgb(19 6 8 / 96%);
+  color: #fff;
+  transform: translateX(-4px);
+}
+
+.forceframe-reference-table-panel {
+  position: absolute;
+  top: 12px;
+  right: 0;
+  width: min(960px, calc(100vw - 178px));
+  max-height: min(760px, 76vh);
+  overflow: hidden;
+  border: 1px solid rgb(215 180 106 / 46%);
+  border-radius: 22px;
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 4%) 1px, transparent 1px),
+    linear-gradient(rgb(255 255 255 / 4%) 1px, transparent 1px),
+    radial-gradient(circle at 18% 0%, rgb(226 29 50 / 28%), transparent 44%),
+    linear-gradient(145deg, rgb(10 5 7 / 98%), rgb(44 9 14 / 98%));
+  background-size: 34px 34px, 34px 34px, auto, auto;
+  box-shadow:
+    0 28px 78px rgb(0 0 0 / 66%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+  color: #fff;
+  pointer-events: auto;
+}
+
+.forceframe-reference-table-panel header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgb(215 180 106 / 28%);
+  padding: 18px 18px 14px;
+}
+
+.forceframe-reference-table-panel header span {
+  color: var(--ams-gold);
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.forceframe-reference-table-panel header strong {
+  display: block;
+  margin-top: 4px;
+  color: #fff;
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.forceframe-reference-table-panel header p {
+  max-width: 680px;
+  margin: 6px 0 0;
+  color: var(--ams-muted);
+  font-size: 0.88rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.forceframe-reference-table-panel header button {
+  flex: 0 0 auto;
+  border: 1px solid rgb(215 180 106 / 36%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 6%);
+  color: var(--ams-gold);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 950;
+  padding: 9px 13px;
+  text-transform: uppercase;
+}
+
+.forceframe-reference-table-wrap {
+  max-height: min(560px, 56vh);
+  overflow: auto;
+  padding: 12px 14px;
+}
+
+.forceframe-reference-table-panel table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: separate;
+  border-spacing: 0 7px;
+}
+
+.forceframe-reference-table-panel th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgb(20 8 10 / 96%);
+  color: var(--ams-gold);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  padding: 8px 10px;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.forceframe-reference-table-panel th:first-child,
+.forceframe-reference-table-panel td:first-child {
+  text-align: left;
+}
+
+.forceframe-reference-table-panel th small {
+  color: rgb(255 255 255 / 54%);
+  font-size: 0.58rem;
+}
+
+.forceframe-reference-table-panel td {
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 4%);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 850;
+  padding: 9px 10px;
+  text-align: right;
+}
+
+.forceframe-reference-table-panel td:first-child {
+  border-left: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 12px 0 0 12px;
+  font-family: inherit;
+  font-weight: 950;
+}
+
+.forceframe-reference-table-panel td:last-child {
+  border-right: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 0 12px 12px 0;
+}
+
+.forceframe-percentile-pill {
+  display: inline-grid;
+  min-width: 42px;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 950;
+  padding: 5px 8px;
+}
+
+.forceframe-percentile-pill.is-p25 {
+  background: linear-gradient(135deg, #a91521, #ff3b30);
+}
+
+.forceframe-percentile-pill.is-p50 {
+  background: linear-gradient(135deg, #826018, #f4c34f);
+  color: #1a0d0e;
+}
+
+.forceframe-percentile-pill.is-p75 {
+  background: linear-gradient(135deg, #0c6b3d, #42c45a);
+}
+
+.forceframe-reference-table-panel footer {
+  border-top: 1px solid rgb(215 180 106 / 22%);
+  color: var(--ams-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 10px 18px 14px;
+}
+
 .forceframe-report-header {
   background:
     radial-gradient(circle at 22% 0%, rgb(226 29 50 / 20%), transparent 34%),
