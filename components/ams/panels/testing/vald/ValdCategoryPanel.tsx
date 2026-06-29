@@ -31,7 +31,6 @@ export function ValdCategoryPanel({
 }) {
   const [isNordbordOpen, setIsNordbordOpen] = useState(true);
   const [isForceFrameOpen, setIsForceFrameOpen] = useState(false);
-  const [isReferenceOpen, setIsReferenceOpen] = useState(false);
   const [forceFramePayload, setForceFramePayload] = useState<ForceFrameRefreshPayload | null>(null);
   const hasOpenValdDashboard = isNordbordOpen || isForceFrameOpen;
   const nordbordCard: ValdDeviceCardData = {
@@ -67,11 +66,7 @@ export function ValdCategoryPanel({
       </section>
 
       {hasOpenValdDashboard ? (
-        <ValdReferenceDock
-          isOpen={isReferenceOpen}
-          language={language}
-          onToggle={() => setIsReferenceOpen((isOpen) => !isOpen)}
-        />
+        <ValdReferenceDock language={language} />
       ) : null}
 
       {isNordbordOpen ? (

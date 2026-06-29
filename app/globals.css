@@ -4639,15 +4639,16 @@ button {
   top: 116px;
   right: clamp(96px, 8vw, 132px);
   z-index: 94;
+  display: grid;
+  height: auto;
   width: 82px;
-  height: 0;
+  gap: 10px;
+  align-content: start;
   pointer-events: none;
 }
 
 .vald-orlegi-tab {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: relative;
   display: grid;
   width: 82px;
   gap: 4px;
@@ -4677,6 +4678,17 @@ button {
   height: 58px;
   border-radius: 14px;
   object-fit: cover;
+}
+
+.vald-orlegi-tab.is-mls img {
+  background: #fff;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.vald-orlegi-tab.is-mls span {
+  font-size: 0.54rem;
+  line-height: 1;
 }
 
 .vald-orlegi-tab:hover,
@@ -4771,6 +4783,10 @@ button {
   min-width: 820px;
   border-collapse: separate;
   border-spacing: 0 7px;
+}
+
+.vald-reference-table-panel.is-mls table {
+  min-width: 760px;
 }
 
 .vald-reference-table-panel th {
@@ -5801,7 +5817,6 @@ button {
   }
 
   .vald-orlegi-tab {
-    right: 0;
     width: 72px;
     border-radius: 15px;
     padding: 6px 5px;
