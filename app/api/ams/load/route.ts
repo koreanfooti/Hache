@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { compactNumber, numberValue, parseCsv } from "@/lib/ams/data";
+import { loadGpsRouteDataFromSupabase } from "@/lib/ams/server";
 import type { CleanGpsRow, LoadSummary } from "@/lib/ams/types";
 
 const ALL_TEAMS = "__all__";
@@ -13,6 +14,9 @@ let cachedRows: CleanGpsRow[] | null = null;
 let cachedPromise: Promise<CleanGpsRow[]> | null = null;
 
 export async function GET(request: NextRequest) {
+  const supabasePayload = await loadGpsRouteDataFromSupabase(request.nextUrl.searchParams);
+  if (supabasePayload) return NextResponse.json(supabasePayload);
+
   const rows = await loadGpsRows();
   const teams = uniqueTeams(rows);
   const params = request.nextUrl.searchParams;

@@ -4,7 +4,7 @@ import { sampleGpsRows } from "@/lib/ams/content";
 import { compactNumber, loadCsv, loadJson, numberValue } from "@/lib/ams/data";
 import { amsSourcePaths } from "@/lib/ams/source-registry";
 import type {
-  BodyCompRow,
+  BodyCompApiPayload,
   CleanGpsRow,
   FmsAssessmentRow,
   FmsExerciseScoreRow,
@@ -105,7 +105,7 @@ export async function loadAmsSourceData(role: AmsAuthRole = "technicalStaff") {
     playerMatchHistory,
   ] = await Promise.all([
     canViewMedical ? loadInjurySource() : restrictedInjurySource(),
-    canViewMedical || canViewPerformance ? loadJson<BodyCompRow>(amsSourcePaths.bodyComp).catch(() => []) : [],
+    canViewMedical || canViewPerformance ? loadBodyCompSource() : [],
     canViewPerformance ? loadJson<FmsAssessmentRow>(amsSourcePaths.fmsAssessments).catch(() => []) : [],
     canViewPerformance ? loadJson<FmsExerciseScoreRow>(amsSourcePaths.fmsExerciseScores).catch(() => []) : [],
     canViewPerformance ? loadJson<YBalanceAssessmentRow>(amsSourcePaths.yBalanceAssessments).catch(() => []) : [],
@@ -179,7 +179,7 @@ async function loadInjurySource(): Promise<ClientInjurySource> {
     const payload = (await response.json()) as InjuryApiPayload;
 
     if (!response.ok) {
-      throw new Error(payload.error ?? "Unable to load Google Sheets injury history.");
+      throw new Error(payload.error ?? "Unable to load injury history.");
     }
 
     return {
@@ -188,12 +188,25 @@ async function loadInjurySource(): Promise<ClientInjurySource> {
       sourceLabel: payload.meta?.sourceLabel ?? "Published Google Sheet",
     };
   } catch {
-    const fallbackRows = await loadJson<InjuryRow>(amsSourcePaths.injuryFallback).catch(() => []);
-
     return {
-      rows: fallbackRows,
+      rows: [],
       lastSynced: undefined,
-      sourceLabel: "Local fallback",
+      sourceLabel: "Unavailable",
     };
+  }
+}
+
+async function loadBodyCompSource() {
+  try {
+    const response = await fetch(amsSourcePaths.bodyComp, { cache: "no-store" });
+    const payload = (await response.json()) as BodyCompApiPayload;
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to load body composition.");
+    }
+
+    return payload.rows ?? [];
+  } catch {
+    return [];
   }
 }

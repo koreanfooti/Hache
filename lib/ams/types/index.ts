@@ -1,4 +1,5 @@
 export type {
+  BodyCompApiPayload,
   BodyCompRow,
   CleanGpsRow,
   FmsAssessmentRow,

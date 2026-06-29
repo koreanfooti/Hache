@@ -3,7 +3,11 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { parseCsv } from "@/lib/ams/data";
-import { getInjuryHistoryFromGoogleSheet } from "@/lib/ams/server";
+import {
+  getInjuryHistoryFromGoogleSheet,
+  loadBodyCompositionFromSupabase,
+  loadInjuryHistoryFromSupabase,
+} from "@/lib/ams/server";
 import {
   amsSourceDefinitions,
   sourceDefinitionForPath,
@@ -23,6 +27,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unknown source path." }, { status: 404 });
   }
 
+  if (source.kind === "api") {
+    return previewApiSource(source);
+  }
+
   const publicDir = path.join(process.cwd(), "public");
   const filePath = path.resolve(publicDir, sourcePath.replace(/^\/+/, ""));
 
@@ -31,12 +39,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    if (source.kind === "api" && source.key === "injuryHistory") {
-      const payload = await getInjuryHistoryFromGoogleSheet();
-      const rows = payload.rows.slice(0, MAX_ROWS);
-      return NextResponse.json(toPreviewPayload(source, rows, payload.rows.length > MAX_ROWS, payload.rows.length));
-    }
-
     if (sourcePath.endsWith(".csv")) {
       const lines = await readCsvHead(filePath, MAX_ROWS + 1);
       const rows = parseCsv(lines.join("\n")).slice(0, MAX_ROWS);
@@ -47,6 +49,38 @@ export async function GET(request: NextRequest) {
     const rows = Array.isArray(payload) ? payload.slice(0, MAX_ROWS) : [payload];
 
     return NextResponse.json(toPreviewPayload(source, rows, Array.isArray(payload) && payload.length > MAX_ROWS, Array.isArray(payload) ? payload.length : 1));
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Unable to preview source.",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+async function previewApiSource(source: AmsSourceDefinition) {
+  try {
+    if (source.key === "injuryHistory") {
+      const payload = await loadInjuryHistoryFromSupabase() ?? await getInjuryHistoryFromGoogleSheet();
+      const rows = (payload.rows ?? []).slice(0, MAX_ROWS) as RawRow[];
+      return NextResponse.json(toPreviewPayload(source, rows, (payload.rows ?? []).length > MAX_ROWS, payload.rows?.length));
+    }
+
+    if (source.key === "bodyComp") {
+      const payload = await loadBodyCompositionFromSupabase();
+      if (!payload) {
+        return NextResponse.json(
+          { error: "Body composition Supabase source unavailable." },
+          { status: 503 },
+        );
+      }
+
+      const rows = payload.rows ?? [];
+      return NextResponse.json(toPreviewPayload(source, rows.slice(0, MAX_ROWS), rows.length > MAX_ROWS, rows.length));
+    }
+
+    return NextResponse.json({ error: "Unsupported API source." }, { status: 400 });
   } catch (error) {
     return NextResponse.json(
       {

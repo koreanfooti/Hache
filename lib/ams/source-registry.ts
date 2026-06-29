@@ -7,8 +7,7 @@ export const amsSourcePaths = {
   gpsDailyRollup: "/ams/data/clean/gps/gps_player_daily.csv",
   currentRosterGps: "/ams/data/clean/gps/gps_player_daily_current_roster.json",
   injuryHistory: "/api/ams/injuries",
-  injuryFallback: "/ams/data/clean/injuries/injury_history_clean.json",
-  bodyComp: "/ams/data/clean/body_comp/body_comp_clean.json",
+  bodyComp: "/api/ams/body-composition",
   fmsAssessments: "/ams/data/clean/tests/fms_assessments_clean.json",
   fmsExerciseScores: "/ams/data/clean/tests/fms_exercise_scores_clean.json",
   yBalanceAssessments: "/ams/data/clean/tests/y_balance_assessments_clean.json",
@@ -27,7 +26,7 @@ type SourceCountContext = {
 };
 
 export type AmsSourceDefinition = {
-  key: Exclude<keyof typeof amsSourcePaths, "injuryFallback">;
+  key: keyof typeof amsSourcePaths;
   label: string;
   labelEs: string;
   path: string;
@@ -72,7 +71,7 @@ export const amsSourceDefinitions = [
     label: "Body composition",
     labelEs: "Composición corporal",
     path: amsSourcePaths.bodyComp,
-    kind: "json",
+    kind: "api",
     count: ({ sourceData }) => sourceData.bodyComp.length,
   },
   {

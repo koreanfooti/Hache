@@ -322,6 +322,18 @@ export type InjuryApiPayload = {
     sourceLabel?: string;
     lastSynced?: string;
     rowCount?: number;
+    cacheSeconds?: number;
+  };
+  error?: string;
+};
+
+export type BodyCompApiPayload = {
+  rows?: BodyCompRow[];
+  meta?: {
+    sourceLabel?: string;
+    lastSynced?: string;
+    rowCount?: number;
+    cacheSeconds?: number;
   };
   error?: string;
 };

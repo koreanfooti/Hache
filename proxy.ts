@@ -26,6 +26,13 @@ export function proxy(request: NextRequest) {
     return forbiddenResponse();
   }
 
+  if (
+    pathname === "/api/ams/body-composition"
+    && (!role || (!canAccessDomain(role, "medical") && !canAccessDomain(role, "performance")))
+  ) {
+    return forbiddenResponse();
+  }
+
   if (pathname.startsWith("/ams/data/clean/") && (!role || !canAccessPublicCleanDataPath(role, pathname))) {
     return forbiddenResponse();
   }
@@ -40,6 +47,7 @@ export const config = {
     "/sign-up",
     "/api/ams/source-preview",
     "/api/ams/injuries",
+    "/api/ams/body-composition",
     "/ams/data/clean/:path*",
   ],
 };

@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 const requiredDataFiles = [
   amsSourcePaths.currentRosterGps,
   amsSourcePaths.playerMaster,
-  amsSourcePaths.bodyComp,
   amsSourcePaths.fmsAssessments,
   amsSourcePaths.yBalanceAssessments,
   amsSourcePaths.valdNordbordTests,
