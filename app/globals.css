@@ -3875,8 +3875,10 @@ button {
 }
 
 .testing-category-detail {
+  position: relative;
   display: grid;
   gap: 16px;
+  overflow: visible;
 }
 
 .vald-device-grid {
@@ -4632,20 +4634,20 @@ button {
   margin-top: 2px;
 }
 
-.forceframe-reference-dock {
-  position: sticky;
-  top: 86px;
-  z-index: 72;
-  display: flex;
+.vald-reference-dock {
+  position: fixed;
+  top: 116px;
+  right: clamp(12px, 1.6vw, 28px);
+  z-index: 94;
+  width: 82px;
   height: 0;
-  justify-content: flex-end;
   pointer-events: none;
 }
 
-.forceframe-orlegi-tab {
+.vald-orlegi-tab {
   position: absolute;
-  top: 12px;
-  right: -104px;
+  top: 0;
+  right: 0;
   display: grid;
   width: 82px;
   gap: 4px;
@@ -4669,7 +4671,7 @@ button {
   text-transform: uppercase;
 }
 
-.forceframe-orlegi-tab img {
+.vald-orlegi-tab img {
   overflow: hidden;
   width: 58px;
   height: 58px;
@@ -4677,8 +4679,8 @@ button {
   object-fit: cover;
 }
 
-.forceframe-orlegi-tab:hover,
-.forceframe-orlegi-tab.is-open {
+.vald-orlegi-tab:hover,
+.vald-orlegi-tab.is-open {
   border-color: rgb(226 29 50 / 62%);
   background:
     radial-gradient(circle at 50% 0%, rgb(226 29 50 / 34%), transparent 52%),
@@ -4687,11 +4689,11 @@ button {
   transform: translateX(-4px);
 }
 
-.forceframe-reference-table-panel {
+.vald-reference-table-panel {
   position: absolute;
-  top: 12px;
-  right: 0;
-  width: min(960px, calc(100vw - 178px));
+  top: 0;
+  right: 94px;
+  width: min(960px, calc(100vw - 132px));
   max-height: min(760px, 76vh);
   overflow: hidden;
   border: 1px solid rgb(215 180 106 / 46%);
@@ -4709,7 +4711,7 @@ button {
   pointer-events: auto;
 }
 
-.forceframe-reference-table-panel header {
+.vald-reference-table-panel header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -4718,7 +4720,7 @@ button {
   padding: 18px 18px 14px;
 }
 
-.forceframe-reference-table-panel header span {
+.vald-reference-table-panel header span {
   color: var(--ams-gold);
   font-size: 0.7rem;
   font-weight: 950;
@@ -4726,7 +4728,7 @@ button {
   text-transform: uppercase;
 }
 
-.forceframe-reference-table-panel header strong {
+.vald-reference-table-panel header strong {
   display: block;
   margin-top: 4px;
   color: #fff;
@@ -4735,7 +4737,7 @@ button {
   letter-spacing: -0.04em;
 }
 
-.forceframe-reference-table-panel header p {
+.vald-reference-table-panel header p {
   max-width: 680px;
   margin: 6px 0 0;
   color: var(--ams-muted);
@@ -4744,7 +4746,7 @@ button {
   line-height: 1.35;
 }
 
-.forceframe-reference-table-panel header button {
+.vald-reference-table-panel header button {
   flex: 0 0 auto;
   border: 1px solid rgb(215 180 106 / 36%);
   border-radius: 999px;
@@ -4758,20 +4760,20 @@ button {
   text-transform: uppercase;
 }
 
-.forceframe-reference-table-wrap {
+.vald-reference-table-wrap {
   max-height: min(560px, 56vh);
   overflow: auto;
   padding: 12px 14px;
 }
 
-.forceframe-reference-table-panel table {
+.vald-reference-table-panel table {
   width: 100%;
   min-width: 820px;
   border-collapse: separate;
   border-spacing: 0 7px;
 }
 
-.forceframe-reference-table-panel th {
+.vald-reference-table-panel th {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -4785,17 +4787,17 @@ button {
   text-transform: uppercase;
 }
 
-.forceframe-reference-table-panel th:first-child,
-.forceframe-reference-table-panel td:first-child {
+.vald-reference-table-panel th:first-child,
+.vald-reference-table-panel td:first-child {
   text-align: left;
 }
 
-.forceframe-reference-table-panel th small {
+.vald-reference-table-panel th small {
   color: rgb(255 255 255 / 54%);
   font-size: 0.58rem;
 }
 
-.forceframe-reference-table-panel td {
+.vald-reference-table-panel td {
   border-top: 1px solid rgb(255 255 255 / 8%);
   border-bottom: 1px solid rgb(255 255 255 / 8%);
   background: rgb(255 255 255 / 4%);
@@ -4807,19 +4809,19 @@ button {
   text-align: right;
 }
 
-.forceframe-reference-table-panel td:first-child {
+.vald-reference-table-panel td:first-child {
   border-left: 1px solid rgb(255 255 255 / 8%);
   border-radius: 12px 0 0 12px;
   font-family: inherit;
   font-weight: 950;
 }
 
-.forceframe-reference-table-panel td:last-child {
+.vald-reference-table-panel td:last-child {
   border-right: 1px solid rgb(255 255 255 / 8%);
   border-radius: 0 12px 12px 0;
 }
 
-.forceframe-percentile-pill {
+.vald-percentile-pill {
   display: inline-grid;
   min-width: 42px;
   place-items: center;
@@ -4831,20 +4833,20 @@ button {
   padding: 5px 8px;
 }
 
-.forceframe-percentile-pill.is-p25 {
+.vald-percentile-pill.is-p25 {
   background: linear-gradient(135deg, #a91521, #ff3b30);
 }
 
-.forceframe-percentile-pill.is-p50 {
+.vald-percentile-pill.is-p50 {
   background: linear-gradient(135deg, #826018, #f4c34f);
   color: #1a0d0e;
 }
 
-.forceframe-percentile-pill.is-p75 {
+.vald-percentile-pill.is-p75 {
   background: linear-gradient(135deg, #0c6b3d, #42c45a);
 }
 
-.forceframe-reference-table-panel footer {
+.vald-reference-table-panel footer {
   border-top: 1px solid rgb(215 180 106 / 22%);
   color: var(--ams-muted);
   font-size: 0.74rem;
@@ -5789,6 +5791,37 @@ button {
 
   .forceframe-kpi-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vald-reference-dock {
+    position: fixed;
+    top: 72px;
+    right: 8px;
+    width: 72px;
+  }
+
+  .vald-orlegi-tab {
+    right: 0;
+    width: 72px;
+    border-radius: 15px;
+    padding: 6px 5px;
+  }
+
+  .vald-orlegi-tab img {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  .vald-reference-table-panel {
+    top: 68px;
+    right: 0;
+    width: min(92vw, 860px);
+  }
+
+  .vald-reference-table-panel header {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .body-composition-hero h2 {

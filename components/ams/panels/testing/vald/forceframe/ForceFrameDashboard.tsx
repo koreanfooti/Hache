@@ -7,7 +7,6 @@ import { ForceFrameAsymmetryChart, ForceFrameSplitForceChart } from "@/component
 import { ForceFrameFilterDrawer } from "@/components/ams/panels/testing/vald/forceframe/ForceFrameFilterDrawer";
 import { forceFrameLabels } from "@/components/ams/panels/testing/vald/forceframe/forceframeLabels";
 import { ForceFramePlayerPanel } from "@/components/ams/panels/testing/vald/forceframe/ForceFramePlayerPanel";
-import { ForceFrameReferenceDock } from "@/components/ams/panels/testing/vald/forceframe/ForceFrameReferenceDock";
 import type { ForceFrameDashboardProps, ForceFrameDirection, ForceFrameRefreshPayload } from "@/components/ams/panels/testing/vald/forceframe/forceframeTypes";
 import {
   average,
@@ -43,7 +42,6 @@ export function ForceFrameDashboard({ copy, language, onRefreshData, payload }: 
   const [selectedDirection, setSelectedDirection] = useState<ForceFrameDirection>("pull");
   const [hiddenTestIds, setHiddenTestIds] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isReferenceOpen, setIsReferenceOpen] = useState(false);
   const [refreshStatus, setRefreshStatus] = useState<"idle" | "refreshing" | "success" | "error">("idle");
   const [refreshMessage, setRefreshMessage] = useState("");
   const [lastSynced, setLastSynced] = useState(payload?.meta?.lastSynced ?? "");
@@ -148,12 +146,6 @@ export function ForceFrameDashboard({ copy, language, onRefreshData, payload }: 
 
   return (
     <article className="nordbord-powerbi-dashboard forceframe-dashboard">
-      <ForceFrameReferenceDock
-        isOpen={isReferenceOpen}
-        labels={labels}
-        language={language}
-        onToggle={() => setIsReferenceOpen((isOpen) => !isOpen)}
-      />
       <header className="nordbord-report-header forceframe-report-header">
         <div className="nordbord-date-slicer" aria-label={labels.dateSlicer}>
           <DateSlicerField

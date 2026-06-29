@@ -2,28 +2,25 @@ import Image from "next/image";
 import { compactNumber } from "@/lib/ams/data";
 import { valdPerformanceReferenceRows } from "@/lib/ams/valdReferences";
 import type { AmsLanguage } from "@/components/ams/ui/AmsUi";
-import type { ForceFrameLabels } from "@/components/ams/panels/testing/vald/forceframe/forceframeLabels";
 
 const orlegiLogo = "/ams/assets/testing/orlegi-sports.jpeg";
 
-export function ForceFrameReferenceDock({
+export function ValdReferenceDock({
   isOpen,
-  labels,
   language,
   onToggle,
 }: {
   isOpen: boolean;
-  labels: ForceFrameLabels;
   language: AmsLanguage;
   onToggle: () => void;
 }) {
   const copy = referenceCopy(language);
 
   return (
-    <div className="forceframe-reference-dock">
+    <div className="vald-reference-dock">
       <button
         aria-expanded={isOpen}
-        className={isOpen ? "forceframe-orlegi-tab is-open" : "forceframe-orlegi-tab"}
+        className={isOpen ? "vald-orlegi-tab is-open" : "vald-orlegi-tab"}
         type="button"
         onClick={onToggle}
       >
@@ -32,16 +29,16 @@ export function ForceFrameReferenceDock({
       </button>
 
       {isOpen ? (
-        <aside className="forceframe-reference-table-panel" aria-label={copy.panelLabel}>
+        <aside className="vald-reference-table-panel" aria-label={copy.panelLabel}>
           <header>
             <div>
               <span>{copy.kicker}</span>
               <strong>{copy.title}</strong>
               <p>{copy.subtitle}</p>
             </div>
-            <button type="button" onClick={onToggle}>{labels.close}</button>
+            <button type="button" onClick={onToggle}>{copy.close}</button>
           </header>
-          <div className="forceframe-reference-table-wrap">
+          <div className="vald-reference-table-wrap">
             <table>
               <thead>
                 <tr>
@@ -59,7 +56,7 @@ export function ForceFrameReferenceDock({
                 {valdPerformanceReferenceRows.map((row) => (
                   <tr key={row.key}>
                     <td>{language === "es" ? row.esLabel : row.enLabel}</td>
-                    <td><span className={`forceframe-percentile-pill is-p${row.percentile}`}>P{row.percentile}</span></td>
+                    <td><span className={`vald-percentile-pill is-p${row.percentile}`}>P{row.percentile}</span></td>
                     <td>{formatReferenceValue(row.sjCm)}</td>
                     <td>{formatReferenceValue(row.cmjCm)}</td>
                     <td>{formatReferenceValue(row.abkCm)}</td>
@@ -85,6 +82,7 @@ function formatReferenceValue(value: number) {
 function referenceCopy(language: AmsLanguage) {
   if (language === "es") {
     return {
+      close: "Cerrar",
       kicker: "Orlegi Sports",
       panelLabel: "Tabla de referencias percentiles VALD",
       percentile: "Percentil",
@@ -97,6 +95,7 @@ function referenceCopy(language: AmsLanguage) {
   }
 
   return {
+    close: "Close",
     kicker: "Orlegi Sports",
     panelLabel: "VALD percentile reference table",
     percentile: "Percentile",

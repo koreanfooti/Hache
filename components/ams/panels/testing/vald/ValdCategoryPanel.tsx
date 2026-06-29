@@ -12,6 +12,7 @@ import type { ForceFrameRefreshPayload } from "@/components/ams/panels/testing/v
 import { NordbordDashboard } from "@/components/ams/panels/testing/vald/nordbord/NordbordDashboard";
 import type { NordbordRefreshPayload } from "@/components/ams/panels/testing/vald/nordbord/nordbordTypes";
 import { ValdDeviceCard } from "@/components/ams/panels/testing/vald/ValdDeviceCard";
+import { ValdReferenceDock } from "@/components/ams/panels/testing/vald/ValdReferenceDock";
 
 export function ValdCategoryPanel({
   copy,
@@ -30,7 +31,9 @@ export function ValdCategoryPanel({
 }) {
   const [isNordbordOpen, setIsNordbordOpen] = useState(true);
   const [isForceFrameOpen, setIsForceFrameOpen] = useState(false);
+  const [isReferenceOpen, setIsReferenceOpen] = useState(false);
   const [forceFramePayload, setForceFramePayload] = useState<ForceFrameRefreshPayload | null>(null);
+  const hasOpenValdDashboard = isNordbordOpen || isForceFrameOpen;
   const nordbordCard: ValdDeviceCardData = {
     copy: copy.development.nordbordCopy ?? labels.nordbordCopy,
     id: "nordbord",
@@ -62,6 +65,14 @@ export function ValdCategoryPanel({
           onClick={() => setIsForceFrameOpen((isOpen) => !isOpen)}
         />
       </section>
+
+      {hasOpenValdDashboard ? (
+        <ValdReferenceDock
+          isOpen={isReferenceOpen}
+          language={language}
+          onToggle={() => setIsReferenceOpen((isOpen) => !isOpen)}
+        />
+      ) : null}
 
       {isNordbordOpen ? (
         <NordbordDashboard
