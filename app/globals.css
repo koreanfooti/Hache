@@ -4948,13 +4948,13 @@ button {
 
 .forceframe-chart-grid {
   display: grid;
-  grid-template-columns: minmax(240px, 0.52fr) minmax(0, 1.48fr);
+  grid-template-columns: minmax(340px, 0.62fr) minmax(0, 1.38fr);
   gap: 12px;
 }
 
 .forceframe-chart-card {
   position: relative;
-  overflow: auto visible;
+  overflow: hidden;
   border: 1px solid rgb(215 180 106 / 30%);
   border-radius: 10px;
   background:
@@ -4967,7 +4967,7 @@ button {
 .forceframe-chart-card svg {
   display: block;
   width: 100%;
-  min-width: 420px;
+  min-width: 0;
   height: auto;
 }
 
@@ -4986,7 +4986,7 @@ button {
 }
 
 .forceframe-chart-title strong {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 950;
 }
 
@@ -5155,7 +5155,7 @@ button {
 
 .forceframe-axis-title {
   fill: #fff;
-  font-size: 12px;
+  font-size: 10px;
   text-anchor: middle;
 }
 

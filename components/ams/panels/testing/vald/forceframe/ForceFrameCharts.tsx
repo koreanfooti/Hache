@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { compactNumber } from "@/lib/ams/data";
 import type { ForceFrameHipAdAbReference, ValdReferenceLine } from "@/lib/ams/valdReferences";
 import type { ForceFrameLabels } from "@/components/ams/panels/testing/vald/forceframe/forceframeLabels";
@@ -18,27 +18,29 @@ export function ForceFrameAsymmetryChart({
   const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const width = 500;
   const rowHeight = 34;
-  const height = Math.max(260, 76 + points.length * rowHeight);
-  const padding = { bottom: 34, left: 104, right: 28, top: 28 };
+  const height = Math.max(282, 92 + points.length * rowHeight);
+  const padding = { bottom: 50, left: 104, right: 56, top: 28 };
   const innerWidth = width - padding.left - padding.right;
-  const maxAsymmetry = Math.max(10, ...points.map((point) => Math.abs(point.asymmetry))) * 1.2;
+  const maxAsymmetry = Math.max(10, ...points.map((point) => Math.abs(point.asymmetry))) * 1.28;
+  const title = shortAsymmetryLabel(labels.asymmetry);
   const yFor = (index: number) => padding.top + index * rowHeight;
-  const widthFor = (value: number) => (Math.abs(value) / maxAsymmetry) * innerWidth;
+  const widthFor = (value: number) => Math.min(innerWidth, (Math.abs(value) / maxAsymmetry) * innerWidth);
 
   return (
     <section className="forceframe-chart-card forceframe-asymmetry-card" onMouseLeave={() => setTooltip(null)}>
       <div className="forceframe-chart-title">
-        <strong>{labels.asymmetryBars}</strong>
+        <strong>{title}</strong>
         <span>{labels.direction}</span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={labels.asymmetryBars}>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={title}>
         <line className="forceframe-axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
         <line className="forceframe-reference-line is-white" x1={padding.left} x2={padding.left} y1={padding.top - 8} y2={height - padding.bottom} />
-        <text className="forceframe-axis-caption" x={padding.left} y={height - 8}>0</text>
-        <text className="forceframe-axis-caption" x={width - padding.right} y={height - 8}>{compactNumber(maxAsymmetry, 0)}</text>
+        <text className="forceframe-axis-caption" x={padding.left} y={height - 22}>0</text>
+        <text className="forceframe-axis-caption" x={width - padding.right} y={height - 22} textAnchor="end">{compactNumber(maxAsymmetry, 0)}</text>
         {points.map((point, index) => {
           const y = yFor(index);
-          const barWidth = widthFor(point.asymmetry);
+          const barWidth = Math.max(4, widthFor(point.asymmetry));
+          const labelX = Math.min(width - padding.right - 8, Math.max(padding.left + 18, padding.left + barWidth - 8));
 
           return (
             <g
@@ -50,11 +52,11 @@ export function ForceFrameAsymmetryChart({
             >
               <text className="forceframe-row-date" x={padding.left - 16} y={y + 14}>{point.displayDate}</text>
               <rect className="forceframe-asymmetry-bar" x={padding.left} y={y} width={Math.max(2, barWidth)} height="20" rx="2" />
-              <text className="forceframe-bar-label" x={padding.left + barWidth - 8} y={y + 14}>{compactNumber(Math.abs(point.asymmetry), 0)}</text>
+              <text className="forceframe-bar-label" x={labelX} y={y + 14}>{compactNumber(Math.abs(point.asymmetry), 0)}</text>
             </g>
           );
         })}
-        <text className="forceframe-axis-title" x={padding.left + innerWidth / 2} y={height - 7}>{labels.asymmetry}</text>
+        <text className="forceframe-axis-title" x={padding.left + innerWidth / 2} y={height - 8}>{title}</text>
       </svg>
       <ChartTooltip tooltip={tooltip} />
     </section>
@@ -79,8 +81,8 @@ export function ForceFrameSplitForceChart({
   const [tooltip, setTooltip] = useState<ChartTooltipState | null>(null);
   const width = Math.max(640, 600 + points.length * 8);
   const rowHeight = 34;
-  const height = Math.max(260, 76 + points.length * rowHeight);
-  const padding = { bottom: 40, left: 22, right: 36, top: 28 };
+  const height = Math.max(282, 92 + points.length * rowHeight);
+  const padding = { bottom: 54, left: 26, right: 48, top: 28 };
   const centerX = width / 2;
   const halfWidth = centerX - padding.left - 34;
   const referenceLines = reference ? forceFrameReferenceLines(reference, referenceMetric) : [];
@@ -114,7 +116,6 @@ export function ForceFrameSplitForceChart({
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label={labels.forceSplit}
-        style={{ minWidth: `${width}px` } as CSSProperties}
       >
         <line className="forceframe-center-line" x1={centerX} x2={centerX} y1={padding.top - 10} y2={height - padding.bottom} />
         {referenceLines.length ? (
@@ -164,12 +165,16 @@ export function ForceFrameSplitForceChart({
             </g>
           );
         })}
-        <text className="forceframe-axis-title" x={centerX - halfWidth / 2} y={height - 7}>{labels.leftMaxForce}</text>
-        <text className="forceframe-axis-title" x={centerX + halfWidth / 2} y={height - 7}>{labels.rightMaxForce}</text>
+        <text className="forceframe-axis-title" x={centerX - halfWidth / 2} y={height - 8}>{labels.leftMaxForce}</text>
+        <text className="forceframe-axis-title" x={centerX + halfWidth / 2} y={height - 8}>{labels.rightMaxForce}</text>
       </svg>
       <ChartTooltip tooltip={tooltip} />
     </section>
   );
+}
+
+function shortAsymmetryLabel(label: string) {
+  return label.replace(/\s*\([^)]*\)/g, "");
 }
 
 function forceFrameReferenceLines(reference: ForceFrameHipAdAbReference, metric: "abd" | "add"): ValdReferenceLine[] {
