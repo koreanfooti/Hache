@@ -32,7 +32,7 @@ export function ForceFrameAsymmetryChart({
         <strong>{title}</strong>
         <span>{labels.direction}</span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={title}>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={title} style={{ height }}>
         <line className="forceframe-axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
         <line className="forceframe-reference-line is-white" x1={padding.left} x2={padding.left} y1={padding.top - 8} y2={height - padding.bottom} />
         <text className="forceframe-axis-caption" x={padding.left} y={height - 22}>0</text>
@@ -116,6 +116,7 @@ export function ForceFrameSplitForceChart({
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label={labels.forceSplit}
+        style={{ height }}
       >
         <line className="forceframe-center-line" x1={centerX} x2={centerX} y1={padding.top - 10} y2={height - padding.bottom} />
         {referenceLines.length ? (

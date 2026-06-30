@@ -4976,6 +4976,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-height: 54px;
   margin-bottom: 4px;
   color: #fff;
 }
