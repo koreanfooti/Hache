@@ -6,7 +6,14 @@ import { parseCsv } from "@/lib/ams/data";
 import {
   getInjuryHistoryFromGoogleSheet,
   loadBodyCompositionFromSupabase,
+  loadGpsRouteDataFromSupabase,
   loadInjuryHistoryFromSupabase,
+  loadPlayerHistoryFromSupabase,
+  loadPlayerMasterFromSupabase,
+  loadRehabServicesFromSupabase,
+  loadSyncAuditFromSupabase,
+  loadTestingFromSupabase,
+  loadValdNordbordFromSupabase,
 } from "@/lib/ams/server";
 import {
   amsSourceDefinitions,
@@ -80,6 +87,96 @@ async function previewApiSource(source: AmsSourceDefinition) {
       return NextResponse.json(toPreviewPayload(source, rows.slice(0, MAX_ROWS), rows.length > MAX_ROWS, rows.length));
     }
 
+    if (source.key === "gpsDailyRollup" || source.key === "currentRosterGps") {
+      const payload = await gpsRowsForSource(source.key);
+      if (!payload) {
+        return NextResponse.json(
+          { error: "WIMU/GPS Supabase source unavailable." },
+          { status: 503 },
+        );
+      }
+
+      const rows = payload.rows ?? [];
+      return NextResponse.json(
+        toPreviewPayload(source, rows.slice(0, MAX_ROWS), rows.length > MAX_ROWS, payload.totalRows),
+      );
+    }
+
+    if (source.key === "playerMaster") {
+      const payload = await loadPlayerMasterFromSupabase();
+      if (!payload) {
+        return NextResponse.json(
+          { error: "Player master Supabase source unavailable." },
+          { status: 503 },
+        );
+      }
+
+      const rows = payload.rows ?? [];
+      return NextResponse.json(toPreviewPayload(source, rows.slice(0, MAX_ROWS), rows.length > MAX_ROWS, rows.length));
+    }
+
+    if (source.key === "rehabServices") {
+      const payload = await loadRehabServicesFromSupabase();
+      if (!payload) {
+        return NextResponse.json(
+          { error: "Rehab services Supabase source unavailable." },
+          { status: 503 },
+        );
+      }
+
+      const rows = payload.rows ?? [];
+      return NextResponse.json(toPreviewPayload(source, rows.slice(0, MAX_ROWS), rows.length > MAX_ROWS, rows.length));
+    }
+
+    if (source.key === "playerSeasonHistory" || source.key === "playerMatchHistory") {
+      const rows = await playerHistoryRowsForSource(source.key);
+      if (!rows) {
+        return NextResponse.json(
+          { error: "Player history Supabase source unavailable." },
+          { status: 503 },
+        );
+      }
+
+      return NextResponse.json(toPreviewPayload(source, rows.slice(0, MAX_ROWS), rows.length > MAX_ROWS, rows.length));
+    }
+
+    if (source.key === "valdNordbordTests" || source.key === "valdNordbordMetrics") {
+      const rows = await valdNordbordRowsForSource(source.key);
+      if (!rows) {
+        return NextResponse.json(
+          { error: "VALD NordBord Supabase source unavailable." },
+          { status: 503 },
+        );
+      }
+
+      return NextResponse.json(toPreviewPayload(source, rows.slice(0, MAX_ROWS), rows.length > MAX_ROWS, rows.length));
+    }
+
+    if (source.key === "syncAudit") {
+      const payload = await loadSyncAuditFromSupabase();
+      if (!payload) {
+        return NextResponse.json(
+          { error: "Sync audit Supabase source unavailable." },
+          { status: 503 },
+        );
+      }
+
+      const rows = payload.rows ?? [];
+      return NextResponse.json(toPreviewPayload(source, rows.slice(0, MAX_ROWS), rows.length > MAX_ROWS, rows.length));
+    }
+
+    if (isTestingSourceKey(source.key)) {
+      const rows = await testingRowsForSource(source.key);
+      if (!rows) {
+        return NextResponse.json(
+          { error: "Testing Supabase source unavailable." },
+          { status: 503 },
+        );
+      }
+
+      return NextResponse.json(toPreviewPayload(source, rows.slice(0, MAX_ROWS), rows.length > MAX_ROWS, rows.length));
+    }
+
     return NextResponse.json({ error: "Unsupported API source." }, { status: 400 });
   } catch (error) {
     return NextResponse.json(
@@ -103,6 +200,121 @@ function toPreviewPayload(source: AmsSourceDefinition, rows: RawRow[], truncated
     totalRows,
     truncated,
   };
+}
+
+function isTestingSourceKey(key: AmsSourceDefinition["key"]) {
+  return [
+    "fmsAssessments",
+    "fmsExerciseScores",
+    "yBalanceAssessments",
+    "yBalanceMetrics",
+    "externalTestAssessments",
+    "externalTestMetrics",
+    "externalTestScoringCriteria",
+    "mobilityScreenAssessments",
+    "mobilityScreenMetrics",
+    "musculoskeletalScreenAssessments",
+    "musculoskeletalScreenMetrics",
+    "musculoskeletalScreenScoringCriteria",
+  ].includes(key);
+}
+
+async function gpsRowsForSource(key: AmsSourceDefinition["key"]) {
+  const params = new URLSearchParams();
+  if (key === "gpsDailyRollup") params.set("team", "__all__");
+
+  const payload = await loadGpsRouteDataFromSupabase(params);
+  if (!payload) return null;
+
+  return {
+    rows: payload.rows as RawRow[],
+    totalRows: payload.filters.totalRows,
+  };
+}
+
+async function testingRowsForSource(key: AmsSourceDefinition["key"]) {
+  const payload = await loadTestingFromSupabase();
+  if (!payload) return null;
+
+  if (key === "fmsAssessments") {
+    return (payload.fms ?? []) as RawRow[];
+  }
+
+  if (key === "fmsExerciseScores") {
+    return (payload.fmsExerciseScores ?? []) as RawRow[];
+  }
+
+  if (key === "yBalanceAssessments") {
+    return (payload.yBalance ?? []) as RawRow[];
+  }
+
+  if (key === "yBalanceMetrics") {
+    return (payload.yBalanceMetrics ?? []) as RawRow[];
+  }
+
+  if (key === "externalTestAssessments") {
+    return (payload.externalTestAssessments ?? []) as RawRow[];
+  }
+
+  if (key === "externalTestMetrics") {
+    return (payload.externalTestMetrics ?? []) as RawRow[];
+  }
+
+  if (key === "externalTestScoringCriteria") {
+    return (payload.externalTestScoringCriteria ?? []) as RawRow[];
+  }
+
+  if (key === "mobilityScreenAssessments") {
+    return (payload.mobilityScreenAssessments ?? []) as RawRow[];
+  }
+
+  if (key === "mobilityScreenMetrics") {
+    return (payload.mobilityScreenMetrics ?? []) as RawRow[];
+  }
+
+  if (key === "musculoskeletalScreenAssessments") {
+    return (payload.musculoskeletalScreenAssessments ?? []) as RawRow[];
+  }
+
+  if (key === "musculoskeletalScreenMetrics") {
+    return (payload.musculoskeletalScreenMetrics ?? []) as RawRow[];
+  }
+
+  if (key === "musculoskeletalScreenScoringCriteria") {
+    return (payload.musculoskeletalScreenScoringCriteria ?? []) as RawRow[];
+  }
+
+  return [];
+}
+
+async function playerHistoryRowsForSource(key: AmsSourceDefinition["key"]) {
+  const payload = await loadPlayerHistoryFromSupabase();
+  if (!payload) return null;
+
+  if (key === "playerSeasonHistory") {
+    return (payload.seasonHistory ?? []) as RawRow[];
+  }
+
+  if (key === "playerMatchHistory") {
+    return (payload.matchHistory ?? []) as RawRow[];
+  }
+
+  return [];
+}
+
+async function valdNordbordRowsForSource(key: AmsSourceDefinition["key"]) {
+  const payload = await loadValdNordbordFromSupabase();
+  if (!payload) return null;
+
+  if (key === "valdNordbordTests") {
+    return (payload.tests ?? []) as RawRow[];
+  }
+
+  if (key === "valdNordbordMetrics") {
+    return (payload.metrics ?? []) as RawRow[];
+  }
+
+  return [];
 }
 
 async function readCsvHead(filePath: string, maxLines: number) {

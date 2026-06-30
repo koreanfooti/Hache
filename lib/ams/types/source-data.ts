@@ -132,6 +132,114 @@ export type YBalanceMetricRow = {
   unit?: string;
 };
 
+export type ExternalTestAssessmentRow = {
+  assessmentId?: string;
+  amsId?: string;
+  sourceAthleteName?: string;
+  matchedAthleteName?: string;
+  dateIso?: string;
+  test?: string;
+  testType?: string;
+  totalScore?: number;
+  scoreBand?: string;
+  riskFlag?: string;
+  flagCount?: number;
+} & Record<string, unknown>;
+
+export type ExternalTestMetricRow = {
+  assessmentId?: string;
+  amsId?: string;
+  sourceAthleteName?: string;
+  dateIso?: string;
+  test?: string;
+  testType?: string;
+  side?: string;
+  metric?: string;
+  value?: number;
+  unit?: string;
+  metricKey?: string;
+  metricName?: string;
+  numericValue?: number;
+  flag?: string;
+} & Record<string, unknown>;
+
+export type ExternalTestScoringCriterionRow = {
+  test?: string;
+  type?: string;
+  label?: string;
+  range?: string;
+  meaning?: string;
+} & Record<string, unknown>;
+
+export type MobilityScreenAssessmentRow = {
+  assessmentId?: string;
+  amsId?: string;
+  sourceAthleteName?: string;
+  matchedAthleteName?: string;
+  dateIso?: string;
+  test?: string;
+  flagCount?: number;
+  numericAsymmetryCount?: number;
+  scoreBand?: string;
+  riskFlag?: string;
+} & Record<string, unknown>;
+
+export type MobilityScreenMetricRow = {
+  assessmentId?: string;
+  amsId?: string;
+  sourceAthleteName?: string;
+  dateIso?: string;
+  test?: string;
+  metricKey?: string;
+  metricName?: string;
+  side?: string;
+  numericValue?: number;
+  unit?: string;
+  flag?: string;
+} & Record<string, unknown>;
+
+export type MusculoskeletalScreenAssessmentRow = {
+  assessmentId?: string;
+  amsId?: string;
+  sourceAthleteName?: string;
+  matchedAthleteName?: string;
+  dateIso?: string;
+  test?: string;
+  populatedMetricCount?: number;
+  flagCount?: number;
+  asymmetryCount?: number;
+  scoreBand?: string;
+  riskFlag?: string;
+} & Record<string, unknown>;
+
+export type MusculoskeletalScreenMetricRow = {
+  assessmentId?: string;
+  amsId?: string;
+  sourceAthleteName?: string;
+  matchedAthleteName?: string;
+  dateIso?: string;
+  test?: string;
+  domain?: string;
+  metricKey?: string;
+  metricName?: string;
+  side?: string;
+  numericValue?: number;
+  unit?: string;
+  idealRule?: string;
+  isIdeal?: boolean;
+  flag?: string;
+} & Record<string, unknown>;
+
+export type MusculoskeletalScreenScoringCriterionRow = {
+  test?: string;
+  domain?: string;
+  metricKey?: string;
+  metricName?: string;
+  side?: string;
+  idealRule?: string;
+  unit?: string;
+} & Record<string, unknown>;
+
 export type ValdNordbordTestRow = {
   amsId?: string;
   tenantId?: string;
@@ -295,6 +403,14 @@ export type SourceData = {
   fmsExerciseScores: FmsExerciseScoreRow[];
   yBalance: YBalanceAssessmentRow[];
   yBalanceMetrics: YBalanceMetricRow[];
+  externalTestAssessments: ExternalTestAssessmentRow[];
+  externalTestMetrics: ExternalTestMetricRow[];
+  externalTestScoringCriteria: ExternalTestScoringCriterionRow[];
+  mobilityScreenAssessments: MobilityScreenAssessmentRow[];
+  mobilityScreenMetrics: MobilityScreenMetricRow[];
+  musculoskeletalScreenAssessments: MusculoskeletalScreenAssessmentRow[];
+  musculoskeletalScreenMetrics: MusculoskeletalScreenMetricRow[];
+  musculoskeletalScreenScoringCriteria: MusculoskeletalScreenScoringCriterionRow[];
   valdNordbordTests: ValdNordbordTestRow[];
   valdNordbordMetrics: ValdNordbordMetricRow[];
   rehabServices: RehabServiceRow[];
@@ -322,6 +438,107 @@ export type InjuryApiPayload = {
     sourceLabel?: string;
     lastSynced?: string;
     rowCount?: number;
+    cacheSeconds?: number;
+  };
+  error?: string;
+};
+
+export type PlayerMasterApiPayload = {
+  rows?: PlayerMasterRow[];
+  meta?: {
+    sourceLabel?: string;
+    lastSynced?: string;
+    rowCount?: number;
+    cacheSeconds?: number;
+  };
+  error?: string;
+};
+
+export type RehabServicesApiPayload = {
+  rows?: RehabServiceRow[];
+  meta?: {
+    sourceLabel?: string;
+    lastSynced?: string;
+    rowCount?: number;
+    cacheSeconds?: number;
+  };
+  error?: string;
+};
+
+export type PlayerHistoryApiPayload = {
+  seasonHistory?: PlayerSeasonHistoryRow[];
+  matchHistory?: PlayerMatchHistoryRow[];
+  meta?: {
+    sourceLabel?: string;
+    lastSynced?: string;
+    rowCount?: number;
+    rowCounts?: {
+      seasonHistory?: number;
+      matchHistory?: number;
+    };
+    cacheSeconds?: number;
+  };
+  error?: string;
+};
+
+export type ValdNordbordApiPayload = {
+  tests?: ValdNordbordTestRow[];
+  metrics?: ValdNordbordMetricRow[];
+  meta?: {
+    sourceLabel?: string;
+    lastSynced?: string;
+    rowCount?: number;
+    rowCounts?: {
+      tests?: number;
+      metrics?: number;
+    };
+    cacheSeconds?: number;
+  };
+  error?: string;
+};
+
+export type SyncAuditApiPayload = {
+  rows?: SyncAuditRow[];
+  meta?: {
+    sourceLabel?: string;
+    lastSynced?: string;
+    rowCount?: number;
+    cacheSeconds?: number;
+  };
+  error?: string;
+};
+
+export type TestingApiPayload = {
+  fms?: FmsAssessmentRow[];
+  fmsExerciseScores?: FmsExerciseScoreRow[];
+  yBalance?: YBalanceAssessmentRow[];
+  yBalanceMetrics?: YBalanceMetricRow[];
+  externalTestAssessments?: ExternalTestAssessmentRow[];
+  externalTestMetrics?: ExternalTestMetricRow[];
+  externalTestScoringCriteria?: ExternalTestScoringCriterionRow[];
+  mobilityScreenAssessments?: MobilityScreenAssessmentRow[];
+  mobilityScreenMetrics?: MobilityScreenMetricRow[];
+  musculoskeletalScreenAssessments?: MusculoskeletalScreenAssessmentRow[];
+  musculoskeletalScreenMetrics?: MusculoskeletalScreenMetricRow[];
+  musculoskeletalScreenScoringCriteria?: MusculoskeletalScreenScoringCriterionRow[];
+  meta?: {
+    sourceLabel?: string;
+    lastSynced?: string;
+    rowCount?: number;
+    rowCounts?: {
+      fms?: number;
+      fmsExerciseScores?: number;
+      yBalance?: number;
+      yBalanceMetrics?: number;
+      externalTestAssessments?: number;
+      externalTestMetrics?: number;
+      externalTestScoringCriteria?: number;
+      mobilityScreenAssessments?: number;
+      mobilityScreenMetrics?: number;
+      musculoskeletalScreenAssessments?: number;
+      musculoskeletalScreenMetrics?: number;
+      musculoskeletalScreenScoringCriteria?: number;
+    };
     cacheSeconds?: number;
   };
   error?: string;

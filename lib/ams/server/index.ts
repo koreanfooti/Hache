@@ -5,4 +5,10 @@ export { loadGpsRouteDataFromSupabase } from "./supabase-load-source";
 export {
   loadBodyCompositionFromSupabase,
   loadInjuryHistoryFromSupabase,
+  loadPlayerHistoryFromSupabase,
+  loadPlayerMasterFromSupabase,
+  loadRehabServicesFromSupabase,
+  loadSyncAuditFromSupabase,
+  loadTestingFromSupabase,
+  loadValdNordbordFromSupabase,
 } from "./supabase-module-sources";

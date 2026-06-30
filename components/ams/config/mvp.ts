@@ -37,6 +37,14 @@ export const mvpSourceKeys = [
   "fmsExerciseScores",
   "yBalanceAssessments",
   "yBalanceMetrics",
+  "externalTestAssessments",
+  "externalTestMetrics",
+  "externalTestScoringCriteria",
+  "mobilityScreenAssessments",
+  "mobilityScreenMetrics",
+  "musculoskeletalScreenAssessments",
+  "musculoskeletalScreenMetrics",
+  "musculoskeletalScreenScoringCriteria",
   "valdNordbordTests",
   "valdNordbordMetrics",
   "rehabServices",
@@ -73,7 +81,7 @@ export const mvpSourceCards = [
   {
     id: "testing",
     asset: "/ams/assets/integrations/fms.jpeg",
-    labels: { en: "FMS / Y Balance", es: "FMS / Y Balance" },
+    labels: { en: "Testing Screens", es: "Pruebas físicas" },
   },
   {
     id: "vald",

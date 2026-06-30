@@ -1,22 +1,38 @@
-import { readFile } from "fs/promises";
-import path from "path";
+import { createAmsSupabaseServerClient } from "@/lib/ams/server";
 
 export type ValdProfileMapRow = {
   amsId?: string;
   valdProfileId?: string;
   tenantId?: string;
+  syncId?: string | null;
+  externalId?: string | null;
+  matchMethod?: string | null;
+  confidence?: number | null;
+  reviewRequired?: boolean | null;
 };
 
 export async function readValdProfileMap(): Promise<ValdProfileMapRow[]> {
-  const mapPath = path.join(process.cwd(), "public", "ams", "data", "clean", "vald_profile_map.json");
+  const supabaseRows = await readValdProfileMapFromSupabase();
+  return supabaseRows ?? [];
+}
+
+async function readValdProfileMapFromSupabase() {
+  const supabase = createAmsSupabaseServerClient();
+  if (!supabase) return null;
 
   try {
-    const file = await readFile(mapPath, "utf8");
-    const rows = JSON.parse(file) as unknown;
+    const { data, error } = await supabase
+      .from("ams_vald_profile_map")
+      .select("payload")
+      .order("ams_id", { ascending: true });
 
-    return Array.isArray(rows) ? rows as ValdProfileMapRow[] : [];
-  } catch {
-    return [];
+    if (error) throw error;
+
+    const rows = (data ?? []).map((row) => row.payload as ValdProfileMapRow);
+    return rows.length ? rows : null;
+  } catch (error) {
+    console.warn("Supabase VALD profile map unavailable.", error);
+    return null;
   }
 }
 

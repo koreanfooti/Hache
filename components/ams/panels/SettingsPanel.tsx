@@ -338,6 +338,9 @@ function buildPlayerRegistryRows(
       { label: "Body Comp", tone: bodyCompMatch ? "synced" : "pending" },
       { label: "FMS", tone: sourceData.fms.some((row) => row.amsId === player.amsId) ? "synced" : "pending" },
       { label: "Y Balance", tone: sourceData.yBalance.some((row) => row.amsId === player.amsId) ? "synced" : "pending" },
+      { label: "External Tests", tone: sourceData.externalTestAssessments.some((row) => row.amsId === player.amsId) ? "synced" : "pending" },
+      { label: "Mobility", tone: sourceData.mobilityScreenAssessments.some((row) => row.amsId === player.amsId) ? "synced" : "pending" },
+      { label: "MSK", tone: sourceData.musculoskeletalScreenAssessments.some((row) => row.amsId === player.amsId) ? "synced" : "pending" },
       { label: "NordBord", tone: sourceData.valdNordbordTests.some((row) => row.amsId === player.amsId) ? "synced" : "pending" },
       { label: "Rehab", tone: sourceData.rehabServices.length ? "partial" : "pending" },
     ];
@@ -390,6 +393,9 @@ function localizedRegistrySource(label: string, language: AmsLanguage) {
     "Body Comp": "Comp. corporal",
     FMS: "FMS",
     "Y Balance": "Y Balance",
+    "External Tests": "Pruebas externas",
+    Mobility: "Movilidad",
+    MSK: "MSK",
     NordBord: "NordBord",
     Rehab: "Rehab",
   };

@@ -1,19 +1,10 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { amsSourcePaths } from "@/lib/ams/source-registry";
 
 export const dynamic = "force-dynamic";
 
-const requiredDataFiles = [
-  amsSourcePaths.currentRosterGps,
-  amsSourcePaths.playerMaster,
-  amsSourcePaths.fmsAssessments,
-  amsSourcePaths.yBalanceAssessments,
-  amsSourcePaths.valdNordbordTests,
-  amsSourcePaths.playerSeasonHistory,
-  amsSourcePaths.playerMatchHistory,
-];
+const requiredDataFiles: string[] = [];
 
 export async function GET() {
   const checks = await Promise.all(requiredDataFiles.map(checkPublicDataFile));

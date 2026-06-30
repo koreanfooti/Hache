@@ -22,6 +22,22 @@ export function proxy(request: NextRequest) {
     return forbiddenResponse();
   }
 
+  if (pathname === "/api/ams/load" && (!role || !canAccessDomain(role, "performance"))) {
+    return forbiddenResponse();
+  }
+
+  if (pathname === "/api/ams/testing" && (!role || !canAccessDomain(role, "performance"))) {
+    return forbiddenResponse();
+  }
+
+  if (pathname === "/api/ams/vald-nordbord" && (!role || !canAccessDomain(role, "performance"))) {
+    return forbiddenResponse();
+  }
+
+  if (pathname === "/api/ams/sync-audit" && (!role || !canAccessRawSources(role))) {
+    return forbiddenResponse();
+  }
+
   if (pathname === "/api/ams/injuries" && (!role || !canAccessDomain(role, "medical"))) {
     return forbiddenResponse();
   }
@@ -30,6 +46,44 @@ export function proxy(request: NextRequest) {
     pathname === "/api/ams/body-composition"
     && (!role || (!canAccessDomain(role, "medical") && !canAccessDomain(role, "performance")))
   ) {
+    return forbiddenResponse();
+  }
+
+  if (pathname === "/api/ams/player-master" && (!role || !canAccessDomain(role, "biography"))) {
+    return forbiddenResponse();
+  }
+
+  if (
+    pathname === "/api/ams/rehab-services"
+    && (!role || (
+      !canAccessDomain(role, "medical")
+      && !canAccessDomain(role, "performance")
+      && !canAccessDomain(role, "playerCare")
+    ))
+  ) {
+    return forbiddenResponse();
+  }
+
+  if (
+    pathname === "/api/ams/player-history"
+    && (!role || (
+      !canAccessDomain(role, "biography")
+      && !canAccessDomain(role, "performance")
+      && !canAccessDomain(role, "technical")
+    ))
+  ) {
+    return forbiddenResponse();
+  }
+
+  if (pathname === "/api/ams/weather" && !role) {
+    return forbiddenResponse();
+  }
+
+  if (pathname === "/api/atlas/fixtures" && !role) {
+    return forbiddenResponse();
+  }
+
+  if (pathname.startsWith("/api/vald/") && (!role || !canAccessDomain(role, "performance"))) {
     return forbiddenResponse();
   }
 
@@ -46,8 +100,18 @@ export const config = {
     "/sign-in",
     "/sign-up",
     "/api/ams/source-preview",
+    "/api/ams/load",
+    "/api/ams/testing",
+    "/api/ams/vald-nordbord",
+    "/api/ams/sync-audit",
     "/api/ams/injuries",
     "/api/ams/body-composition",
+    "/api/ams/player-master",
+    "/api/ams/rehab-services",
+    "/api/ams/player-history",
+    "/api/ams/weather",
+    "/api/atlas/fixtures",
+    "/api/vald/:path*",
     "/ams/data/clean/:path*",
   ],
 };

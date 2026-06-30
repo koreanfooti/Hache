@@ -659,7 +659,20 @@ function sourceCount(id: MvpSourceCardId, loadSummary: LoadSummary, sourceData: 
   if (id === "gps") return loadSummary.rows.length;
   if (id === "injury") return sourceData.injuries.length;
   if (id === "bodyComp") return sourceData.bodyComp.length;
-  if (id === "testing") return sourceData.fms.length + sourceData.fmsExerciseScores.length + sourceData.yBalance.length + sourceData.yBalanceMetrics.length;
+  if (id === "testing") {
+    return sourceData.fms.length
+      + sourceData.fmsExerciseScores.length
+      + sourceData.yBalance.length
+      + sourceData.yBalanceMetrics.length
+      + sourceData.externalTestAssessments.length
+      + sourceData.externalTestMetrics.length
+      + sourceData.externalTestScoringCriteria.length
+      + sourceData.mobilityScreenAssessments.length
+      + sourceData.mobilityScreenMetrics.length
+      + sourceData.musculoskeletalScreenAssessments.length
+      + sourceData.musculoskeletalScreenMetrics.length
+      + sourceData.musculoskeletalScreenScoringCriteria.length;
+  }
   if (id === "vald") return sourceData.valdNordbordTests.length + sourceData.valdNordbordMetrics.length;
   if (id === "rehab") return sourceData.rehabServices.length;
   return sourceData.playerMaster.length;

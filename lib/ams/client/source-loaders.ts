@@ -1,26 +1,22 @@
 import type { AmsAuthRole } from "@/lib/ams/auth-rules";
 import { canAccessDomain, canAccessRawSources } from "@/lib/ams/auth-rules";
 import { sampleGpsRows } from "@/lib/ams/content";
-import { compactNumber, loadCsv, loadJson, numberValue } from "@/lib/ams/data";
+import { compactNumber, numberValue } from "@/lib/ams/data";
 import { amsSourcePaths } from "@/lib/ams/source-registry";
 import type {
   BodyCompApiPayload,
   CleanGpsRow,
-  FmsAssessmentRow,
-  FmsExerciseScoreRow,
   InjuryApiPayload,
   InjuryRow,
   LoadSummary,
-  PlayerMasterRow,
-  PlayerMatchHistoryRow,
-  PlayerSeasonHistoryRow,
-  RehabServiceRow,
+  PlayerHistoryApiPayload,
+  PlayerMasterApiPayload,
+  RehabServicesApiPayload,
   SourceData,
+  SyncAuditApiPayload,
   SyncAuditRow,
-  ValdNordbordMetricRow,
-  ValdNordbordTestRow,
-  YBalanceAssessmentRow,
-  YBalanceMetricRow,
+  TestingApiPayload,
+  ValdNordbordApiPayload,
 } from "@/lib/ams/types";
 
 type ClientInjurySource = {
@@ -45,6 +41,14 @@ export const initialSourceData: SourceData = {
   fmsExerciseScores: [],
   yBalance: [],
   yBalanceMetrics: [],
+  externalTestAssessments: [],
+  externalTestMetrics: [],
+  externalTestScoringCriteria: [],
+  mobilityScreenAssessments: [],
+  mobilityScreenMetrics: [],
+  musculoskeletalScreenAssessments: [],
+  musculoskeletalScreenMetrics: [],
+  musculoskeletalScreenScoringCriteria: [],
   valdNordbordTests: [],
   valdNordbordMetrics: [],
   rehabServices: [],
@@ -64,19 +68,21 @@ export async function loadAmsLoadSummary(role: AmsAuthRole = "technicalStaff") {
   }
 
   try {
-    let rows = await loadJson<CleanGpsRow>(amsSourcePaths.currentRosterGps);
-    let sourceLabel = "current-roster WIMU/GPS daily records";
+    const response = await fetch("/api/ams/load", { cache: "no-store" });
+    const payload = (await response.json()) as { summary?: LoadSummary; rows?: CleanGpsRow[]; error?: string };
 
-    if (!rows.length) {
-      rows = sampleGpsRows;
-      sourceLabel = "sample WIMU/GPS records";
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to load WIMU/GPS feed.");
     }
 
-    return summarizeGpsRows(rows, `Loaded ${compactNumber(rows.length)} ${sourceLabel}.`);
+    if (payload.summary) return payload.summary;
+
+    const rows = payload.rows ?? [];
+    return summarizeGpsRows(rows, `Loaded ${compactNumber(rows.length)} WIMU/GPS daily records from Supabase.`);
   } catch (error) {
     const rows: CleanGpsRow[] = sampleGpsRows;
     const status = error instanceof Error
-      ? `Using sample WIMU/GPS records. Data feed unavailable: ${error.message}`
+      ? `Using sample WIMU/GPS records. Supabase feed unavailable: ${error.message}`
       : "Using sample WIMU/GPS records.";
 
     return summarizeGpsRows(rows, status);
@@ -87,37 +93,45 @@ export async function loadAmsSourceData(role: AmsAuthRole = "technicalStaff") {
   const canViewMedical = canAccessDomain(role, "medical");
   const canViewPerformance = canAccessDomain(role, "performance");
   const canViewPlayerCare = canAccessDomain(role, "playerCare");
+  const canViewBiography = canAccessDomain(role, "biography");
+  const canViewTechnical = canAccessDomain(role, "technical");
   const canViewRawSources = canAccessRawSources(role);
 
   const [
     injuryPayload,
     bodyComp,
-    fms,
-    fmsExerciseScores,
-    yBalance,
-    yBalanceMetrics,
-    valdNordbordTests,
-    valdNordbordMetrics,
+    testingPayload,
+    valdNordbordPayload,
     rehabServices,
     syncAudit,
     playerMaster,
-    playerSeasonHistory,
-    playerMatchHistory,
+    playerHistoryPayload,
   ] = await Promise.all([
     canViewMedical ? loadInjurySource() : restrictedInjurySource(),
     canViewMedical || canViewPerformance ? loadBodyCompSource() : [],
-    canViewPerformance ? loadJson<FmsAssessmentRow>(amsSourcePaths.fmsAssessments).catch(() => []) : [],
-    canViewPerformance ? loadJson<FmsExerciseScoreRow>(amsSourcePaths.fmsExerciseScores).catch(() => []) : [],
-    canViewPerformance ? loadJson<YBalanceAssessmentRow>(amsSourcePaths.yBalanceAssessments).catch(() => []) : [],
-    canViewPerformance ? loadJson<YBalanceMetricRow>(amsSourcePaths.yBalanceMetrics).catch(() => []) : [],
-    canViewPerformance ? loadJson<ValdNordbordTestRow>(amsSourcePaths.valdNordbordTests).catch(() => []) : [],
-    canViewPerformance ? loadJson<ValdNordbordMetricRow>(amsSourcePaths.valdNordbordMetrics).catch(() => []) : [],
-    canViewMedical || canViewPerformance || canViewPlayerCare ? loadJson<RehabServiceRow>(amsSourcePaths.rehabServices).catch(() => []) : [],
-    canViewRawSources ? loadCsv<SyncAuditRow>(amsSourcePaths.syncAudit).catch(() => []) : [],
-    loadJson<PlayerMasterRow>(amsSourcePaths.playerMaster).catch(() => []),
-    loadJson<PlayerSeasonHistoryRow>(amsSourcePaths.playerSeasonHistory).catch(() => []),
-    loadJson<PlayerMatchHistoryRow>(amsSourcePaths.playerMatchHistory).catch(() => []),
+    canViewPerformance ? loadTestingSource() : emptyTestingSource(),
+    canViewPerformance ? loadValdNordbordSource() : emptyValdNordbordSource(),
+    canViewMedical || canViewPerformance || canViewPlayerCare ? loadRehabServicesSource() : [],
+    canViewRawSources ? loadSyncAuditSource() : [],
+    loadPlayerMasterSource(),
+    canViewBiography || canViewPerformance || canViewTechnical ? loadPlayerHistorySource() : emptyPlayerHistorySource(),
   ]);
+  const fms = testingPayload.fms ?? [];
+  const fmsExerciseScores = testingPayload.fmsExerciseScores ?? [];
+  const yBalance = testingPayload.yBalance ?? [];
+  const yBalanceMetrics = testingPayload.yBalanceMetrics ?? [];
+  const externalTestAssessments = testingPayload.externalTestAssessments ?? [];
+  const externalTestMetrics = testingPayload.externalTestMetrics ?? [];
+  const externalTestScoringCriteria = testingPayload.externalTestScoringCriteria ?? [];
+  const mobilityScreenAssessments = testingPayload.mobilityScreenAssessments ?? [];
+  const mobilityScreenMetrics = testingPayload.mobilityScreenMetrics ?? [];
+  const musculoskeletalScreenAssessments = testingPayload.musculoskeletalScreenAssessments ?? [];
+  const musculoskeletalScreenMetrics = testingPayload.musculoskeletalScreenMetrics ?? [];
+  const musculoskeletalScreenScoringCriteria = testingPayload.musculoskeletalScreenScoringCriteria ?? [];
+  const valdNordbordTests = valdNordbordPayload.tests ?? [];
+  const valdNordbordMetrics = valdNordbordPayload.metrics ?? [];
+  const playerSeasonHistory = playerHistoryPayload.seasonHistory ?? [];
+  const playerMatchHistory = playerHistoryPayload.matchHistory ?? [];
 
   return {
     injuries: injuryPayload.rows,
@@ -128,6 +142,14 @@ export async function loadAmsSourceData(role: AmsAuthRole = "technicalStaff") {
     fmsExerciseScores,
     yBalance,
     yBalanceMetrics,
+    externalTestAssessments,
+    externalTestMetrics,
+    externalTestScoringCriteria,
+    mobilityScreenAssessments,
+    mobilityScreenMetrics,
+    musculoskeletalScreenAssessments,
+    musculoskeletalScreenMetrics,
+    musculoskeletalScreenScoringCriteria,
     valdNordbordTests,
     valdNordbordMetrics,
     rehabServices,
@@ -135,7 +157,7 @@ export async function loadAmsSourceData(role: AmsAuthRole = "technicalStaff") {
     playerMaster,
     playerSeasonHistory,
     playerMatchHistory,
-    status: `Loaded ${compactNumber(injuryPayload.rows.length + bodyComp.length + fms.length + fmsExerciseScores.length + yBalance.length + yBalanceMetrics.length + valdNordbordTests.length + valdNordbordMetrics.length + rehabServices.length + syncAudit.length + playerMaster.length + playerSeasonHistory.length + playerMatchHistory.length)} clean module records.`,
+    status: `Loaded ${compactNumber(injuryPayload.rows.length + bodyComp.length + fms.length + fmsExerciseScores.length + yBalance.length + yBalanceMetrics.length + externalTestAssessments.length + externalTestMetrics.length + externalTestScoringCriteria.length + mobilityScreenAssessments.length + mobilityScreenMetrics.length + musculoskeletalScreenAssessments.length + musculoskeletalScreenMetrics.length + musculoskeletalScreenScoringCriteria.length + valdNordbordTests.length + valdNordbordMetrics.length + rehabServices.length + syncAudit.length + playerMaster.length + playerSeasonHistory.length + playerMatchHistory.length)} clean module records.`,
   } satisfies SourceData;
 }
 
@@ -208,5 +230,126 @@ async function loadBodyCompSource() {
     return payload.rows ?? [];
   } catch {
     return [];
+  }
+}
+
+async function loadPlayerMasterSource() {
+  try {
+    const response = await fetch(amsSourcePaths.playerMaster, { cache: "no-store" });
+    const payload = (await response.json()) as PlayerMasterApiPayload;
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to load player master.");
+    }
+
+    return payload.rows ?? [];
+  } catch {
+    return [];
+  }
+}
+
+async function loadRehabServicesSource() {
+  try {
+    const response = await fetch(amsSourcePaths.rehabServices, { cache: "no-store" });
+    const payload = (await response.json()) as RehabServicesApiPayload;
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to load rehab services.");
+    }
+
+    return payload.rows ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function emptyPlayerHistorySource(): PlayerHistoryApiPayload {
+  return {
+    seasonHistory: [],
+    matchHistory: [],
+  };
+}
+
+async function loadPlayerHistorySource() {
+  try {
+    const response = await fetch("/api/ams/player-history", { cache: "no-store" });
+    const payload = (await response.json()) as PlayerHistoryApiPayload;
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to load player history.");
+    }
+
+    return payload;
+  } catch {
+    return emptyPlayerHistorySource();
+  }
+}
+
+function emptyValdNordbordSource(): ValdNordbordApiPayload {
+  return {
+    tests: [],
+    metrics: [],
+  };
+}
+
+async function loadValdNordbordSource() {
+  try {
+    const response = await fetch("/api/ams/vald-nordbord", { cache: "no-store" });
+    const payload = (await response.json()) as ValdNordbordApiPayload;
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to load VALD NordBord source.");
+    }
+
+    return payload;
+  } catch {
+    return emptyValdNordbordSource();
+  }
+}
+
+async function loadSyncAuditSource(): Promise<SyncAuditRow[]> {
+  try {
+    const response = await fetch(amsSourcePaths.syncAudit, { cache: "no-store" });
+    const payload = (await response.json()) as SyncAuditApiPayload;
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to load sync audit.");
+    }
+
+    return payload.rows ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function emptyTestingSource(): TestingApiPayload {
+  return {
+    fms: [],
+    fmsExerciseScores: [],
+    yBalance: [],
+    yBalanceMetrics: [],
+    externalTestAssessments: [],
+    externalTestMetrics: [],
+    externalTestScoringCriteria: [],
+    mobilityScreenAssessments: [],
+    mobilityScreenMetrics: [],
+    musculoskeletalScreenAssessments: [],
+    musculoskeletalScreenMetrics: [],
+    musculoskeletalScreenScoringCriteria: [],
+  };
+}
+
+async function loadTestingSource() {
+  try {
+    const response = await fetch("/api/ams/testing", { cache: "no-store" });
+    const payload = (await response.json()) as TestingApiPayload;
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "Unable to load testing source.");
+    }
+
+    return payload;
+  } catch {
+    return emptyTestingSource();
   }
 }

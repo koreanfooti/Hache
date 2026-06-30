@@ -44,7 +44,7 @@ export async function loadGpsRouteDataFromSupabase(params: URLSearchParams) {
       summary,
     };
   } catch (error) {
-    console.warn("Supabase GPS source unavailable; falling back to local CSV.", error);
+    console.warn("Supabase GPS source unavailable.", error);
     return null;
   }
 }
