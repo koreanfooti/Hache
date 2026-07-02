@@ -87,8 +87,10 @@ async function refreshForceFrame(request: Request) {
       ? (await Promise.all(profileIds.map((profileId) => fetchForceFrameTestsForProfile(profileId, tenantId, modifiedFromUtc, token)))).flat()
       : await fetchForceFrameTestsForProfile(undefined, tenantId, modifiedFromUtc, token);
     const normalizedTests = dedupeTests(tests.map((test) => normalizeTest(test, tenantId, profileMap)));
-    const metrics = await mapWithConcurrency(normalizedTests, 5, (test) => fetchForceFrameMetrics(test, tenantId, token, profileMap));
-    const repetitionsByTest = await mapWithConcurrency(normalizedTests, 5, (test) => fetchForceFrameRepetitions(test, tenantId, token, profileMap));
+    const detailConcurrency = Number(process.env.VALD_FORCEFRAME_DETAIL_CONCURRENCY ?? 2);
+    const safeDetailConcurrency = Number.isFinite(detailConcurrency) && detailConcurrency > 0 ? detailConcurrency : 2;
+    const metrics = await mapWithConcurrency(normalizedTests, safeDetailConcurrency, (test) => fetchForceFrameMetrics(test, tenantId, token, profileMap));
+    const repetitionsByTest = await mapWithConcurrency(normalizedTests, safeDetailConcurrency, (test) => fetchForceFrameRepetitions(test, tenantId, token, profileMap));
     const repetitions = repetitionsByTest.flat();
     const payload: ValdForceFrameRefreshPayload = {
       tests: normalizedTests.sort((a, b) => String(a.testDateUtc).localeCompare(String(b.testDateUtc))),
@@ -127,7 +129,7 @@ async function fetchForceFrameTestsForProfile(profileId: string | undefined, ten
 
   const payload = await fetchValdWithRetry<ValdForceFrameTestsResponse>(testsUrl, token);
 
-  return payload.tests ?? [];
+  return payload?.tests ?? [];
 }
 
 async function fetchForceFrameMetrics(
@@ -207,19 +209,34 @@ function dedupeTests(tests: ValdForceFrameTestRow[]) {
   return Array.from(testById.values());
 }
 
-async function fetchOptionalForceFrame<T>(url: URL, token: string) {
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
+async function fetchOptionalForceFrame<T>(url: URL, token: string, retries = 4) {
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
 
-  if (res.status === 204 || res.status === 404) return null;
+    if (res.status === 204 || res.status === 404) return null;
 
-  const data = await res.json().catch(() => null);
+    const data = await res.json().catch(() => null);
 
-  if (!res.ok) {
-    throw new Error(`VALD ForceFrame request failed (${res.status}) for ${url.pathname}`);
+    if (res.ok) return data as T;
+
+    if (res.status !== 429 || attempt === retries) {
+      throw new Error(`VALD ForceFrame request failed (${res.status}) for ${url.pathname}`);
+    }
+
+    await waitForRateLimit(res, attempt);
   }
 
-  return data as T;
+  throw new Error(`VALD ForceFrame request failed for ${url.pathname}`);
+}
+
+async function waitForRateLimit(response: Response, attempt: number) {
+  const retryAfterSeconds = Number(response.headers.get("retry-after"));
+  const retryAfterMs = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+    ? retryAfterSeconds * 1000
+    : 1500 * (attempt + 1);
+
+  await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
 }

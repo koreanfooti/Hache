@@ -128,7 +128,7 @@ async function fetchNordbordTestsForProfile(profileId: string | undefined, tenan
 
   const payload = await fetchValdWithRetry<ValdNordbordTestsResponse>(testsUrl, token);
 
-  return payload.tests ?? [];
+  return payload?.tests ?? [];
 }
 
 async function fetchNordbordMetrics(
